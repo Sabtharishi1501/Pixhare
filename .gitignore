@@ -11,3 +11,4 @@ build/
 .vscode/
 .idea/
 *.mp3
+.env

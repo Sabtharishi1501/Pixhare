@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .login-page {
+    min-height: calc(100vh - 64px);
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px 20px;
+  }
+
+  .login-wrap { width: 100%; max-width: 440px; }
+
+  /* ── Top badge ── */
+  .login-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--plum-lt);
+    border: 1px solid rgba(78,53,152,0.2);
+    border-radius: 50px; padding: 5px 14px 5px 8px;
+    font-size: 0.7rem; font-weight: 800;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--plum); margin-bottom: 16px;
+  }
+  .login-badge-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--plum);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: #fff;
+  }
+
+  /* ── Card ── */
+  .login-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+    position: relative;
+  }
+  .login-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--plum), var(--forest), var(--amber));
+  }
+
+  /* ── Head ── */
+  .login-head {
+    padding: 32px 36px 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: #fafaf8;
+  }
+  .login-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem; font-weight: 700;
+    letter-spacing: -1px; color: var(--ink); margin-bottom: 6px;
+  }
+  .login-title span { color: var(--plum); }
+  .login-sub { font-size: 0.85rem; color: var(--ink3); }
+
+  /* welcome avatar */
+  .welcome-avatar {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--plum-lt), var(--forest-lt));
+    border: 1.5px solid rgba(78,53,152,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 16px;
+  }
+
+  /* ── Body ── */
+  .login-body { padding: 28px 36px 32px; }
+
+  .fl {
+    display: block;
+    font-size: 0.74rem; font-weight: 800;
+    color: var(--ink2); letter-spacing: 0.07em;
+    text-transform: uppercase; margin-bottom: 7px;
+  }
+
+  /* input wrapper for icon */
+  .fi-wrap {
+    position: relative; margin-bottom: 18px;
+  }
+  .fi-icon {
+    position: absolute; left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink4); font-size: 0.95rem;
+    pointer-events: none;
+  }
+  .fi {
+    width: 100%;
+    background: #f5f3ef;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-radius: 11px;
+    padding: 12px 16px 12px 40px;
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.92rem; font-weight: 400;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .fi:focus {
+    border-color: var(--plum);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(78,53,152,0.1);
+  }
+  .fi::placeholder { color: var(--ink4); }
+
+  /* submit */
+  .btn-login {
+    width: 100%;
+    background: linear-gradient(135deg, var(--plum), var(--plum2));
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800; font-size: 0.92rem;
+    padding: 14px; border: none;
+    border-radius: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .15s, box-shadow .2s;
+    box-shadow: 0 4px 18px rgba(78,53,152,0.28);
+    margin-top: 4px;
+  }
+  .btn-login:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(78,53,152,0.36); }
+  .btn-login:active { transform: translateY(0); }
+
+  /* flash */
+  .login-flash {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 0.84rem; font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .login-flash.danger  { background: #fdeaed; border: 1px solid rgba(212,43,82,0.2);  color: var(--rose); }
+  .login-flash.success { background: #dff2ea; border: 1px solid rgba(15,123,86,0.2);  color: var(--forest); }
+  .login-flash.info    { background: var(--plum-lt); border: 1px solid rgba(78,53,152,0.2); color: var(--plum); }
+  .login-flash.warning { background: var(--amber-lt); border: 1px solid rgba(200,96,10,0.2); color: var(--amber); }
+
+  /* ── Footer ── */
+  .login-foot {
+    padding: 16px 36px 20px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    background: #fafaf8;
+    text-align: center;
+  }
+  .login-foot p { font-size: 0.82rem; color: var(--ink3); margin: 0 0 6px; }
+  .btn-reg-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none;
+    background: var(--forest-lt); border: 1px solid rgba(15,123,86,0.2);
+    color: var(--forest); border-radius: 50px;
+    padding: 8px 20px; font-size: 0.82rem; font-weight: 800;
+    transition: background .18s, transform .15s;
+  }
+  .btn-reg-link:hover { background: #c8ead8; transform: translateY(-1px); text-decoration: none; color: var(--forest); }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+
+<div class="login-page">
+  <div class="login-wrap">
+
+    <!-- Top badge -->
+    <div class="login-badge">
+      <div class="login-badge-dot">🔑</div>
+      Pixhare · Welcome Back
+    </div>
+
+    <div class="login-card">
+
+      <!-- Head -->
+      <div class="login-head">
+        <div class="welcome-avatar">📸</div>
+        <div class="login-title">Login to <span>Pixhare</span></div>
+        <div class="login-sub">Enter your credentials to access your studio.</div>
+      </div>
+
+      <!-- Body -->
+      <div class="login-body">
+
+        <!-- Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div class="login-flash {{ category }}">
+              {% if category == 'success' %}✅
+              {% elif category == 'danger' %}❌
+              {% elif category == 'warning' %}⚠️
+              {% else %}ℹ️{% endif %}
+              {{ message }}
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+          <label class="fl" for="email">Email Address</label>
+          <div class="fi-wrap">
+            <i class="bi bi-envelope fi-icon"></i>
+            <input type="email" class="fi" id="email" name="email"
+                   required placeholder="you@example.com">
+          </div>
+
+          <label class="fl" for="password">Password</label>
+          <div class="fi-wrap">
+            <i class="bi bi-lock fi-icon"></i>
+            <input type="password" class="fi" id="password" name="password"
+                   required placeholder="Enter your password">
+          </div>
+
+          <div style="text-align:right; margin-top:-10px; margin-bottom:18px;">
+            <a href="{{ url_for('forgot_password') }}"
+               style="font-size:0.78rem; font-weight:700; color:var(--plum); text-decoration:none;">
+              Forgot password?
+            </a>
+          </div>
+
+          <button type="submit" class="btn-login">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+          </button>
+        </form>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="login-foot">
+        <p>Don't have an account?</p>
+        <a href="{{ url_for('photographer_register') }}" class="btn-reg-link">
+          <i class="bi bi-person-plus-fill"></i> Create Account
+        </a>
+      </div>
+
+    </div><!-- /login-card -->
+  </div>
+</div>
+
+{% endblock %}

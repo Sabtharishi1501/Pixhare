@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .up-page {
+    min-height: calc(100vh - 64px);
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px 20px;
+  }
+
+  .up-wrap { width: 100%; max-width: 580px; }
+
+  /* ── Badge ── */
+  .up-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--plum-lt); border: 1px solid rgba(82,64,168,0.2);
+    border-radius: 50px; padding: 5px 14px 5px 8px;
+    font-size: 0.7rem; font-weight: 800;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--plum); margin-bottom: 16px;
+  }
+  .up-badge-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--plum);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: #fff;
+  }
+
+  /* ── Card ── */
+  .up-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 22px; overflow: hidden;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+    position: relative;
+  }
+  .up-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--plum), var(--forest), var(--amber));
+  }
+
+  /* ── Head ── */
+  .up-head {
+    padding: 28px 32px 22px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: #fafaf8;
+  }
+  .up-event-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--forest-lt); border: 1px solid rgba(15,123,86,0.2);
+    border-radius: 50px; padding: 4px 12px;
+    font-size: 0.72rem; font-weight: 800;
+    color: var(--forest); margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .up-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.55rem; font-weight: 700;
+    letter-spacing: -0.8px; color: var(--ink); margin-bottom: 5px;
+  }
+  .up-title span { color: var(--plum); }
+  .up-sub { font-size: 0.84rem; color: var(--ink3); }
+
+  /* ── Body ── */
+  .up-body { padding: 28px 32px 32px; }
+
+  /* Flash */
+  .up-flash {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 0.84rem; font-weight: 600; margin-bottom: 20px;
+    max-height: 80px; overflow: hidden;
+    transition: opacity .6s, transform .6s, max-height .5s, margin .4s, padding .4s;
+  }
+  .up-flash.hide { opacity:0; transform:translateY(-6px); max-height:0; margin-bottom:0; padding:0; }
+  .up-flash.success { background:#dff2ea; border:1px solid rgba(15,123,86,.2); color:var(--forest); }
+  .up-flash.danger  { background:#fdeaed; border:1px solid rgba(220,38,83,.2); color:var(--rose); }
+  .up-flash.warning { background:var(--amber-lt); border:1px solid rgba(217,119,6,.2); color:var(--amber); }
+
+  /* ── Drop zone ── */
+  .drop-zone {
+    border: 2px dashed rgba(82,64,168,0.3);
+    border-radius: 16px; padding: 40px 24px;
+    text-align: center; cursor: pointer;
+    background: #fafaf8;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .drop-zone:hover,
+  .drop-zone.dragover {
+    border-color: var(--plum);
+    background: var(--plum-lt);
+  }
+  .drop-zone input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: var(--plum-lt); border: 1.5px solid rgba(82,64,168,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin: 0 auto 14px;
+  }
+  .drop-title {
+    font-size: 0.95rem; font-weight: 800; color: var(--ink); margin-bottom: 5px;
+  }
+  .drop-sub { font-size: 0.8rem; color: var(--ink3); }
+  .drop-sub span {
+    color: var(--plum); font-weight: 700; text-decoration: underline;
+  }
+  .drop-types {
+    display: inline-flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; justify-content: center;
+  }
+  .drop-type-chip {
+    background: var(--bg); border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 50px; padding: 2px 10px;
+    font-size: 0.68rem; font-weight: 700; color: var(--ink3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── File preview list ── */
+  .file-list {
+    display: none; margin-bottom: 20px;
+  }
+  .file-list-head {
+    font-size: 0.73rem; font-weight: 800; color: var(--ink2);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .file-count-badge {
+    background: var(--plum-lt); color: var(--plum);
+    border: 1px solid rgba(82,64,168,0.2);
+    border-radius: 50px; padding: 2px 10px;
+    font-size: 0.7rem; font-weight: 800;
+  }
+  .file-items {
+    max-height: 180px; overflow-y: auto;
+    border: 1px solid rgba(0,0,0,0.08); border-radius: 11px;
+    background: #fafaf8;
+  }
+  .file-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; font-size: 0.8rem; color: var(--ink2);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .file-item:last-child { border-bottom: none; }
+  .file-item i { color: var(--plum); font-size: 0.9rem; flex-shrink: 0; }
+  .file-item .file-size { margin-left: auto; color: var(--ink4); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+
+  /* ── Progress bar ── */
+  .up-progress { display: none; margin-bottom: 20px; }
+  .up-progress-label {
+    font-size: 0.73rem; font-weight: 700; color: var(--ink2);
+    display: flex; justify-content: space-between; margin-bottom: 6px;
+  }
+  .up-progress-bar-bg { background: rgba(0,0,0,0.07); border-radius: 50px; height: 6px; overflow: hidden; }
+  .up-progress-bar {
+    height: 6px; border-radius: 50px; width: 0%;
+    background: linear-gradient(90deg, var(--plum), var(--plum2));
+    transition: width .3s ease;
+  }
+
+  /* ── Submit button ── */
+  .btn-upload {
+    width: 100%;
+    background: linear-gradient(135deg, var(--plum), var(--plum2));
+    color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800; font-size: 0.92rem;
+    padding: 14px; border: none; border-radius: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .15s, box-shadow .2s;
+    box-shadow: 0 4px 18px rgba(82,64,168,0.28);
+  }
+  .btn-upload:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(82,64,168,0.36); }
+  .btn-upload:active { transform: translateY(0); }
+  .btn-upload:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  /* ── Success state ── */
+  .success-body { padding: 44px 32px 36px; text-align: center; }
+  .success-icon-wrap {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: var(--forest-lt); border: 1.5px solid rgba(15,123,86,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 18px;
+    animation: popIn .4s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes popIn { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+  .success-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 700;
+    letter-spacing: -0.8px; color: var(--ink); margin-bottom: 8px;
+  }
+  .success-title span { color: var(--forest); }
+  .success-sub { font-size: 0.86rem; color: var(--ink3); margin-bottom: 28px; }
+  .success-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .btn-dash {
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none;
+    background: var(--forest-lt); border: 1.5px solid rgba(15,123,86,0.22);
+    color: var(--forest); border-radius: 11px;
+    padding: 11px 22px; font-size: 0.85rem; font-weight: 800;
+    transition: background .18s, transform .15s;
+  }
+  .btn-dash:hover { background: #c8ead8; transform: translateY(-1px); text-decoration: none; color: var(--forest); }
+
+  .btn-more {
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none;
+    background: linear-gradient(135deg, var(--plum), var(--plum2));
+    color: #fff; border-radius: 11px;
+    padding: 11px 22px; font-size: 0.85rem; font-weight: 800;
+    box-shadow: 0 4px 16px rgba(82,64,168,0.25);
+    transition: transform .15s, box-shadow .2s;
+  }
+  .btn-more:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(82,64,168,0.32); text-decoration: none; color: #fff; }
+
+  /* footer strip */
+  .up-foot {
+    padding: 14px 32px 18px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    background: #fafaf8; text-align: center;
+  }
+  .up-foot a {
+    font-size: 0.8rem; font-weight: 700; color: var(--ink3); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .up-foot a:hover { color: var(--forest); }
+</style>
+
+<div class="up-page">
+  <div class="up-wrap">
+
+    <div class="up-badge">
+      <div class="up-badge-dot">📤</div>
+      Photo Upload
+    </div>
+
+    <div class="up-card">
+
+      <!-- Head -->
+      <div class="up-head">
+        <div class="up-event-chip">
+          <i class="bi bi-calendar-event-fill"></i> {{ event_name }}
+        </div>
+        <div class="up-title">
+          {% if uploaded %}Photos <span>uploaded!</span>
+          {% else %}Upload <span>photos</span>{% endif %}
+        </div>
+        <div class="up-sub">
+          {% if uploaded %}
+            Your photos have been saved. You can upload more or go back to the dashboard.
+          {% else %}
+            Drag &amp; drop photos or click to browse. JPG and PNG only.
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Body -->
+      {% if uploaded %}
+      <div class="success-body">
+        <div class="success-icon-wrap">✅</div>
+        <div class="success-title">Photos <span>saved</span> successfully!</div>
+        <p class="success-sub">Your photos are ready for AI face matching.</p>
+        <div class="success-actions">
+          <a href="{{ url_for('photographer_dashboard') }}" class="btn-dash">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+          </a>
+          <a href="{{ url_for('upload_photos', event_name=event_name) }}" class="btn-more">
+            <i class="bi bi-plus-lg"></i> Upload More
+          </a>
+        </div>
+      </div>
+
+      {% else %}
+      <div class="up-body">
+
+        <!-- Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}{% for category, message in messages %}
+          <div class="up-flash {{ category }}">
+            {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% else %}⚠️{% endif %}
+            {{ message }}
+          </div>
+          {% endfor %}{% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+
+          <!-- Drop zone -->
+          <div class="drop-zone" id="dropZone">
+            <input type="file" name="photos" id="photosInput"
+                   multiple accept="image/jpeg,image/jpg,image/png">
+            <div class="drop-icon">🖼️</div>
+            <div class="drop-title">Drag &amp; drop photos here</div>
+            <div class="drop-sub">or <span>browse files</span></div>
+            <div class="drop-types">
+              <span class="drop-type-chip">.jpg</span>
+              <span class="drop-type-chip">.jpeg</span>
+              <span class="drop-type-chip">.png</span>
+            </div>
+          </div>
+
+          <!-- File list preview -->
+          <div class="file-list" id="fileList">
+            <div class="file-list-head">
+              Selected Files
+              <span class="file-count-badge" id="fileCountBadge">0</span>
+            </div>
+            <div class="file-items" id="fileItems"></div>
+          </div>
+
+          <!-- Progress bar (shows during upload) -->
+          <div class="up-progress" id="upProgress">
+            <div class="up-progress-label">
+              <span>Uploading...</span>
+              <span id="upPercent">0%</span>
+            </div>
+            <div class="up-progress-bar-bg">
+              <div class="up-progress-bar" id="upBar"></div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-upload" id="uploadBtn" disabled>
+            <i class="bi bi-cloud-arrow-up-fill"></i>
+            Upload <span id="uploadBtnCount"></span> Photos
+          </button>
+
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="up-foot">
+        <a href="{{ url_for('photographer_dashboard') }}">
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* Flash auto-hide */
+  document.querySelectorAll('.up-flash').forEach(function (el) {
+    setTimeout(function () {
+      el.classList.add('hide');
+      setTimeout(function () { el.remove(); }, 650);
+    }, 3000);
+  });
+
+  var dropZone  = document.getElementById('dropZone');
+  var input     = document.getElementById('photosInput');
+  var fileList  = document.getElementById('fileList');
+  var fileItems = document.getElementById('fileItems');
+  var countBadge= document.getElementById('fileCountBadge');
+  var uploadBtn = document.getElementById('uploadBtn');
+  var btnCount  = document.getElementById('uploadBtnCount');
+
+  if (!dropZone) return;  /* success state — nothing to wire up */
+
+  /* Drag over styles */
+  dropZone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', function () {
+    dropZone.classList.remove('dragover');
+  });
+  dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    /* merge dropped files into input */
+    try {
+      var dt = new DataTransfer();
+      Array.from(e.dataTransfer.files).forEach(function (f) { dt.items.add(f); });
+      input.files = dt.files;
+    } catch(err) {}
+    renderFiles(e.dataTransfer.files);
+  });
+
+  /* File picker change */
+  input.addEventListener('change', function () {
+    renderFiles(input.files);
+  });
+
+  function formatSize(bytes) {
+    if (bytes < 1024)       return bytes + ' B';
+    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function renderFiles(files) {
+    if (!files || files.length === 0) {
+      fileList.style.display = 'none';
+      uploadBtn.disabled = true;
+      btnCount.textContent = '';
+      return;
+    }
+    fileItems.innerHTML = '';
+    Array.from(files).forEach(function (f) {
+      var row = document.createElement('div');
+      row.className = 'file-item';
+      row.innerHTML =
+        '<i class="bi bi-file-earmark-image-fill"></i>' +
+        '<span>' + f.name + '</span>' +
+        '<span class="file-size">' + formatSize(f.size) + '</span>';
+      fileItems.appendChild(row);
+    });
+    countBadge.textContent = files.length;
+    btnCount.textContent   = '(' + files.length + ')';
+    uploadBtn.disabled     = false;
+    fileList.style.display = 'block';
+  }
+
+  /* Fake progress bar during form submit */
+  document.getElementById('uploadForm').addEventListener('submit', function () {
+    var prog = document.getElementById('upProgress');
+    var bar  = document.getElementById('upBar');
+    var pct  = document.getElementById('upPercent');
+    prog.style.display = 'block';
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Uploading...';
+    var w = 0;
+    var t = setInterval(function () {
+      w = Math.min(w + Math.random() * 12, 92);
+      bar.style.width = w + '%';
+      pct.textContent = Math.round(w) + '%';
+    }, 200);
+  });
+}());
+</script>
+
+{% endblock %}

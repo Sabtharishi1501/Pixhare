@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .notfound-page {
+    min-height: calc(100vh - 64px);
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px 20px;
+  }
+  .notfound-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+    max-width: 440px; width: 100%;
+    text-align: center;
+    position: relative;
+  }
+  .notfound-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--rose), var(--amber), var(--plum));
+  }
+  .notfound-body { padding: 48px 36px 40px; }
+  .notfound-icon {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: var(--rose-lt); border: 1.5px solid rgba(220,38,83,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 20px;
+  }
+  .notfound-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 700;
+    letter-spacing: -0.8px; color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .notfound-sub {
+    font-size: 0.88rem; color: var(--ink3);
+    line-height: 1.6; margin-bottom: 6px;
+  }
+  .notfound-event {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--rose-lt); border: 1px solid rgba(220,38,83,0.15);
+    border-radius: 50px; padding: 5px 14px;
+    font-size: 0.78rem; font-weight: 800;
+    color: var(--rose); margin: 12px 0 24px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .notfound-hint {
+    font-size: 0.82rem; color: var(--ink3);
+    background: var(--bg); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 0;
+    line-height: 1.5;
+  }
+</style>
+
+<div class="notfound-page">
+  <div class="notfound-card">
+    <div class="notfound-body">
+      <div class="notfound-icon">🔍</div>
+      <div class="notfound-title">Event Not Found</div>
+      <p class="notfound-sub">The event you're trying to register for doesn't exist or may have been removed.</p>
+      <div class="notfound-event">
+        <i class="bi bi-calendar-x"></i> {{ event_name }}
+      </div>
+      <p class="notfound-hint">
+        Please make sure you scanned the correct QR code.<br>
+        Contact your photographer if the problem continues.
+      </p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

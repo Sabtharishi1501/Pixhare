@@ -1,0 +1,1020 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════
+   PAGE VARS (inherits base tokens)
+═══════════════════════════════════ */
+.d-page {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 48px 32px 100px;
+}
+
+/* ═══════════════════════════════════
+   FLASH MESSAGES
+═══════════════════════════════════ */
+.fl-stack { margin-bottom: 28px; }
+.fl-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 18px; border-radius: 11px;
+  font-size: 0.86rem; font-weight: 600;
+  margin-bottom: 8px;
+  max-height: 80px; overflow: hidden;
+  transition: opacity .6s ease, transform .6s ease,
+              max-height .5s ease, margin .4s ease, padding .4s ease;
+}
+.fl-item.hide {
+  opacity: 0; transform: translateY(-8px);
+  max-height: 0; margin-bottom: 0; padding: 0;
+}
+.fl-bar { width: 3px; height: 26px; border-radius: 3px; flex-shrink: 0; }
+.fl-success { background: #edfaf5; border: 1px solid #9de7c4; color: #0f7b56; }
+.fl-danger  { background: #fdeaed; border: 1px solid #f0b3bf; color: #dc2653; }
+.fl-info    { background: #eeebfb; border: 1px solid #c5b8f0; color: #5240a8; }
+.fl-warning { background: #fef3e2; border: 1px solid #f5cc88; color: #d97706; }
+.fl-success .fl-bar { background: #0f7b56; }
+.fl-danger  .fl-bar { background: #dc2653; }
+.fl-info    .fl-bar { background: #5240a8; }
+.fl-warning .fl-bar { background: #d97706; }
+
+/* ═══════════════════════════════════
+   HERO BANNER
+═══════════════════════════════════ */
+.hero-banner {
+  background: linear-gradient(135deg, #0f7b56 0%, #5240a8 60%, #13a372 100%);
+  border-radius: 20px;
+  padding: 44px 48px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 24px;
+}
+/* decorative circles */
+.hero-banner::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+.hero-banner::after {
+  content: '';
+  position: absolute; bottom: -80px; left: 30%;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+.hero-text { position: relative; z-index: 1; }
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 50px; padding: 5px 14px;
+  font-size: 0.7rem; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(255,255,255,0.9); margin-bottom: 12px;
+}
+.kicker-pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #7dffd0;
+  box-shadow: 0 0 8px #7dffd0;
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hero-title {
+  font-size: clamp(1.9rem, 3.5vw, 2.7rem);
+  font-weight: 900; letter-spacing: -1.5px;
+  line-height: 1.08; color: #fff;
+  margin-bottom: 10px;
+}
+.hero-title em { font-style: normal; color: #7dffd0; }
+.hero-sub {
+  font-size: 0.9rem; color: rgba(255,255,255,0.7);
+  font-weight: 400; line-height: 1.6; max-width: 400px;
+}
+.hero-stats {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 10px; position: relative; z-index: 1;
+}
+.hero-stat-box {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(12px);
+  border-radius: 14px; padding: 16px 24px;
+  text-align: center; min-width: 110px;
+}
+.hero-stat-num {
+  font-size: 2.2rem; font-weight: 900;
+  letter-spacing: -2px; color: #fff; line-height: 1;
+}
+.hero-stat-lbl {
+  font-size: 0.68rem; font-weight: 700;
+  color: rgba(255,255,255,0.65);
+  text-transform: uppercase; letter-spacing: 0.12em; margin-top: 2px;
+}
+.hero-brand-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50px; padding: 7px 16px;
+  font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.85);
+}
+
+/* ═══════════════════════════════════
+   TWO-COLUMN LAYOUT
+═══════════════════════════════════ */
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════
+   SIDEBAR — CREATE EVENT
+═══════════════════════════════════ */
+.sidebar-card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  position: sticky; top: 84px;
+}
+.sc-head {
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #0f7b56, #5240a8);
+  display: flex; align-items: center; gap: 10px;
+}
+.sc-head-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+}
+.sc-head-label {
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
+}
+.sc-body { padding: 22px; }
+
+.f-label {
+  display: block;
+  font-size: 0.72rem; font-weight: 800;
+  color: #434956; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 7px;
+}
+.f-input {
+  width: 100%;
+  background: #f0f2f5;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #16181d;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem; font-weight: 400;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.f-input:focus {
+  border-color: #0f7b56;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(15,123,86,0.1);
+}
+.f-input::placeholder { color: #c8cdd6; }
+input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.5; }
+.f-group { margin-bottom: 16px; }
+
+.btn-create {
+  width: 100%;
+  background: linear-gradient(135deg, #0f7b56 0%, #13a372 100%);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800; font-size: 0.9rem;
+  padding: 13px; border: none;
+  border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .15s, box-shadow .2s;
+  box-shadow: 0 4px 18px rgba(15,123,86,0.25);
+  margin-top: 4px;
+}
+.btn-create:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(15,123,86,0.32); }
+.btn-create:active { transform: translateY(0); }
+
+/* sidebar tips */
+.sc-tips {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding: 16px 22px;
+  background: #fafafa;
+}
+.tip-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 0.78rem; color: #8a9099;
+  margin-bottom: 8px; line-height: 1.45;
+}
+.tip-row:last-child { margin-bottom: 0; }
+.tip-icon {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem;
+}
+.tip-g { background: #e0f5ed; }
+.tip-p { background: #eeebfb; }
+.tip-a { background: #fef3e2; }
+
+/* ═══════════════════════════════════
+   MAIN — EVENTS
+═══════════════════════════════════ */
+.main-col {}
+
+.sec-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.sec-title {
+  font-size: 0.95rem; font-weight: 800;
+  display: flex; align-items: center; gap: 9px; color: #16181d;
+}
+.sec-badge {
+  font-size: 0.68rem; font-weight: 800;
+  background: linear-gradient(135deg, #0f7b56, #13a372);
+  color: #fff; padding: 2px 10px; border-radius: 50px;
+}
+.sec-hint { font-size: 0.76rem; color: #c8cdd6; font-weight: 500; }
+
+/* ═══════════════════════════════════
+   EVENT CARDS GRID
+═══════════════════════════════════ */
+.ev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.ev-card {
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.07);
+  border-radius: 16px;
+  padding: 22px 18px 17px;
+  cursor: pointer; position: relative; overflow: hidden;
+  animation: riseIn .45s cubic-bezier(0.22,1,0.36,1) both;
+  transition: border-color .22s, transform .22s, box-shadow .22s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* top stripe — cycles colour */
+.ev-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.ev-card:nth-child(3n+1)::before { background: linear-gradient(90deg, #0f7b56, #13a372); }
+.ev-card:nth-child(3n+2)::before { background: linear-gradient(90deg, #5240a8, #6b58cc); }
+.ev-card:nth-child(3n+3)::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+/* bottom glow blob */
+.ev-card::after {
+  content: ''; position: absolute; bottom: -28px; right: -28px;
+  width: 80px; height: 80px; border-radius: 50%;
+  opacity: 0; transition: opacity .3s;
+}
+.ev-card:nth-child(3n+1)::after { background: radial-gradient(circle, rgba(15,123,86,0.1), transparent 70%); }
+.ev-card:nth-child(3n+2)::after { background: radial-gradient(circle, rgba(82,64,168,0.1), transparent 70%); }
+.ev-card:nth-child(3n+3)::after { background: radial-gradient(circle, rgba(217,119,6,0.1), transparent 70%); }
+
+.ev-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.1);
+}
+.ev-card:hover::after { opacity: 1; }
+.ev-card:nth-child(3n+1):hover { border-color: rgba(15,123,86,0.35); }
+.ev-card:nth-child(3n+2):hover { border-color: rgba(82,64,168,0.35); }
+.ev-card:nth-child(3n+3):hover { border-color: rgba(217,119,6,0.35); }
+
+.ev-card.active { transform: translateY(-4px); }
+.ev-card.active::after { opacity: 1; }
+.ev-card:nth-child(3n+1).active { border-color: #0f7b56; box-shadow: 0 8px 32px rgba(15,123,86,0.14); }
+.ev-card:nth-child(3n+2).active { border-color: #5240a8; box-shadow: 0 8px 32px rgba(82,64,168,0.14); }
+.ev-card:nth-child(3n+3).active { border-color: #d97706; box-shadow: 0 8px 32px rgba(217,119,6,0.14); }
+
+.ev-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; margin-bottom: 13px;
+  transition: transform .2s;
+}
+.ev-card:nth-child(3n+1) .ev-icon { background: #e0f5ed; border: 1.5px solid rgba(15,123,86,0.2); }
+.ev-card:nth-child(3n+2) .ev-icon { background: #eeebfb; border: 1.5px solid rgba(82,64,168,0.2); }
+.ev-card:nth-child(3n+3) .ev-icon { background: #fef3e2; border: 1.5px solid rgba(217,119,6,0.2); }
+.ev-card:hover .ev-icon { transform: scale(1.1) rotate(-6deg); }
+
+.ev-name {
+  font-size: 0.96rem; font-weight: 800;
+  letter-spacing: -0.3px; margin-bottom: 5px;
+  word-break: break-word; color: #16181d;
+}
+.ev-date {
+  font-size: 0.71rem; color: #8a9099;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; gap: 4px;
+}
+.ev-foot {
+  margin-top: 13px; padding-top: 11px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ev-tag {
+  font-size: 0.64rem; font-weight: 700;
+  letter-spacing: 0.06em; border-radius: 50px; padding: 3px 9px;
+}
+.ev-card:nth-child(3n+1) .ev-tag { background: #e0f5ed; color: #0f7b56; border: 1px solid rgba(15,123,86,0.2); }
+.ev-card:nth-child(3n+2) .ev-tag { background: #eeebfb; color: #5240a8; border: 1px solid rgba(82,64,168,0.2); }
+.ev-card:nth-child(3n+3) .ev-tag { background: #fef3e2; color: #d97706; border: 1px solid rgba(217,119,6,0.2); }
+.ev-arrow { font-size: 0.8rem; color: #c8cdd6; transition: transform .2s, color .2s; }
+.ev-card:hover .ev-arrow,
+.ev-card.active .ev-arrow { transform: translateX(4px); color: #0f7b56; }
+
+/* ═══════════════════════════════════
+   DETAIL PANEL
+═══════════════════════════════════ */
+.ev-detail {
+  display: none;
+  margin-top: 12px; margin-bottom: 4px;
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.09);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.09);
+  animation: dropIn .28s cubic-bezier(0.22,1,0.36,1) both;
+  position: relative;
+}
+.ev-detail::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #0f7b56, #5240a8, #d97706);
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-10px) scaleY(0.96); transform-origin: top; }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+.ev-detail.open { display: block; }
+
+.det-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px;
+  background: #fafafa;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-wrap: wrap; gap: 10px;
+}
+.det-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.det-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: #e0f5ed; border: 1.5px solid rgba(15,123,86,0.2);
+  display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+}
+.det-name { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; color: #16181d; }
+.det-date {
+  font-size: 0.68rem; font-weight: 500;
+  background: #f0f2f5; border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 50px; padding: 4px 11px; color: #8a9099;
+  font-family: 'JetBrains Mono', monospace;
+}
+.btn-cls {
+  display: flex; align-items: center; gap: 6px;
+  background: #fdeaed; border: 1px solid rgba(220,38,83,0.18);
+  color: #dc2653; border-radius: 8px;
+  padding: 6px 13px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.77rem; font-weight: 700; cursor: pointer;
+  transition: background .18s;
+}
+.btn-cls:hover { background: #fbd5de; }
+
+.det-actions {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  padding: 18px 22px; background: #fff; align-items: center;
+}
+.sep { width: 1px; height: 26px; background: rgba(0,0,0,0.07); margin: 0 2px; }
+
+.ab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 700;
+  text-decoration: none; border: 1.5px solid transparent;
+  cursor: pointer; white-space: nowrap;
+  transition: transform .14s, box-shadow .18s, filter .14s;
+}
+.ab:hover { transform: translateY(-2px); text-decoration: none; }
+.ab:active { transform: translateY(0); }
+
+.ab-qr     { background: #f0f2f5; border-color: rgba(0,0,0,0.1); color: #434956; }
+.ab-upload { background: #eeebfb; border-color: rgba(82,64,168,0.22); color: #5240a8; }
+.ab-upload:hover { background: #e4e0f8; }
+.ab-view   { background: #e6f0fd; border-color: rgba(37,99,235,0.2);  color: #2563eb; }
+.ab-view:hover { background: #dce8fc; }
+.ab-send   { background: linear-gradient(135deg,#0f7b56,#13a372); border-color: transparent; color: #fff; font-weight: 800; box-shadow: 0 4px 16px rgba(15,123,86,0.22); }
+.ab-send:hover { box-shadow: 0 6px 22px rgba(15,123,86,0.3); filter: brightness(1.06); }
+.ab-del    { background: #fdeaed; border-color: rgba(220,38,83,0.18); color: #dc2653; margin-left: auto; }
+.ab-del:hover { background: #fbd5de; }
+
+/* ── Event stats strip ── */
+.det-stats {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  padding: 12px 22px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  background: #fafafa;
+}
+.det-stat {
+  display: flex; align-items: center; gap: 7px;
+  background: #fff; border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 50px; padding: 6px 14px;
+  font-size: 0.78rem; font-weight: 600; color: #434956;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+}
+.det-stat i { font-size: 0.85rem; }
+.det-stat .stat-num { font-weight: 800; color: #16181d; }
+.det-stat.guests i { color: #5240a8; }
+.det-stat.photos i { color: #0f7b56; }
+
+/* ── QR Modal ── */
+.qr-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+  animation: lbIn .2s ease both;
+}
+.qr-modal-overlay.open { display: flex; }
+@keyframes lbIn { from{opacity:0} to{opacity:1} }
+
+.qr-modal-box {
+  background: #fff;
+  border-radius: 22px;
+  padding: 36px 32px 28px;
+  text-align: center;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.25);
+  max-width: 320px; width: 90%;
+  position: relative;
+  animation: popIn .25s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes popIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+
+.qr-modal-close {
+  position: absolute; top: 14px; right: 16px;
+  background: #f0f2f5; border: none; border-radius: 50%;
+  width: 32px; height: 32px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; color: #434956;
+  transition: background .18s;
+}
+.qr-modal-close:hover { background: #fdeaed; color: #dc2653; }
+
+.qr-modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: #16181d; margin-bottom: 4px; letter-spacing: -0.4px;
+}
+.qr-modal-sub {
+  font-size: 0.78rem; color: #8a9099; margin-bottom: 20px;
+}
+.qr-modal-img {
+  width: 100%; border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+.btn-dl-qr {
+  display: inline-flex; align-items: center; gap: 8px;
+  width: 100%; justify-content: center;
+  background: linear-gradient(135deg, #0f7b56, #13a372);
+  color: #fff; text-decoration: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800; font-size: 0.9rem;
+  padding: 13px; border-radius: 11px;
+  box-shadow: 0 4px 16px rgba(15,123,86,0.25);
+  transition: transform .15s, box-shadow .2s;
+}
+.btn-dl-qr:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,123,86,0.32); color:#fff; text-decoration:none; }
+
+/* ═══════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════ */
+.empty {
+  text-align: center; padding: 72px 24px;
+  background: #fff;
+  border: 2px dashed rgba(0,0,0,0.1);
+  border-radius: 18px;
+}
+.empty-ring {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: #e0f5ed; border: 1.5px solid rgba(15,123,86,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; margin: 0 auto 18px;
+}
+.empty h3 { font-size: 1.05rem; font-weight: 800; color: #16181d; margin-bottom: 7px; }
+.empty p  { font-size: 0.86rem; color: #8a9099; }
+
+/* ═══════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════ */
+@media (max-width: 640px) {
+  .d-page      { padding: 24px 16px 80px; }
+  .ev-grid     { grid-template-columns: repeat(2, 1fr); }
+  .det-actions { padding: 14px; flex-direction: column; }
+  .ab          { width: 100%; justify-content: center; }
+  .ab-del      { margin-left: 0; }
+  .sep         { display: none; }
+  .hero-banner { padding: 28px 22px; }
+  .hero-title  { font-size: 1.7rem; }
+}
+</style>
+
+<div class="d-page">
+
+  <!-- Flash (dashboard-level, auto-dismiss) -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fl-stack">
+      {% for category, message in messages %}
+      <div class="fl-item fl-{{ category }}">
+        <span class="fl-bar"></span>
+        {% if category == 'success' %}✅
+        {% elif category == 'danger' %}❌
+        {% elif category == 'info' %}ℹ️
+        {% else %}⚠️{% endif %}
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Hero Banner -->
+  <div class="hero-banner">
+    <div class="hero-text">
+      <div class="hero-kicker"><span class="kicker-pulse"></span> Photographer Studio</div>
+      <h1 class="hero-title">Capture. Organise.<br><em>Deliver Magic.</em></h1>
+      <p class="hero-sub">AI-powered face matching. Personalised galleries. Delivered instantly.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat-box">
+        <div class="hero-stat-num">{{ events | length }}</div>
+        <div class="hero-stat-lbl">Event{{ 's' if events | length != 1 else '' }}</div>
+      </div>
+      <div class="hero-brand-chip">📸 &nbsp;PhotoShare AI</div>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="layout">
+
+    <!-- LEFT: Create Event sidebar -->
+    <div>
+      <div class="sidebar-card">
+        <div class="sc-head">
+          <div class="sc-head-icon">✦</div>
+          <span class="sc-head-label">New Event</span>
+        </div>
+        <div class="sc-body">
+          <form method="POST" action="{{ url_for('create_event') }}">
+            <div class="f-group">
+              <label class="f-label">Event Name</label>
+              <input type="text" name="event_name" class="f-input"
+                     placeholder="e.g., Wedding2025" required>
+            </div>
+            <div class="f-group">
+              <label class="f-label">Event Date</label>
+              <input type="date" name="event_date" class="f-input" required>
+            </div>
+            <button type="submit" class="btn-create">
+              <i class="bi bi-plus-lg"></i> Create Event
+            </button>
+          </form>
+        </div>
+        <div class="sc-tips">
+          <div class="tip-row">
+            <div class="tip-icon tip-g">📸</div>
+            <span>Upload event photos to start AI face matching.</span>
+          </div>
+          <div class="tip-row">
+            <div class="tip-icon tip-p">🔗</div>
+            <span>Share the QR code so guests can self-register.</span>
+          </div>
+          <div class="tip-row">
+            <div class="tip-icon tip-a">✉️</div>
+            <span>Hit Send Gallery to email each guest their photos.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Events grid -->
+    <div class="main-col">
+      <div class="sec-row">
+        <div class="sec-title">
+          <i class="bi bi-grid-3x3-gap-fill" style="color:#0f7b56"></i>
+          My Events
+          <span class="sec-badge">{{ events | length }}</span>
+        </div>
+        <span class="sec-hint">Click a card to manage</span>
+      </div>
+
+      {% if events %}
+      <div class="ev-grid" id="evGrid">
+        {% for event in events %}
+        <div class="ev-card"
+             id="card-{{ loop.index }}"
+             data-index="{{ loop.index }}"
+             data-delay="{{ loop.index0 }}">
+          <div class="ev-icon">📸</div>
+          <div class="ev-name">{{ event.name }}</div>
+          <div class="ev-date"><i class="bi bi-calendar3"></i>&nbsp;{{ event.date }}</div>
+          <div class="ev-foot">
+            <span class="ev-tag">Active</span>
+            <i class="bi bi-arrow-right ev-arrow"></i>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% for event in events %}
+      <div class="ev-detail" id="detail-{{ loop.index }}">
+        <div class="det-top">
+          <div class="det-left">
+            <div class="det-icon">🎯</div>
+            <span class="det-name">{{ event.name }}</span>
+            <span class="det-date">{{ event.date }}</span>
+          </div>
+          <button class="btn-cls" data-index="{{ loop.index }}">
+            <i class="bi bi-x-lg"></i> Close
+          </button>
+        </div>
+        <div class="det-actions">
+          <button class="ab ab-qr"
+                  data-qr-src="{{ url_for('static', filename='qrcodes/' + event.qr_filename) }}"
+                  data-qr-name="{{ event.name }}"
+                  onclick="openQrModal(this)">
+            <i class="bi bi-qr-code-scan"></i> QR Code
+          </button>
+          <div class="sep"></div>
+          <a href="{{ url_for('upload_photos', event_name=event.name) }}" class="ab ab-upload">
+            <i class="bi bi-cloud-arrow-up-fill"></i> Upload Photos
+          </a>
+          <a href="{{ url_for('view_event_photos', event_name=event.name) }}" class="ab ab-view">
+            <i class="bi bi-images"></i> View Photos
+          </a>
+          <div class="sep"></div>
+          <form method="POST" action="{{ url_for('send_gallery', event_name=event.name) }}"
+                data-confirm="Start AI face matching and send galleries for {{ event.name }}?"
+                style="display:inline;">
+            <button type="submit" class="ab ab-send">
+              <i class="bi bi-send-fill"></i> Send Gallery
+            </button>
+          </form>
+          <form method="POST" action="{{ url_for('delete_event', event_name=event.name) }}"
+                data-confirm="Permanently delete {{ event.name }} and all its data?"
+                style="display:inline;">
+            <button type="submit" class="ab ab-del">
+              <i class="bi bi-trash3-fill"></i> Delete
+            </button>
+          </form>
+        </div>
+
+        <!-- Stats strip -->
+        {% if event_stats and event.name in event_stats %}
+        <div class="det-stats">
+          <div class="det-stat guests">
+            <i class="bi bi-people-fill"></i>
+            <span class="stat-num">{{ event_stats[event.name].guests }}</span>
+            Guest{{ 's' if event_stats[event.name].guests != 1 else '' }} Registered
+          </div>
+          <div class="det-stat photos">
+            <i class="bi bi-images"></i>
+            <span class="stat-num">{{ event_stats[event.name].photos }}</span>
+            Photo{{ 's' if event_stats[event.name].photos != 1 else '' }} Uploaded
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+      {% endfor %}
+
+      {% else %}
+      <div class="empty">
+        <div class="empty-ring">📷</div>
+        <h3>No events yet</h3>
+        <p>Create your first event on the left to get started. 🚀</p>
+      </div>
+      {% endif %}
+    </div><!-- /main-col -->
+
+  </div><!-- /layout -->
+</div><!-- /d-page -->
+
+<!-- ── QR Poster Modal ── -->
+<style>
+.qr-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center;
+  animation: lbIn .2s ease both;
+  padding: 20px;
+}
+.qr-modal-overlay.open { display: flex; }
+@keyframes lbIn { from{opacity:0} to{opacity:1} }
+
+.qr-modal-box {
+  background: #fff; border-radius: 22px;
+  padding: 28px 24px 24px;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+  max-width: 360px; width: 100%;
+  position: relative;
+  animation: popIn .25s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes popIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+
+.qr-modal-close {
+  position: absolute; top: 14px; right: 16px;
+  background: #f0f2f5; border: none; border-radius: 50%;
+  width: 32px; height: 32px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; color: #434956; transition: background .18s;
+}
+.qr-modal-close:hover { background: #fdeaed; color: #dc2653; }
+
+.qr-poster-wrap {
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+canvas#posterCanvas { display: block; width: 100%; height: auto; }
+
+.btn-dl-qr {
+  display: inline-flex; align-items: center; gap: 8px;
+  width: 100%; justify-content: center;
+  background: linear-gradient(135deg, #0f7b56, #13a372);
+  color: #fff; text-decoration: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800; font-size: 0.9rem;
+  padding: 13px; border-radius: 11px;
+  box-shadow: 0 4px 16px rgba(15,123,86,0.25);
+  transition: transform .15s, box-shadow .2s; border: none; cursor: pointer;
+}
+.btn-dl-qr:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,123,86,0.32); color:#fff; text-decoration:none; }
+</style>
+
+<div class="qr-modal-overlay" id="qrModal" onclick="closeQrModal(event)">
+  <div class="qr-modal-box">
+    <button class="qr-modal-close" onclick="document.getElementById('qrModal').classList.remove('open')">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <div class="qr-poster-wrap">
+      <canvas id="posterCanvas" width="600" height="780"></canvas>
+    </div>
+    <button class="btn-dl-qr" id="posterDlBtn">
+      <i class="bi bi-download"></i> Download Poster
+    </button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var active = null;
+
+  /* ══════════════════════════════════════
+     QR POSTER GENERATOR
+  ══════════════════════════════════════ */
+  window.openQrModal = function (btn) {
+    var src       = btn.getAttribute('data-qr-src');
+    var eventName = btn.getAttribute('data-qr-name');
+    document.getElementById('qrModal').classList.add('open');
+    renderPoster(src, eventName);
+  };
+
+  window.closeQrModal = function (e) {
+    if (e.target === document.getElementById('qrModal')) {
+      document.getElementById('qrModal').classList.remove('open');
+    }
+  };
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { document.getElementById('qrModal').classList.remove('open'); }
+  });
+
+  function renderPoster(qrSrc, eventName) {
+    var canvas = document.getElementById('posterCanvas');
+    var ctx    = canvas.getContext('2d');
+    var W = 600, H = 780;
+    canvas.width = W; canvas.height = H;
+
+    /* ── Background gradient ── */
+    var bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0,   '#0d1117');
+    bg.addColorStop(0.5, '#131d2e');
+    bg.addColorStop(1,   '#0a1a14');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    /* ── Decorative circles ── */
+    function circle(x, y, r, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    circle(W - 60,  50,  120, 'rgba(15,123,86,0.08)');
+    circle(60,      H - 80, 100, 'rgba(82,64,168,0.1)');
+    circle(W / 2,   H - 40, 200, 'rgba(15,123,86,0.05)');
+
+    /* ── Top accent line ── */
+    var line = ctx.createLinearGradient(0, 0, W, 0);
+    line.addColorStop(0,   '#0f7b56');
+    line.addColorStop(0.5, '#5240a8');
+    line.addColorStop(1,   '#d97706');
+    ctx.fillStyle = line;
+    ctx.fillRect(0, 0, W, 5);
+
+    /* ── PIXHARE logo text ── */
+    ctx.font = 'bold 42px serif';
+    ctx.textAlign = 'center';
+    /* shadow */
+    ctx.shadowColor = 'rgba(15,123,86,0.4)';
+    ctx.shadowBlur  = 20;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('Pix', W/2 - 42, 90);
+    ctx.fillStyle = '#13a372';
+    ctx.fillText('hare', W/2 + 28, 90);
+    ctx.shadowBlur = 0;
+
+    /* ── Tagline ── */
+    ctx.font = '300 18px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('AI-Powered Event Photo Sharing', W/2, 122);
+
+    /* ── Divider ── */
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(60, 142); ctx.lineTo(W-60, 142); ctx.stroke();
+
+    /* ── "You're invited to" label ── */
+    ctx.font = '500 16px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText('YOU\'RE INVITED TO', W/2, 175);
+
+    /* ── Event name ── */
+    ctx.font = 'bold 38px serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(19,163,114,0.3)';
+    ctx.shadowBlur  = 16;
+    /* truncate if long */
+    var evName = eventName.length > 20 ? eventName.substring(0, 18) + '…' : eventName;
+    ctx.fillText(evName, W/2, 220);
+    ctx.shadowBlur = 0;
+
+    /* ── QR white card background ── */
+    var qrSize   = 260;
+    var qrX      = (W - qrSize) / 2;
+    var qrY      = 255;
+    var cardPad  = 18;
+    roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 20, '#ffffff');
+
+    /* ── Draw QR image ── */
+    var qrImg = new Image();
+    qrImg.crossOrigin = 'anonymous';
+    qrImg.onload = function () {
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      /* ── "Scan to register" label ── */
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillStyle = '#13a372';
+      ctx.fillText('📷  Scan to Register', W/2, 590);
+
+      ctx.font = '400 15px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText('Get your personalised photo gallery after the event', W/2, 618);
+
+      /* ── Bottom divider ── */
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(60, 645); ctx.lineTo(W-60, 645); ctx.stroke();
+
+      /* ── Steps row ── */
+      var steps = ['📸 Upload Selfie', '🤖 AI Matches You', '✉️ Get Your Photos'];
+      var stepX = [120, 300, 480];
+      steps.forEach(function (s, i) {
+        ctx.font = '500 13px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillText(s, stepX[i], 680);
+      });
+
+      /* ── Footer ── */
+      ctx.font = '400 12px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillText('pixhare.ai', W/2, 750);
+
+      /* ── Wire up download ── */
+      var dlBtn = document.getElementById('posterDlBtn');
+      dlBtn.onclick = function () {
+        var link = document.createElement('a');
+        link.download = eventName + '_pixhare_poster.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
+    };
+    qrImg.onerror = function () {
+      /* fallback if CORS blocks — just show text */
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillStyle = '#f87171';
+      ctx.fillText('QR image could not load', W/2, 400);
+    };
+    qrImg.src = qrSrc;
+  }
+
+  /* helper: rounded rectangle fill */
+  function roundRect(ctx, x, y, w, h, r, fill) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+
+  /* ── Flash auto-hide ── */
+  document.querySelectorAll('.fl-item').forEach(function (el) {
+    setTimeout(function () {
+      el.classList.add('hide');
+      setTimeout(function () { el.remove(); }, 650);
+    }, 3000);
+  });
+
+  /* ── Cards: stagger + click ── */
+  document.querySelectorAll('.ev-card[data-index]').forEach(function (card) {
+    var d = parseFloat(card.getAttribute('data-delay') || 0) * 0.07;
+    card.style.animationDelay = d + 's';
+    card.addEventListener('click', function () { toggle(card.getAttribute('data-index')); });
+  });
+
+  /* ── Close buttons ── */
+  document.querySelectorAll('.btn-cls[data-index]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var idx = btn.getAttribute('data-index');
+      document.getElementById('detail-' + idx).classList.remove('open');
+      document.getElementById('card-'   + idx).classList.remove('active');
+      if (active === idx) { active = null; }
+    });
+  });
+
+  /* ── Confirm dialogs ── */
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (!confirm(form.getAttribute('data-confirm'))) { e.preventDefault(); }
+    });
+  });
+
+}());
+
+/* ── Toggle detail panel ── */
+var active = null;
+function toggle(idx) {
+  if (active !== null && active !== idx) {
+    document.getElementById('detail-' + active).classList.remove('open');
+    document.getElementById('card-'   + active).classList.remove('active');
+  }
+  var card   = document.getElementById('card-'   + idx);
+  var detail = document.getElementById('detail-' + idx);
+  if (active === idx) {
+    detail.classList.remove('open');
+    card.classList.remove('active');
+    active = null;
+  } else {
+    card.classList.add('active');
+    detail.classList.add('open');
+    active = idx;
+    setTimeout(function () {
+      detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 60);
+  }
+}
+</script>
+
+{% endblock %}

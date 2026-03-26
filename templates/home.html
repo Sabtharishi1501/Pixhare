@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pixhare — AI Photo Sharing for Events</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+  /* ═══════════════════════════════════════════
+     TOKENS
+  ═══════════════════════════════════════════ */
+  :root {
+    --bg:         #f5f1ea;
+    --bg2:        #ede8df;
+    --card:       #ffffff;
+    --forest:     #0f7b56;
+    --forest2:    #13a372;
+    --forest-lt:  #dff2ea;
+    --plum:       #4e3598;
+    --plum2:      #6b52c8;
+    --plum-lt:    #ece8fb;
+    --amber:      #c8600a;
+    --amber-lt:   #fef0e4;
+    --rose:       #d42b52;
+    --ink:        #18160f;
+    --ink2:       #46423a;
+    --ink3:       #8a847a;
+    --ink4:       #c5c0b8;
+    --r:          18px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ═══════════════════════════════════════════
+     NAVBAR
+  ═══════════════════════════════════════════ */
+  .pix-nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(245,241,234,0.88);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    height: 64px;
+    display: flex; align-items: center;
+    padding: 0 48px;
+    gap: 16px;
+  }
+  .pix-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .pix-brand-logo {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--forest), var(--plum2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: #fff;
+    box-shadow: 0 3px 12px rgba(15,123,86,0.28);
+  }
+  .pix-brand-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem; font-weight: 700;
+    color: var(--ink); letter-spacing: -0.5px;
+  }
+  .pix-brand-name span { color: var(--forest); }
+
+  .nav-spacer { flex: 1; }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .nav-lnk {
+    text-decoration: none;
+    font-size: 0.85rem; font-weight: 600; color: var(--ink2);
+    padding: 8px 16px; border-radius: 9px;
+    transition: background .18s, color .18s;
+  }
+  .nav-lnk:hover { background: var(--forest-lt); color: var(--forest); text-decoration: none; }
+  .nav-lnk.cta {
+    background: var(--forest);
+    color: #fff;
+    box-shadow: 0 3px 14px rgba(15,123,86,0.28);
+    transition: transform .15s, box-shadow .18s;
+  }
+  .nav-lnk.cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,123,86,0.36); color: #fff; background: var(--forest); }
+  .nav-lnk.dash { background: var(--plum-lt); color: var(--plum); border: 1px solid rgba(78,53,152,0.18); }
+  .nav-lnk.dash:hover { background: #e0d8f8; color: var(--plum); }
+  .nav-lnk.out  { background: #fdeaed; color: var(--rose); border: 1px solid rgba(212,43,82,0.16); }
+  .nav-lnk.out:hover { background: #fbd4dc; color: var(--rose); }
+
+  /* ═══════════════════════════════════════════
+     HERO
+  ═══════════════════════════════════════════ */
+  .hero {
+    min-height: calc(100vh - 64px);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    padding: 80px 24px 60px;
+    position: relative; overflow: hidden;
+  }
+
+  /* animated background mesh */
+  .hero-mesh {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 55% 45% at 15%  20%, rgba(15,123,86,0.1)  0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 85%  15%, rgba(78,53,152,0.09)  0%, transparent 55%),
+      radial-gradient(ellipse 60% 50% at 50% 100%, rgba(200,96,10,0.07)  0%, transparent 55%);
+    animation: meshShift 12s ease-in-out infinite alternate;
+  }
+  @keyframes meshShift {
+    from { opacity: 0.7; }
+    to   { opacity: 1; }
+  }
+
+  /* floating deco shapes */
+  .hero-deco {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .deco-circle {
+    position: absolute; border-radius: 50%;
+    border: 1.5px solid rgba(15,123,86,0.15);
+    animation: floatUp 8s ease-in-out infinite;
+  }
+  .deco-circle:nth-child(1) { width: 280px; height: 280px; top: -60px; left: -80px; animation-delay: 0s; }
+  .deco-circle:nth-child(2) { width: 180px; height: 180px; top: 30%; right: -40px; border-color: rgba(78,53,152,0.12); animation-delay: 2s; }
+  .deco-circle:nth-child(3) { width: 120px; height: 120px; bottom: 10%; left: 10%; border-color: rgba(200,96,10,0.12); animation-delay: 4s; }
+  @keyframes floatUp {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    50%     { transform: translateY(-18px) rotate(6deg); }
+  }
+
+  .hero-content { position: relative; z-index: 1; max-width: 760px; }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid rgba(0,0,0,0.09);
+    border-radius: 50px; padding: 6px 16px 6px 10px;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--forest); margin-bottom: 24px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    animation: fadeDown .7s ease both;
+  }
+  .eyebrow-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--forest-lt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+  }
+
+  .hero-h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 900; letter-spacing: -2.5px;
+    line-height: 1.0; color: var(--ink);
+    margin-bottom: 20px;
+    animation: fadeDown .7s .1s ease both;
+  }
+  .hero-h1 .accent {
+    color: var(--forest);
+    font-style: italic;
+  }
+  .hero-h1 .accent2 {
+    background: linear-gradient(135deg, var(--plum), var(--plum2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.05rem; color: var(--ink2);
+    font-weight: 400; line-height: 1.7;
+    max-width: 540px; margin: 0 auto 36px;
+    animation: fadeDown .7s .2s ease both;
+  }
+
+  .hero-cta-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap;
+    animation: fadeDown .7s .3s ease both;
+  }
+  .btn-hero-primary {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: linear-gradient(135deg, var(--forest), var(--forest2));
+    color: #fff; text-decoration: none;
+    font-weight: 800; font-size: 0.95rem;
+    padding: 15px 32px; border-radius: 50px;
+    box-shadow: 0 6px 28px rgba(15,123,86,0.3);
+    transition: transform .18s, box-shadow .2s;
+    border: none; cursor: pointer;
+  }
+  .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(15,123,86,0.38); color: #fff; text-decoration: none; }
+
+  .btn-hero-secondary {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--card); color: var(--ink2);
+    text-decoration: none;
+    font-weight: 700; font-size: 0.9rem;
+    padding: 14px 28px; border-radius: 50px;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    transition: transform .18s, border-color .2s, color .2s;
+  }
+  .btn-hero-secondary:hover { transform: translateY(-2px); border-color: var(--forest); color: var(--forest); text-decoration: none; }
+
+  /* hero trust bar */
+  .hero-trust {
+    margin-top: 52px; display: flex; align-items: center;
+    justify-content: center; gap: 28px; flex-wrap: wrap;
+    animation: fadeDown .7s .45s ease both;
+  }
+  .trust-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8rem; font-weight: 600; color: var(--ink3);
+  }
+  .trust-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+  }
+  .ti-g { background: var(--forest-lt); }
+  .ti-p { background: var(--plum-lt); }
+  .ti-a { background: var(--amber-lt); }
+  .trust-divider { width: 4px; height: 4px; border-radius: 50%; background: var(--ink4); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ═══════════════════════════════════════════
+     HOW IT WORKS
+  ═══════════════════════════════════════════ */
+  .section { padding: 100px 48px; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+
+  .section-kicker {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.68rem; font-weight: 800;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--forest); margin-bottom: 12px;
+  }
+  .section-kicker::before {
+    content: '';
+    display: inline-block; width: 16px; height: 2px;
+    background: var(--forest); border-radius: 2px;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 700; letter-spacing: -1.5px;
+    color: var(--ink); margin-bottom: 14px; line-height: 1.1;
+  }
+  .section-sub {
+    font-size: 0.95rem; color: var(--ink3); max-width: 480px;
+    line-height: 1.7; margin-bottom: 56px;
+  }
+
+  /* steps */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .step-card {
+    background: var(--card);
+    border: 1px solid rgba(0,0,0,0.07);
+    border-radius: var(--r);
+    padding: 30px 24px 26px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 3px 18px rgba(0,0,0,0.055);
+    transition: transform .22s, box-shadow .22s;
+    animation: riseIn .55s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(22px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .step-card:hover { transform: translateY(-5px); box-shadow: 0 14px 42px rgba(0,0,0,0.1); }
+
+  /* top accent stripe */
+  .step-card:nth-child(1)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--forest),var(--forest2)); }
+  .step-card:nth-child(2)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--plum),var(--plum2)); }
+  .step-card:nth-child(3)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--amber),#f59e0b); }
+  .step-card:nth-child(4)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--rose),#f43f5e); }
+
+  .step-num {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem; font-weight: 900;
+    line-height: 1; margin-bottom: 16px;
+    opacity: 0.1; letter-spacing: -3px;
+  }
+  .step-card:nth-child(1) .step-num { color: var(--forest); opacity: 0.12; }
+  .step-card:nth-child(2) .step-num { color: var(--plum);  opacity: 0.1; }
+  .step-card:nth-child(3) .step-num { color: var(--amber); opacity: 0.1; }
+  .step-card:nth-child(4) .step-num { color: var(--rose);  opacity: 0.1; }
+
+  .step-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 16px;
+  }
+  .step-card:nth-child(1) .step-icon { background: var(--forest-lt); }
+  .step-card:nth-child(2) .step-icon { background: var(--plum-lt); }
+  .step-card:nth-child(3) .step-icon { background: var(--amber-lt); }
+  .step-card:nth-child(4) .step-icon { background: #fdeaed; }
+
+  .step-title {
+    font-size: 1rem; font-weight: 800;
+    letter-spacing: -0.3px; color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .step-desc {
+    font-size: 0.84rem; color: var(--ink3);
+    line-height: 1.6;
+  }
+
+  /* ═══════════════════════════════════════════
+     AUTH CARDS (logged-out state)
+  ═══════════════════════════════════════════ */
+  .auth-section {
+    background: linear-gradient(135deg, #0f7b56 0%, #4e3598 60%, #13a372 100%);
+    padding: 80px 48px;
+    position: relative; overflow: hidden;
+  }
+  .auth-section::before {
+    content: '';
+    position: absolute; top: -100px; right: -100px;
+    width: 400px; height: 400px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .auth-section::after {
+    content: '';
+    position: absolute; bottom: -80px; left: 20%;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .auth-inner {
+    max-width: 900px; margin: 0 auto;
+    position: relative; z-index: 1;
+    text-align: center;
+  }
+  .auth-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 700; color: #fff;
+    letter-spacing: -1px; margin-bottom: 10px;
+  }
+  .auth-sub {
+    font-size: 0.92rem; color: rgba(255,255,255,0.7);
+    margin-bottom: 40px;
+  }
+  .auth-cards {
+    display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
+  }
+  .auth-card {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(16px);
+    border-radius: var(--r); padding: 32px 28px;
+    width: 260px; text-align: left;
+    transition: transform .2s, background .2s;
+  }
+  .auth-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.16); }
+  .auth-card-icon {
+    width: 46px; height: 46px; border-radius: 13px;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 16px;
+  }
+  .auth-card-title {
+    font-size: 1rem; font-weight: 800; color: #fff;
+    margin-bottom: 8px; letter-spacing: -0.3px;
+  }
+  .auth-card-desc {
+    font-size: 0.82rem; color: rgba(255,255,255,0.65);
+    line-height: 1.55; margin-bottom: 20px;
+  }
+  .auth-card-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none; font-size: 0.83rem; font-weight: 800;
+    padding: 10px 20px; border-radius: 50px;
+    transition: transform .15s, box-shadow .18s;
+  }
+  .auth-card-btn:hover { transform: translateY(-2px); text-decoration: none; }
+  .btn-white { background: #fff; color: var(--forest); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+  .btn-outline-w { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); }
+  .btn-outline-w:hover { background: rgba(255,255,255,0.25); color: #fff; }
+
+  /* ═══════════════════════════════════════════
+     FOOTER
+  ═══════════════════════════════════════════ */
+  .pix-footer {
+    background: var(--ink);
+    padding: 48px;
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 16px;
+    text-align: center;
+  }
+  .footer-brand {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: #fff; letter-spacing: -0.5px;
+  }
+  .footer-brand span { color: #7dffd0; }
+  .footer-copy {
+    font-size: 0.78rem; color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a {
+    font-size: 0.8rem; font-weight: 600;
+    color: rgba(255,255,255,0.5); text-decoration: none;
+    transition: color .18s;
+  }
+  .footer-links a:hover { color: #7dffd0; }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE
+  ═══════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .pix-nav   { padding: 0 20px; }
+    .hero      { padding: 60px 20px 50px; }
+    .section   { padding: 64px 20px; }
+    .auth-section { padding: 60px 20px; }
+    .features-strip { padding: 56px 20px; }
+    .pix-footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
+    .hero-h1   { letter-spacing: -1.5px; }
+  }
+  </style>
+</head>
+<body>
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="pix-nav">
+    <a class="pix-brand" href="{{ url_for('home') }}">
+      <div class="pix-brand-logo">Px</div>
+      <span class="pix-brand-name">Pix<span>hare</span></span>
+    </a>
+    <div class="nav-spacer"></div>
+    <div class="nav-links">
+      {% if not session.get('email') %}
+        <a class="nav-lnk" href="{{ url_for('photographer_login') }}">Login</a>
+        <a class="nav-lnk cta" href="{{ url_for('photographer_register') }}">
+          Get Started <i class="bi bi-arrow-right"></i>
+        </a>
+      {% else %}
+        <a class="nav-lnk dash" href="{{ url_for('photographer_dashboard') }}">
+          <i class="bi bi-grid me-1"></i>Dashboard
+        </a>
+        <a class="nav-lnk out" href="{{ url_for('photographer_logout') }}">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section class="hero">
+    <div class="hero-mesh"></div>
+    <div class="hero-deco">
+      <div class="deco-circle"></div>
+      <div class="deco-circle"></div>
+      <div class="deco-circle"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <div class="eyebrow-dot">✨</div>
+        AI-Powered Event Photography
+      </div>
+
+      <h1 class="hero-h1">
+        Every guest gets<br>
+        <span class="accent">their photos.</span><br>
+        <span class="accent2">Automatically.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Pixhare uses DeepFace AI to match event photos to guests and delivers personalised galleries — without anyone lifting a finger.
+      </p>
+
+      <div class="hero-cta-row">
+        {% if not session.get('email') %}
+          <a href="{{ url_for('photographer_register') }}" class="btn-hero-primary">
+            <i class="bi bi-camera-fill"></i> Start for Free
+          </a>
+          <a href="{{ url_for('photographer_login') }}" class="btn-hero-secondary">
+            <i class="bi bi-person"></i> Login
+          </a>
+        {% else %}
+          <a href="{{ url_for('photographer_dashboard') }}" class="btn-hero-primary">
+            <i class="bi bi-grid-fill"></i> Go to Dashboard
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="hero-trust">
+        <div class="trust-item">
+          <div class="trust-icon ti-g">🤖</div>
+          DeepFace AI Matching
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <div class="trust-icon ti-p">📧</div>
+          Instant Email Delivery
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <div class="trust-icon ti-a">📱</div>
+          QR Code Registration
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <div class="trust-icon" style="background:#fdeaed;">🔒</div>
+          Private Galleries
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HOW IT WORKS ══ -->
+  <section class="section" style="background: var(--bg);">
+    <div class="section-inner">
+      <div class="section-kicker">How it works</div>
+      <h2 class="section-title">Four steps.<br>Zero hassle.</h2>
+      <p class="section-sub">From event creation to personalised gallery delivery — Pixhare handles everything.</p>
+
+      <div class="steps-grid">
+        <div class="step-card" style="animation-delay:0s">
+          <div class="step-num">01</div>
+          <div class="step-icon">📅</div>
+          <div class="step-title">Create an Event</div>
+          <p class="step-desc">Photographer sets up an event and receives a unique QR code to share with guests on the day.</p>
+        </div>
+        <div class="step-card" style="animation-delay:.08s">
+          <div class="step-num">02</div>
+          <div class="step-icon">🤳</div>
+          <div class="step-title">Guests Self-Register</div>
+          <p class="step-desc">Guests scan the QR, enter their name & email, and upload a quick selfie. Done in under 30 seconds.</p>
+        </div>
+        <div class="step-card" style="animation-delay:.16s">
+          <div class="step-num">03</div>
+          <div class="step-icon">🤖</div>
+          <div class="step-title">AI Face Matching</div>
+          <p class="step-desc">DeepFace AI scans every uploaded photo and matches faces to registered guests with high accuracy.</p>
+        </div>
+        <div class="step-card" style="animation-delay:.24s">
+          <div class="step-num">04</div>
+          <div class="step-icon">✉️</div>
+          <div class="step-title">Gallery Delivered</div>
+          <p class="step-desc">Each guest receives a private email with a link to only their photos — beautifully organised and ready to download.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ AUTH CARDS (logged-out only) ══ -->
+  {% if not session.get('email') %}
+  <section class="auth-section">
+    <div class="auth-inner">
+      <h2 class="auth-title">Ready to deliver magic?</h2>
+      <p class="auth-sub">Join photographers already using Pixhare to delight their guests.</p>
+      <div class="auth-cards">
+        <div class="auth-card">
+          <div class="auth-card-icon">🔑</div>
+          <div class="auth-card-title">Photographer Login</div>
+          <p class="auth-card-desc">Already have an account? Log in to manage your events and galleries.</p>
+          <a href="{{ url_for('photographer_login') }}" class="auth-card-btn btn-white">
+            Login <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+        <div class="auth-card">
+          <div class="auth-card-icon">🚀</div>
+          <div class="auth-card-title">Create an Account</div>
+          <p class="auth-card-desc">New to Pixhare? Register free and run your first event in minutes.</p>
+          <a href="{{ url_for('photographer_register') }}" class="auth-card-btn btn-outline-w">
+            Register Free <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="pix-footer">
+    <div>
+      <div class="footer-brand">Pix<span>hare</span></div>
+      <div class="footer-copy">&copy; 2025 Pixhare · AI-Powered Event Photo Sharing</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /* Stagger step cards on scroll */
+    (function () {
+      var cards = document.querySelectorAll('.step-card, .feat-item, .auth-card');
+      if (!window.IntersectionObserver) return;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0) scale(1)';
+          }
+        });
+      }, { threshold: 0.15 });
+
+      cards.forEach(function (el) {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity .55s ease, transform .55s cubic-bezier(0.22,1,0.36,1)';
+        io.observe(el);
+      });
+    }());
+  </script>
+
+</body>
+</html>

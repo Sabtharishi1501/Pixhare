@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pixhare</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Fraunces:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <style>
+    /* ══════════════════════════════════════
+       DESIGN TOKENS
+    ══════════════════════════════════════ */
+    :root {
+      --bg:        #f0f2f5;
+      --bg2:       #e8eaed;
+      --card:      #ffffff;
+      --forest:    #0f7b56;
+      --forest2:   #13a372;
+      --forest-lt: #e0f5ed;
+      --plum:      #5240a8;
+      --plum2:     #6b58cc;
+      --plum-lt:   #eeebfb;
+      --amber:     #d97706;
+      --amber-lt:  #fef3e2;
+      --rose:      #dc2653;
+      --rose-lt:   #fdeaed;
+      --ink:       #16181d;
+      --ink2:      #434956;
+      --ink3:      #8a9099;
+      --ink4:      #c8cdd6;
+      --nav-h:     64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg) !important;
+      background-color: var(--bg) !important;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       NAVBAR
+    ══════════════════════════════════════ */
+    .ps-nav {
+      position: sticky; top: 0; z-index: 1000;
+      height: var(--nav-h);
+      background: #ffffff;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 1px 20px rgba(0,0,0,0.06);
+      display: flex; align-items: center;
+      padding: 0 32px;
+      gap: 16px;
+    }
+
+    /* Brand */
+    .ps-nav-brand {
+      display: flex; align-items: center; gap: 9px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .ps-nav-brand-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--forest), var(--plum2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 900; color: #fff;
+      letter-spacing: -0.5px;
+      box-shadow: 0 3px 10px rgba(15,123,86,0.3);
+      font-family: 'Fraunces', serif;
+    }
+    .ps-nav-brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--ink);
+    }
+    .ps-nav-brand-name span { color: var(--forest); }
+
+    .ps-nav-spacer { flex: 1; }
+
+    /* Greeting */
+    .ps-nav-greeting {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.85rem; font-weight: 600; color: var(--ink2);
+    }
+    .ps-nav-greeting .nav-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--forest-lt);
+      border: 2px solid var(--forest);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 800; color: var(--forest);
+    }
+    .ps-nav-greeting .nav-name { color: var(--forest); font-weight: 800; }
+
+    /* Divider */
+    .ps-nav-divider {
+      width: 1px; height: 20px;
+      background: var(--ink4); margin: 0 4px;
+    }
+
+    /* Links */
+    .ps-nav-links { display: flex; align-items: center; gap: 4px; }
+
+    .ps-nav-link {
+      text-decoration: none;
+      font-size: 0.84rem; font-weight: 600; color: var(--ink2);
+      padding: 7px 14px; border-radius: 8px;
+      transition: background 0.18s, color 0.18s;
+      white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;
+    }
+    .ps-nav-link:hover       { background: var(--forest-lt); color: var(--forest); text-decoration: none; }
+    .ps-nav-link.active      { background: var(--forest-lt); color: var(--forest); }
+    .ps-nav-link.nav-logout  { background: var(--rose-lt);   color: var(--rose);   border: 1px solid rgba(220,38,83,0.15); }
+    .ps-nav-link.nav-logout:hover { background: #fbd5de; color: var(--rose); }
+    .ps-nav-link.nav-cta     { background: var(--forest);    color: #fff; box-shadow: 0 3px 12px rgba(15,123,86,0.25); }
+    .ps-nav-link.nav-cta:hover { background: var(--forest2); color: #fff; }
+
+    /* ══════════════════════════════════════
+       PAGE WRAPPER
+    ══════════════════════════════════════ */
+    .ps-page {
+      background: var(--bg);
+      min-height: calc(100vh - var(--nav-h) - 80px);
+    }
+
+    /* ══════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════ */
+    .ps-footer {
+      text-align: center;
+      padding: 28px 24px;
+      font-size: 0.78rem; color: var(--ink3);
+      border-top: 1px solid var(--bg2);
+    }
+    .ps-footer strong { color: var(--forest); }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       NAVBAR
+  ══════════════════════════════════════ -->
+  <nav class="ps-nav">
+
+    <!-- Brand -->
+    <a class="ps-nav-brand" href="{{ url_for('home') }}">
+      <div class="ps-nav-brand-icon">Px</div>
+      <span class="ps-nav-brand-name">Pix<span>hare</span></span>
+    </a>
+
+    <div class="ps-nav-spacer"></div>
+
+    {% if session.get('email') %}
+
+      <!-- Greeting -->
+      <div class="ps-nav-greeting">
+        <div class="nav-avatar">{{ session.get('name', session.get('email', 'P'))[0] | upper }}</div>
+        <span>Hi, <span class="nav-name">{{ session.get('name', session.get('email','').split('@')[0]) | title }}</span> 👋</span>
+      </div>
+
+      <div class="ps-nav-divider"></div>
+
+      <!-- Logged-in links -->
+      <div class="ps-nav-links">
+        <a class="ps-nav-link {% if request.endpoint == 'home' %}active{% endif %}"
+           href="{{ url_for('home') }}">
+          <i class="bi bi-house"></i> Home
+        </a>
+        <a class="ps-nav-link {% if request.endpoint == 'photographer_dashboard' %}active{% endif %}"
+           href="{{ url_for('photographer_dashboard') }}">
+          <i class="bi bi-grid"></i> Dashboard
+        </a>
+        <a class="ps-nav-link nav-logout" href="{{ url_for('photographer_logout') }}">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </div>
+
+    {% else %}
+
+      <!-- Logged-out links -->
+      <div class="ps-nav-links">
+        <a class="ps-nav-link" href="{{ url_for('photographer_login') }}">
+          <i class="bi bi-person"></i> Login
+        </a>
+        <a class="ps-nav-link nav-cta" href="{{ url_for('photographer_register') }}">
+          <i class="bi bi-person-plus"></i> Register
+        </a>
+      </div>
+
+    {% endif %}
+
+  </nav>
+
+  <!-- ══════════════════════════════════════
+       PAGE CONTENT
+  ══════════════════════════════════════ -->
+  <div class="ps-page">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- ══════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════ -->
+  <footer class="ps-footer">
+    &copy; 2025 <strong>Pixhare</strong> &nbsp;·&nbsp; Built with ❤️ for photographers
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ══════════════════════════════════════
+       PIXI CHATBOT WIDGET
+  ══════════════════════════════════════ -->
+  <style>
+    /* Floating button */
+    .pixi-fab {
+      position: fixed; bottom: 28px; right: 28px; z-index: 9000;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--forest), var(--plum2));
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 6px 24px rgba(15,123,86,0.35);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .pixi-fab:hover { transform: scale(1.1); box-shadow: 0 10px 32px rgba(15,123,86,0.45); }
+    .pixi-fab .pixi-notif {
+      position: absolute; top: -2px; right: -2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--rose); border: 2px solid #fff;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* Chat window */
+    .pixi-chat {
+      position: fixed; bottom: 100px; right: 28px; z-index: 9000;
+      width: 360px; max-height: 520px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.18);
+      display: none; flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08);
+      animation: chatPop .25s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .pixi-chat.open { display: flex; }
+    @keyframes chatPop { from{opacity:0;transform:scale(0.85) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+    /* Chat header */
+    .pixi-chat-head {
+      background: linear-gradient(135deg, var(--forest), var(--plum2));
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0;
+    }
+    .pixi-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .pixi-head-info { flex: 1; }
+    .pixi-head-name { font-size: 0.9rem; font-weight: 800; color: #fff; }
+    .pixi-head-status {
+      font-size: 0.7rem; color: rgba(255,255,255,0.7);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .pixi-online-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #7dffd0;
+      box-shadow: 0 0 5px #7dffd0;
+    }
+    .pixi-close-btn {
+      background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+      width: 28px; height: 28px; cursor: pointer; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; transition: background .18s;
+    }
+    .pixi-close-btn:hover { background: rgba(255,255,255,0.28); }
+
+    /* Messages area */
+    .pixi-messages {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+      background: #f8f9fa;
+    }
+    .pixi-messages::-webkit-scrollbar { width: 4px; }
+    .pixi-messages::-webkit-scrollbar-thumb { background: var(--ink4); border-radius: 4px; }
+
+    .msg { display: flex; gap: 8px; align-items: flex-end; }
+    .msg.user  { flex-direction: row-reverse; }
+
+    .msg-bubble {
+      max-width: 78%; padding: 10px 14px;
+      border-radius: 16px; font-size: 0.84rem; line-height: 1.5;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .msg.bot  .msg-bubble { background: #fff; color: var(--ink); border: 1px solid rgba(0,0,0,0.08); border-bottom-left-radius: 4px; }
+    .msg.user .msg-bubble { background: linear-gradient(135deg, var(--forest), var(--forest2)); color: #fff; border-bottom-right-radius: 4px; }
+
+    .msg-avatar {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+    }
+    .msg.bot  .msg-avatar { background: var(--forest-lt); border: 1px solid rgba(15,123,86,0.2); }
+    .msg.user .msg-avatar { background: var(--plum-lt);   border: 1px solid rgba(82,64,168,0.2); }
+
+    /* Typing indicator */
+    .typing-dots { display: flex; gap: 4px; padding: 4px 2px; }
+    .typing-dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--ink3); animation: bounce 1.2s ease-in-out infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-7px)} }
+
+    /* Input area */
+    .pixi-input-row {
+      display: flex; gap: 8px; padding: 12px 14px;
+      border-top: 1px solid rgba(0,0,0,0.07);
+      background: #fff; flex-shrink: 0;
+    }
+    .pixi-input {
+      flex: 1; border: 1.5px solid rgba(0,0,0,0.1); border-radius: 50px;
+      padding: 9px 16px; font-size: 0.85rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      outline: none; transition: border-color .2s;
+      background: #f8f9fa;
+    }
+    .pixi-input:focus { border-color: var(--forest); background: #fff; }
+    .pixi-send {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--forest), var(--forest2));
+      border: none; cursor: pointer; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; flex-shrink: 0;
+      transition: transform .15s, box-shadow .18s;
+      box-shadow: 0 3px 10px rgba(15,123,86,0.28);
+    }
+    .pixi-send:hover { transform: scale(1.08); box-shadow: 0 5px 16px rgba(15,123,86,0.38); }
+    .pixi-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Voice button ── */
+    .pixi-voice {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: #f0f2f5;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      cursor: pointer; color: var(--ink2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; flex-shrink: 0;
+      transition: all .18s;
+      position: relative;
+    }
+    .pixi-voice:hover { background: var(--plum-lt); color: var(--plum); border-color: rgba(82,64,168,0.3); }
+    .pixi-voice.listening {
+      background: var(--rose-lt);
+      border-color: var(--rose);
+      color: var(--rose);
+      box-shadow: 0 0 0 4px rgba(220,38,83,0.15);
+      animation: voicePulse 1s ease-in-out infinite;
+    }
+    @keyframes voicePulse {
+      0%,100% { box-shadow: 0 0 0 4px rgba(220,38,83,0.15); }
+      50%      { box-shadow: 0 0 0 8px rgba(220,38,83,0.05); }
+    }
+
+    /* speaking indicator on bot bubble */
+    .msg-bubble.speaking {
+      border-left: 3px solid var(--forest);
+      animation: speakPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes speakPulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.75; }
+    }
+
+    /* voice status bar */
+    .voice-status {
+      padding: 5px 14px;
+      background: var(--rose-lt);
+      border-top: 1px solid rgba(220,38,83,0.15);
+      font-size: 0.72rem; font-weight: 700; color: var(--rose);
+      text-align: center; flex-shrink: 0;
+      display: none;
+      align-items: center; justify-content: center; gap: 6px;
+    }
+    .voice-status.show { display: flex; }
+    .voice-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--rose);
+      animation: voicePulse 0.8s ease-in-out infinite;
+    }
+
+    /* Suggested questions */
+    .pixi-suggestions {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 0 16px 12px;
+      background: #f8f9fa;
+    }
+    .sug-chip {
+      background: #fff; border: 1px solid rgba(15,123,86,0.2);
+      color: var(--forest); border-radius: 50px;
+      padding: 5px 12px; font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; transition: background .18s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .sug-chip:hover { background: var(--forest-lt); }
+
+    @media (max-width: 480px) {
+      .pixi-chat { width: calc(100vw - 32px); right: 16px; bottom: 90px; }
+      .pixi-fab  { bottom: 20px; right: 16px; }
+    }
+
+    /* ── Language selector ── */
+    .lang-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px;
+      background: #1a2235;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .lang-globe {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--forest), var(--plum2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(15,123,86,0.3);
+    }
+    .lang-label {
+      font-size: 0.68rem; font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .lang-dropdown-wrap {
+      flex: 1; position: relative;
+    }
+    .lang-select {
+      width: 100%;
+      background: #0f1624;
+      border: 1.5px solid rgba(15,123,86,0.4);
+      border-radius: 20px;
+      padding: 6px 28px 6px 12px;
+      color: #e2e8f0;
+      font-size: 0.8rem; font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      outline: none; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      transition: border-color .18s, background .18s;
+    }
+    .lang-select:focus, .lang-select:hover {
+      border-color: var(--forest);
+      background: #162032;
+    }
+    .lang-select option {
+      background: #0f1624; color: #e2e8f0; font-size: 0.85rem;
+    }
+    .lang-caret {
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%);
+      color: #64748b; font-size: 0.65rem;
+      pointer-events: none;
+    }
+    .lang-active-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: linear-gradient(135deg, var(--forest), var(--plum2));
+      border-radius: 50px; padding: 4px 10px;
+      font-size: 0.7rem; font-weight: 800;
+      color: #fff; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(15,123,86,0.3);
+      letter-spacing: 0.04em;
+    }
+  </style>
+
+  <!-- Floating button -->
+  <button class="pixi-fab" id="pixiFab" onclick="togglePixiChat()">
+    🤖
+    <span class="pixi-notif"></span>
+  </button>
+
+  <!-- Chat window -->
+  <div class="pixi-chat" id="pixiChat">
+    <div class="pixi-chat-head">
+      <div class="pixi-avatar">🤖</div>
+      <div class="pixi-head-info">
+        <div class="pixi-head-name">Pixi — Pixhare Assistant</div>
+        <div class="pixi-head-status">
+          <span class="pixi-online-dot"></span> Online · Ask me anything
+        </div>
+      </div>
+      <button class="pixi-close-btn" onclick="window.closePixiChat()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Language selector bar -->
+    <div class="lang-bar">
+      <div class="lang-globe">🌐</div>
+      <span class="lang-label">Lang</span>
+      <div class="lang-dropdown-wrap">
+        <select class="lang-select" id="pixiLang" onchange="onLangChange()">
+          <option value="English">🇬🇧 English</option>
+          <option value="Tamil">🇮🇳 Tamil</option>
+          <option value="Hindi">🇮🇳 Hindi</option>
+          <option value="Telugu">🇮🇳 Telugu</option>
+          <option value="Malayalam">🇮🇳 Malayalam</option>
+          <option value="Kannada">🇮🇳 Kannada</option>
+          <option value="Bengali">🇮🇳 Bengali</option>
+          <option value="Marathi">🇮🇳 Marathi</option>
+          <option value="Spanish">🇪🇸 Spanish</option>
+          <option value="French">🇫🇷 French</option>
+          <option value="Arabic">🇸🇦 Arabic</option>
+          <option value="Japanese">🇯🇵 Japanese</option>
+          <option value="Chinese">🇨🇳 Chinese</option>
+          <option value="German">🇩🇪 German</option>
+        </select>
+        <i class="bi bi-chevron-down lang-caret"></i>
+      </div>
+      <div class="lang-active-chip" id="langChip">🇬🇧 EN</div>
+    </div>
+
+    <div class="pixi-messages" id="pixiMessages">
+      <!-- Welcome message -->
+      <div class="msg bot">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">
+          Hi! I'm <strong>Pixi</strong>, your Pixhare assistant. 👋<br>
+          I can help you with event creation, QR codes, photo uploads, face matching, and more!
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested questions -->
+    <div class="pixi-suggestions" id="pixiSuggestions">
+      <span class="sug-chip" onclick="sendSuggestion(this)">How does it work?</span>
+      <span class="sug-chip" onclick="sendSuggestion(this)">How to create an event?</span>
+      <span class="sug-chip" onclick="sendSuggestion(this)">Guest didn't get email</span>
+      <span class="sug-chip" onclick="sendSuggestion(this)">How to upload photos?</span>
+    </div>
+
+    <!-- Voice status bar -->
+    <div class="voice-status" id="voiceStatus">
+      <span class="voice-dot"></span>
+      <span id="voiceStatusText">Listening...</span>
+    </div>
+
+    <div class="pixi-input-row">
+      <input class="pixi-input" id="pixiInput" type="text"
+             placeholder="Ask me anything about Pixhare..."
+             onkeydown="if(event.key==='Enter') sendPixiMsg()"
+             oninput="lastInputWasVoice=false">
+      <!-- Voice button -->
+      <button class="pixi-voice" id="pixiVoiceBtn" onclick="toggleVoice()" title="Speak your question">
+        <i class="bi bi-mic-fill"></i>
+      </button>
+      <button class="pixi-send" id="pixiSendBtn" onclick="sendPixiMsg()">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var isOpen   = false;
+    var history  = [];
+    var typing   = false;
+    window.lastInputWasVoice = false;
+
+    /* ── Language config ── */
+    var LANG_CONFIG = {
+      'English':   { placeholder: 'Ask me anything about Pixhare...', welcome: 'Hi! I\'m <strong>Pixi</strong>, your Pixhare assistant. 👋<br>I can help you with event creation, QR codes, photo uploads, face matching, and more!' },
+      'Tamil':     { placeholder: 'Pixhare பற்றி எதையும் கேளுங்கள்...', welcome: 'வணக்கம்! நான் <strong>Pixi</strong>, உங்கள் Pixhare உதவியாளர். 👋<br>நிகழ்வு உருவாக்கம், QR குறியீடுகள், புகைப்பட பதிவேற்றம் மற்றும் பலவற்றில் உங்களுக்கு உதவ முடியும்!' },
+      'Hindi':     { placeholder: 'Pixhare के बारे में कुछ भी पूछें...', welcome: 'नमस्ते! मैं <strong>Pixi</strong> हूं, आपका Pixhare सहायक। 👋<br>मैं आपको इवेंट बनाने, QR कोड, फोटो अपलोड और बहुत कुछ में मदद कर सकता हूं!' },
+      'Telugu':    { placeholder: 'Pixhare గురించి ఏదైనా అడగండి...', welcome: 'నమస్కారం! నేను <strong>Pixi</strong>, మీ Pixhare సహాయకుడు. 👋<br>ఈవెంట్ క్రియేషన్, QR కోడ్లు, ఫోటో అప్‌లోడ్ మరియు మరిన్నింటిలో మీకు సహాయం చేయగలను!' },
+      'Malayalam': { placeholder: 'Pixhare-നെ കുറിച്ച് എന്തും ചോദിക്കൂ...', welcome: 'ഹലോ! ഞാൻ <strong>Pixi</strong>, നിങ്ങളുടെ Pixhare അസിസ്റ്റന്റ്. 👋<br>ഇവന്റ് ക്രിയേഷൻ, QR കോഡുകൾ, ഫോട്ടോ അപ്‌ലോഡ് എന്നിവയിൽ ഞാൻ സഹായിക്കാം!' },
+      'Kannada':   { placeholder: 'Pixhare ಬಗ್ಗೆ ಏನಾದರೂ ಕೇಳಿ...', welcome: 'ನಮಸ್ಕಾರ! ನಾನು <strong>Pixi</strong>, ನಿಮ್ಮ Pixhare ಸಹಾಯಕ. 👋<br>ಈವೆಂಟ್ ರಚನೆ, QR ಕೋಡ್‌ಗಳು ಮತ್ತು ಫೋಟೋ ಅಪ್‌ಲೋಡ್‌ನಲ್ಲಿ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ!' },
+      'Bengali':   { placeholder: 'Pixhare সম্পর্কে যেকোনো কিছু জিজ্ঞেস করুন...', welcome: 'হ্যালো! আমি <strong>Pixi</strong>, আপনার Pixhare সহকারী। 👋<br>ইভেন্ট তৈরি, QR কোড, ফটো আপলোড এবং আরও অনেক কিছুতে সাহায্য করতে পারি!' },
+      'Marathi':   { placeholder: 'Pixhare बद्दल काहीही विचारा...', welcome: 'नमस्कार! मी <strong>Pixi</strong>, तुमचा Pixhare सहाय्यक. 👋<br>इव्हेंट तयार करणे, QR कोड, फोटो अपलोड आणि बरेच काही यात मी मदत करू शकतो!' },
+      'Spanish':   { placeholder: 'Pregunta cualquier cosa sobre Pixhare...', welcome: '¡Hola! Soy <strong>Pixi</strong>, tu asistente de Pixhare. 👋<br>¡Puedo ayudarte con la creación de eventos, códigos QR, subida de fotos y mucho más!' },
+      'French':    { placeholder: 'Posez n\'importe quelle question sur Pixhare...', welcome: 'Bonjour! Je suis <strong>Pixi</strong>, votre assistant Pixhare. 👋<br>Je peux vous aider avec la création d\'événements, les QR codes, le téléchargement de photos et plus encore!' },
+      'Arabic':    { placeholder: 'اسأل أي شيء عن Pixhare...', welcome: 'مرحباً! أنا <strong>Pixi</strong>، مساعدك في Pixhare. 👋<br>يمكنني مساعدتك في إنشاء الأحداث ورموز QR وتحميل الصور والمزيد!' },
+      'Japanese':  { placeholder: 'Pixhareについて何でも聞いてください...', welcome: 'こんにちは！私は<strong>Pixi</strong>、あなたのPixhareアシスタントです。👋<br>イベント作成、QRコード、写真のアップロードなどでお手伝いします！' },
+      'Chinese':   { placeholder: '请随时询问有关Pixhare的任何问题...', welcome: '你好！我是<strong>Pixi</strong>，您的Pixhare助手。👋<br>我可以帮助您完成活动创建、二维码、照片上传等工作！' },
+      'German':    { placeholder: 'Fragen Sie alles über Pixhare...', welcome: 'Hallo! Ich bin <strong>Pixi</strong>, Ihr Pixhare-Assistent. 👋<br>Ich kann Ihnen bei der Erstellung von Veranstaltungen, QR-Codes, dem Hochladen von Fotos und mehr helfen!' },
+    };
+
+    var currentLang = 'English';
+
+    /* lang chip labels */
+    var LANG_CHIPS = {
+      'English':'🇬🇧 EN','Tamil':'🇮🇳 TA','Hindi':'🇮🇳 HI','Telugu':'🇮🇳 TE',
+      'Malayalam':'🇮🇳 ML','Kannada':'🇮🇳 KN','Bengali':'🇮🇳 BN','Marathi':'🇮🇳 MR',
+      'Spanish':'🇪🇸 ES','French':'🇫🇷 FR','Arabic':'🇸🇦 AR',
+      'Japanese':'🇯🇵 JA','Chinese':'🇨🇳 ZH','German':'🇩🇪 DE'
+    };
+
+    window.onLangChange = function () {
+      var sel  = document.getElementById('pixiLang');
+      currentLang = sel.value;
+      var cfg  = LANG_CONFIG[currentLang] || LANG_CONFIG['English'];
+
+      /* update placeholder */
+      document.getElementById('pixiInput').placeholder = cfg.placeholder;
+
+      /* update active chip */
+      var chip = document.getElementById('langChip');
+      if (chip) chip.textContent = LANG_CHIPS[currentLang] || '🌐';
+
+      /* clear messages and show new welcome */
+      var msgs = document.getElementById('pixiMessages');
+      msgs.innerHTML = '';
+      history = [];
+      var div = document.createElement('div');
+      div.className = 'msg bot';
+      div.innerHTML =
+        '<div class="msg-avatar">🤖</div>' +
+        '<div class="msg-bubble">' + cfg.welcome + '</div>';
+      msgs.appendChild(div);
+
+      document.getElementById('pixiSuggestions').style.display = 'none';
+    };
+
+    function openChat() {
+      isOpen = true;
+      document.getElementById('pixiChat').classList.add('open');
+      var fab = document.getElementById('pixiFab');
+      fab.innerHTML = '<i class="bi bi-x-lg" style="color:#fff;font-size:1.1rem"></i>';
+      var dot = fab.querySelector('.pixi-notif');
+      if (dot) dot.remove();
+      document.getElementById('pixiInput').focus();
+      if (window._warmupTTS) window._warmupTTS();
+    }
+
+    function closeChat() {
+      isOpen = false;
+      document.getElementById('pixiChat').classList.remove('open');
+      document.getElementById('pixiFab').innerHTML = '🤖';
+
+      /* ── Stop ALL audio immediately ── */
+      try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
+      try {
+        if (window._currentAudio) {
+          window._currentAudio.pause();
+          window._currentAudio.src = '';
+          window._currentAudio = null;
+        }
+      } catch(e){}
+
+      /* ── Clear chat ── */
+      history = [];
+      typing  = false;
+      document.getElementById('pixiSendBtn').disabled = false;
+      var msgs = document.getElementById('pixiMessages');
+      msgs.innerHTML = '';
+      var lang = document.getElementById('pixiLang') ? document.getElementById('pixiLang').value : 'English';
+      var cfg  = LANG_CONFIG[lang] || LANG_CONFIG['English'];
+      var div  = document.createElement('div');
+      div.className = 'msg bot';
+      div.innerHTML = '<div class="msg-avatar">🤖</div><div class="msg-bubble">' + cfg.welcome + '</div>';
+      msgs.appendChild(div);
+
+      /* ── Reset UI ── */
+      var sug = document.getElementById('pixiSuggestions');
+      if (sug) sug.style.display = 'flex';
+      document.getElementById('pixiInput').value = '';
+      var vs = document.getElementById('voiceStatus');
+      if (vs) vs.classList.remove('show');
+    }
+
+    window.togglePixiChat = function () {
+      if (isOpen) { closeChat(); } else { openChat(); }
+    };
+
+    /* Close button inside header calls closeChat directly */
+    window.closePixiChat = closeChat;
+
+    window.sendSuggestion = function (el) {
+      document.getElementById('pixiInput').value = el.textContent;
+      document.getElementById('pixiSuggestions').style.display = 'none';
+      sendPixiMsg();
+    };
+
+    window.sendPixiMsg = function (voiceMode) {
+      var input = document.getElementById('pixiInput');
+      var msg   = input.value.trim();
+      if (!msg || typing) return;
+      input.value = '';
+
+      /* Track input mode */
+      window.lastInputWasVoice = (voiceMode === true);
+
+      /* hide voice status bar when sending */
+      var bar = document.getElementById('voiceStatus');
+      if (bar) bar.classList.remove('show');
+      document.getElementById('pixiVoiceBtn').classList.remove('listening');
+
+      document.getElementById('pixiSuggestions').style.display = 'none';
+      appendMsg('user', msg);
+      history.push({ role: 'user', content: msg });
+
+      typing = true;
+      document.getElementById('pixiSendBtn').disabled = true;
+      var typingEl = appendTyping();
+
+      fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message:  msg,
+          history:  history.slice(-6),
+          language: currentLang
+        })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        typingEl.remove();
+        var reply = data.reply || 'Sorry, I could not get a response.';
+        appendMsg('bot', reply);
+        history.push({ role: 'assistant', content: reply });
+        /* Only speak if input was voice */
+        if (window.lastInputWasVoice && window.speakReply) {
+          var langSel = document.getElementById('pixiLang');
+          var replyLang = langSel ? langSel.value : 'English';
+          window.speakReply(reply, replyLang);
+        }
+      })
+      .catch(function () {
+        typingEl.remove();
+        appendMsg('bot', 'Connection error. Please try again.');
+      })
+      .finally(function () {
+        typing = false;
+        document.getElementById('pixiSendBtn').disabled = false;
+        document.getElementById('pixiInput').focus();
+      });
+    };
+
+    function appendMsg(role, text) {
+      var messages = document.getElementById('pixiMessages');
+      var div = document.createElement('div');
+      div.className = 'msg ' + role;
+      var avatar = role === 'bot' ? '🤖' : '👤';
+      var formatted = text
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+
+      /* Add replay speaker button on bot messages */
+      var speakerBtn = '';
+      if (role === 'bot') {
+        var escaped = text.replace(/'/g, "\\'").replace(/\n/g, ' ');
+        speakerBtn = '<button onclick="window.speakReply(\'' + escaped + '\', currentLang)" '
+          + 'style="background:none;border:none;cursor:pointer;font-size:0.8rem;'
+          + 'color:var(--forest);opacity:0.6;padding:2px 4px;margin-top:4px;display:block;" '
+          + 'title="Read aloud">🔊</button>';
+      }
+
+      div.innerHTML =
+        '<div class="msg-avatar">' + avatar + '</div>' +
+        '<div class="msg-bubble">' + formatted + speakerBtn + '</div>';
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+      return div;
+    }
+
+    function appendTyping() {
+      var messages = document.getElementById('pixiMessages');
+      var div = document.createElement('div');
+      div.className = 'msg bot';
+      div.innerHTML =
+        '<div class="msg-avatar">🤖</div>' +
+        '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+      return div;
+    }
+  }());
+
+  /* ══════════════════════════════════════
+     VOICE ASSISTANT
+     STT: MediaRecorder -> Flask -> HuggingFace Whisper (multilingual)
+     TTS: Web Speech Synthesis (browser-native, free)
+  ══════════════════════════════════════ */
+  (function () {
+
+    var LANG_CODES = {
+      'English':'en-US','Tamil':'ta-IN','Hindi':'hi-IN',
+      'Telugu':'te-IN','Malayalam':'ml-IN','Kannada':'kn-IN',
+      'Bengali':'bn-IN','Marathi':'mr-IN','Spanish':'es-ES',
+      'French':'fr-FR','Arabic':'ar-SA','Japanese':'ja-JP',
+      'Chinese':'zh-CN','German':'de-DE'
+    };
+
+    var synth         = window.speechSynthesis;
+    var mediaRecorder = null;
+    var audioChunks   = [];
+    var isRecording   = false;
+    var stream        = null;
+
+    /* ── Toggle recording ── */
+    window.toggleVoice = function () {
+      if (isRecording) { stopRecording(); }
+      else             { startRecording(); }
+    };
+
+    function startRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Microphone not supported. Please use Chrome or Edge.');
+        return;
+      }
+      synth.cancel();
+      audioChunks = [];
+
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(function (s) {
+          stream = s;
+          var mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']
+            .find(function(m){ return MediaRecorder.isTypeSupported(m); }) || '';
+
+          mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : {});
+
+          mediaRecorder.ondataavailable = function (e) {
+            if (e.data && e.data.size > 0) audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = function () {
+            stream.getTracks().forEach(function (t) { t.stop(); });
+            stream = null;
+            if (audioChunks.length === 0) { setVoiceStatus(false); setVoiceBtn(false); return; }
+            setVoiceStatus(true, '\u23f3 Transcribing your speech...');
+
+            var blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+            var lang = document.getElementById('pixiLang') ? document.getElementById('pixiLang').value : 'English';
+            var fd   = new FormData();
+            fd.append('audio', blob, 'voice.webm');
+            fd.append('language', lang);
+
+            fetch('/transcribe', { method: 'POST', body: fd })
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                setVoiceStatus(false); setVoiceBtn(false);
+                var text = (data.text || '').trim();
+                if (text) {
+                  document.getElementById('pixiInput').value = text;
+                  setVoiceStatus(true, '\u2705 "' + text.slice(0,40) + (text.length>40?'\u2026':'') + '"');
+                  setTimeout(function () { setVoiceStatus(false); window.sendPixiMsg(true); }, 900);
+                } else {
+                  setVoiceStatus(true, '\u274c Could not hear you. Please try again.');
+                  setTimeout(function () { setVoiceStatus(false); }, 2500);
+                }
+              })
+              .catch(function (err) {
+                console.error('[Whisper] error:', err);
+                setVoiceStatus(true, '\u274c Transcription failed. Try again.');
+                setTimeout(function () { setVoiceStatus(false); }, 2500);
+                setVoiceBtn(false);
+              });
+          };
+
+          mediaRecorder.start(100);
+          isRecording = true;
+          setVoiceBtn(true);
+          setVoiceStatus(true, '\ud83d\udd34 Recording... click mic again to stop & send');
+        })
+        .catch(function (err) {
+          console.error('[Voice] getUserMedia error:', err);
+          if (err.name === 'NotAllowedError') {
+            alert('Microphone permission denied.\n\nIn Chrome: click the \ud83d\udd12 icon in the address bar \u2192 Site settings \u2192 Microphone \u2192 Allow.\nThen refresh the page.');
+          } else {
+            alert('Could not access microphone: ' + err.message);
+          }
+        });
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); }
+      setVoiceBtn(false);
+      setVoiceStatus(true, '\u23f3 Processing...');
+    }
+
+    function setVoiceBtn(recording) {
+      var btn = document.getElementById('pixiVoiceBtn');
+      if (!btn) return;
+      if (recording) { btn.classList.add('listening'); btn.title = 'Click to stop'; }
+      else           { btn.classList.remove('listening'); btn.title = 'Click to speak'; }
+    }
+
+    /* ── Speak reply aloud ──
+       English → browser Speech Synthesis (instant)
+       Other   → Edge TTS via Flask (best quality, correct language)
+    ── */
+    var synth        = window.speechSynthesis;
+    var currentAudio = null;
+    window._currentAudio = null;
+
+    window.speakReply = function (text, lang) {
+      if (synth) synth.cancel();
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      if (!text || !text.trim()) return;
+
+      var clean = text
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/<[^>]+>/g, '')
+        .replace(/^\s*\d+[\.\)]\s*/gm, '')
+        .replace(/[•\-#]/g, '')
+        .replace(/\s+/g, ' ').trim()
+        .slice(0, 300);
+
+      if (lang === 'English') {
+        /* ── Fast browser TTS for English ── */
+        var utter    = new SpeechSynthesisUtterance(clean);
+        utter.lang   = 'en-US';
+        utter.rate   = 1.1;
+        utter.volume = 1.0;
+        synth.speak(utter);
+      } else {
+        /* ── Edge TTS for non-English languages ── */
+        fetch('/tts', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ text: clean, language: lang })
+        })
+        .then(function(r) {
+          if (!r.ok) throw new Error('TTS HTTP ' + r.status);
+          return r.blob();
+        })
+        .then(function(blob) {
+          var url   = URL.createObjectURL(blob);
+          var audio = new Audio(url);
+          audio.volume  = 1.0;
+          currentAudio  = audio;
+          window._currentAudio = audio;
+          audio.onended = function() { URL.revokeObjectURL(url); currentAudio = null; window._currentAudio = null; };
+          var p = audio.play();
+          if (p) p.catch(function(err) {
+            console.warn('[TTS] Autoplay blocked:', err.message);
+            showPlayBtn(url, lang);
+          });
+        })
+        .catch(function(e) { console.error('[TTS] Edge TTS error:', e.message); });
+      }
+    };
+
+    /* Warm up speech engine when chat opens */
+    window._warmupTTS = function() {
+      if (synth) {
+        var w = new SpeechSynthesisUtterance('');
+        w.volume = 0; synth.speak(w);
+      }
+    };
+
+    /* Preload voices */
+    if (synth) {
+      synth.getVoices();
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = function() { synth.getVoices(); };
+      }
+    }
+
+    /* Show a clickable play button if autoplay is blocked */
+    function showPlayBtn(url, lang) {
+      var messages = document.getElementById('pixiMessages');
+      var lastBot  = messages.querySelector('.msg.bot:last-child .msg-bubble');
+      if (!lastBot) return;
+
+      /* Remove old play btn if exists */
+      var old = lastBot.querySelector('.tts-play-btn');
+      if (old) old.remove();
+
+      var btn = document.createElement('button');
+      btn.className   = 'tts-play-btn';
+      btn.innerHTML   = '🔊 Click to hear in ' + lang;
+      btn.style.cssText = 'margin-top:8px;padding:5px 12px;border-radius:20px;border:1.5px solid var(--forest);'
+        + 'background:var(--forest-lt);color:var(--forest);font-size:0.75rem;font-weight:700;cursor:pointer;display:block;';
+      btn.onclick = function() {
+        var a = new Audio(url);
+        a.volume = 1.0;
+        a.play().then(function() {
+          btn.innerHTML = '🔊 Playing...';
+          a.onended = function() { btn.remove(); URL.revokeObjectURL(url); };
+        }).catch(function(e) {
+          console.error('[TTS] Manual play also failed:', e);
+          btn.innerHTML = '❌ Audio failed';
+        });
+      };
+      lastBot.appendChild(btn);
+    }
+
+    /* ── Status bar ── */
+    function setVoiceStatus(show, text) {
+      var bar = document.getElementById('voiceStatus');
+      var txt = document.getElementById('voiceStatusText');
+      if (!bar) return;
+      if (show) { bar.classList.add('show'); if (txt && text) txt.textContent = text; }
+      else       { bar.classList.remove('show'); }
+    }
+
+    window.PIXI_LANG_CODES = LANG_CODES;
+  }());
+  </script>
+
+</body>
+</html>

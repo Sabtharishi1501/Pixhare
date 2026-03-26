@@ -1,0 +1,85 @@
+/* General body styling */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+/* Navbar customization */
+.navbar {
+  background-color: #131313 !important; /* navy blue/black mix */
+}
+
+.navbar-brand {
+  color: #ffcc00 !important; /* yellow */
+  font-weight: bold;
+}
+
+.navbar-nav .nav-link {
+  color: #ffffff !important;
+  transition: color 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #ffcc00 !important; /* yellow on hover */
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #0a0a23;
+  border-color: #0a0a23;
+}
+
+.btn-primary:hover {
+  background-color: #ff0000;
+  border-color: #ff0000;
+}
+
+.btn-secondary {
+  background-color: #ffcc00;
+  border-color: #ffcc00;
+  color: #000;
+}
+
+.btn-secondary:hover {
+  background-color: #e6b800;
+  border-color: #e6b800;
+  color: #000;
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 10px;
+}
+
+.card-title {
+  color: #0a0a23;
+  font-weight: bold;
+}
+
+/* Flash messages */
+.alert-info {
+  background-color: #e0f3ff;
+  border-color: #b3e0ff;
+  color: #0a0a23;
+}
+
+/* Footer */
+footer {
+  color: #6c757d;
+}
+
+/* OTP input or form tweaks */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  border-radius: 5px;
+}
+
+/* Custom headings */
+h1, h2, h3 {
+  color: #0a0a23;
+}
+
+

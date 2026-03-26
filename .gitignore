@@ -1,0 +1,13 @@
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+.env
+instance/
+*.db
+dist/
+build/
+.vscode/
+.idea/
+*.mp3

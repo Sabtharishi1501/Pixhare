@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .vp-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 28px 80px;
+  }
+
+  /* ── Top bar ── */
+  .vp-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    position: relative;
+  }
+  .vp-topbar::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 0;
+    width: 120px; height: 1px;
+    background: linear-gradient(90deg, var(--forest), transparent);
+  }
+
+  .vp-back {
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none;
+    background: var(--bg2); border: 1px solid rgba(0,0,0,0.09);
+    color: var(--ink2); border-radius: 9px;
+    padding: 8px 16px; font-size: 0.83rem; font-weight: 700;
+    transition: background .18s, color .18s;
+  }
+  .vp-back:hover { background: var(--forest-lt); color: var(--forest); text-decoration: none; }
+
+  .vp-kicker {
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--forest);
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  }
+  .vp-kicker::before { content:''; display:inline-block; width:14px; height:2px; background:var(--forest); border-radius:2px; }
+  .vp-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem; font-weight: 700;
+    letter-spacing: -1px; color: var(--ink); margin-bottom: 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .vp-event-tag {
+    font-size: 0.72rem; font-weight: 700;
+    background: var(--forest-lt); color: var(--forest);
+    border: 1px solid rgba(15,123,86,0.2);
+    border-radius: 50px; padding: 3px 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .vp-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .btn-vp {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: 10px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.83rem; font-weight: 700;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: transform .15s, box-shadow .18s, filter .15s;
+    white-space: nowrap;
+  }
+  .btn-vp:hover { transform: translateY(-2px); text-decoration: none; }
+  .btn-vp:active { transform: translateY(0); }
+
+  .btn-upload {
+    background: var(--plum-lt); color: var(--plum);
+    border: 1.5px solid rgba(82,64,168,0.22);
+  }
+  .btn-upload:hover { background: #e0d8f8; color: var(--plum); }
+
+  .btn-send {
+    background: linear-gradient(135deg, var(--forest), var(--forest2));
+    color: #fff; font-weight: 800;
+    box-shadow: 0 4px 16px rgba(15,123,86,0.22);
+  }
+  .btn-send:hover { box-shadow: 0 6px 22px rgba(15,123,86,0.32); filter: brightness(1.06); color: #fff; }
+
+  /* ── Stats strip ── */
+  .vp-stats {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .stat-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #fff; border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 50px; padding: 7px 16px;
+    font-size: 0.8rem; font-weight: 600; color: var(--ink2);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  }
+  .stat-chip strong { color: var(--ink); font-weight: 800; }
+  .stat-chip i { color: var(--forest); }
+
+  /* ── Photo grid — uniform squares ── */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .photo-item {
+    aspect-ratio: 1 / 1;
+    border-radius: 13px;
+    overflow: hidden;
+    background: #e8eaed;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    position: relative;
+    cursor: pointer;
+    transition: transform .22s, box-shadow .22s;
+    animation: riseIn .45s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .photo-item:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.13);
+  }
+  .photo-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter .22s, transform .22s;
+  }
+  .photo-item:hover img { filter: brightness(0.82); transform: scale(1.04); }
+
+  /* hover overlay */
+  .photo-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15,123,86,0); 
+    display: flex; align-items: center; justify-content: center;
+    transition: background .22s;
+    border-radius: 13px;
+  }
+  .photo-item:hover .photo-overlay { background: rgba(15,123,86,0.15); }
+  .photo-overlay-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: var(--forest);
+    opacity: 0; transform: scale(0.7);
+    transition: opacity .2s, transform .2s;
+  }
+  .photo-item:hover .photo-overlay-icon { opacity: 1; transform: scale(1); }
+
+  /* photo number badge */
+  .photo-num {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(0,0,0,0.5);
+    color: #fff; font-size: 0.62rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 50px;
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0; transition: opacity .2s;
+  }
+  .photo-item:hover .photo-num { opacity: 1; }
+
+  /* ── Lightbox ── */
+  .lightbox {
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,0.92);
+    align-items: center; justify-content: center;
+    padding: 20px;
+    animation: lbIn .2s ease both;
+  }
+  @keyframes lbIn { from { opacity:0; } to { opacity:1; } }
+  .lightbox.open { display: flex; }
+  .lb-img {
+    max-width: 92vw; max-height: 88vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+    object-fit: contain;
+  }
+  .lb-close {
+    position: fixed; top: 20px; right: 24px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; border-radius: 50%;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1.1rem;
+    transition: background .18s;
+  }
+  .lb-close:hover { background: rgba(220,38,83,0.7); }
+  .lb-prev, .lb-next {
+    position: fixed; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; border-radius: 50%;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem;
+    transition: background .18s;
+  }
+  .lb-prev:hover, .lb-next:hover { background: rgba(15,123,86,0.6); }
+  .lb-prev { left: 16px; }
+  .lb-next { right: 16px; }
+  .lb-counter {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.7);
+    font-size: 0.78rem; font-weight: 600;
+    padding: 6px 16px; border-radius: 50px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Empty state ── */
+  .vp-empty {
+    text-align: center; padding: 72px 24px;
+    background: #fff;
+    border: 2px dashed rgba(0,0,0,0.1);
+    border-radius: 18px;
+  }
+  .vp-empty-icon {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: var(--forest-lt); border: 1.5px solid rgba(15,123,86,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 18px;
+  }
+  .vp-empty h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: 7px; color: var(--ink); }
+  .vp-empty p  { font-size: 0.86rem; color: var(--ink3); }
+
+  /* ── Flash ── */
+  .vp-flash {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 0.84rem; font-weight: 600; margin-bottom: 20px;
+    max-height: 80px; overflow: hidden;
+    transition: opacity .6s ease, transform .6s ease,
+                max-height .5s ease, margin .4s ease, padding .4s ease;
+  }
+  .vp-flash.hide { opacity:0; transform:translateY(-6px); max-height:0; margin-bottom:0; padding:0; }
+  .vp-flash.success { background:#dff2ea; border:1px solid rgba(15,123,86,.2);  color:var(--forest); }
+  .vp-flash.danger  { background:#fdeaed; border:1px solid rgba(220,38,83,.2); color:var(--rose); }
+  .vp-flash.info    { background:var(--plum-lt); border:1px solid rgba(82,64,168,.2); color:var(--plum); }
+  .vp-flash.warning { background:var(--amber-lt); border:1px solid rgba(217,119,6,.2); color:var(--amber); }
+
+  .btn-delete-mode {
+    background: var(--rose-lt); color: var(--rose);
+    border: 1.5px solid rgba(220,38,83,0.22);
+  }
+  .btn-delete-mode:hover { background: #fbd5de; color: var(--rose); }
+  .btn-delete-mode.active {
+    background: var(--rose); color: #fff;
+    box-shadow: 0 4px 16px rgba(220,38,83,0.28);
+  }
+
+  /* ── Delete mode: selection bar ── */
+  .del-bar {
+    display: none;
+    align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    background: #fdeaed; border: 1.5px solid rgba(220,38,83,0.2);
+    border-radius: 12px; padding: 12px 18px;
+    margin-bottom: 20px;
+    animation: fadeDown .2s ease both;
+  }
+  .del-bar.show { display: flex; }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+  .del-bar-left { font-size: 0.84rem; font-weight: 700; color: var(--rose); display:flex; align-items:center; gap:8px; }
+  .del-count { font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:800; }
+  .del-bar-actions { display:flex; gap:8px; }
+
+  .btn-del-cancel {
+    background: #fff; border: 1px solid rgba(0,0,0,0.12); color: var(--ink2);
+    border-radius: 8px; padding: 7px 16px;
+    font-family:'Plus Jakarta Sans',sans-serif; font-size:0.82rem; font-weight:700;
+    cursor:pointer; transition:background .18s;
+  }
+  .btn-del-cancel:hover { background: #f0f2f5; }
+
+  .btn-del-done {
+    background: var(--rose); color: #fff;
+    border: none; border-radius: 8px; padding: 7px 18px;
+    font-family:'Plus Jakarta Sans',sans-serif; font-size:0.82rem; font-weight:800;
+    cursor:pointer; transition:filter .15s, box-shadow .18s;
+    box-shadow: 0 3px 12px rgba(220,38,83,0.25);
+    display:flex; align-items:center; gap:6px;
+  }
+  .btn-del-done:hover { filter:brightness(1.08); }
+  .btn-del-done:disabled { opacity:0.4; cursor:not-allowed; }
+
+  /* ── Photo selected state ── */
+  .photo-item.selectable { cursor: crosshair !important; }
+  .photo-item.selected {
+    border-color: var(--rose) !important;
+    box-shadow: 0 0 0 3px rgba(220,38,83,0.25) !important;
+    transform: scale(0.96) !important;
+  }
+  .photo-item.selected img { filter: brightness(0.6) !important; }
+  .photo-check {
+    display: none; position: absolute; top: 8px; right: 8px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--rose); color: #fff;
+    align-items: center; justify-content: center;
+    font-size: 0.8rem; z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .photo-item.selectable .photo-check { display: flex; opacity: 0.35; }
+  .photo-item.selected .photo-check   { opacity: 1; }
+
+  /* ── Delete confirm modal ── */
+  .del-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 3000;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .del-modal-overlay.open { display: flex; }
+  .del-modal {
+    background: #fff; border-radius: 20px; padding: 36px 32px 28px;
+    max-width: 380px; width: 90%; text-align: center;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.2);
+    animation: popIn .25s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes popIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+  .del-modal-icon {
+    width: 60px; height: 60px; border-radius: 18px;
+    background: var(--rose-lt); border: 1.5px solid rgba(220,38,83,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; margin: 0 auto 16px;
+  }
+  .del-modal-title {
+    font-family:'Fraunces',serif; font-size:1.3rem; font-weight:700;
+    letter-spacing:-0.5px; color:var(--ink); margin-bottom:8px;
+  }
+  .del-modal-sub { font-size:0.84rem; color:var(--ink3); margin-bottom:24px; line-height:1.6; }
+  .del-modal-actions { display:flex; gap:10px; }
+  .btn-modal-cancel {
+    flex:1; background:#f0f2f5; border:1px solid rgba(0,0,0,0.1);
+    color:var(--ink2); border-radius:10px; padding:12px;
+    font-family:'Plus Jakarta Sans',sans-serif; font-size:0.88rem; font-weight:700;
+    cursor:pointer; transition:background .18s;
+  }
+  .btn-modal-cancel:hover { background:#e4e7eb; }
+  .btn-modal-confirm {
+    flex:1; background:linear-gradient(135deg,var(--rose),#f43f5e);
+    color:#fff; border:none; border-radius:10px; padding:12px;
+    font-family:'Plus Jakarta Sans',sans-serif; font-size:0.88rem; font-weight:800;
+    cursor:pointer; box-shadow:0 4px 16px rgba(220,38,83,0.28);
+    transition:filter .15s;
+  }
+  .btn-modal-confirm:hover { filter:brightness(1.08); }
+</style>
+
+<div class="vp-page">
+
+  <!-- Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="vp-flash {{ category }}">
+        {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Top bar -->
+  <div class="vp-topbar">
+    <div>
+      <a href="{{ url_for('photographer_dashboard') }}" class="vp-back">
+        <i class="bi bi-arrow-left"></i> Dashboard
+      </a>
+    </div>
+
+    <div class="vp-title-group">
+      <div class="vp-kicker">Event Photos</div>
+      <div class="vp-title">
+        {{ event_name }}
+        <span class="vp-event-tag">{{ photos | length }} photo{{ 's' if photos | length != 1 else '' }}</span>
+      </div>
+    </div>
+
+    <div class="vp-actions">
+      <a href="{{ url_for('upload_photos', event_name=event_name) }}" class="btn-vp btn-upload">
+        <i class="bi bi-cloud-arrow-up-fill"></i> Upload More
+      </a>
+      {% if photos %}
+      <button class="btn-vp btn-delete-mode" id="deleteModeBtn" onclick="toggleDeleteMode()">
+        <i class="bi bi-trash3-fill"></i> Delete Photos
+      </button>
+      {% endif %}
+      <form method="POST" action="{{ url_for('view_event_photos', event_name=event_name) }}"
+            data-confirm="Start AI face matching and send gallery emails for {{ event_name }}?"
+            style="display:inline;">
+        <button type="submit" class="btn-vp btn-send">
+          <i class="bi bi-send-fill"></i> Match &amp; Send Galleries
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  {% if photos %}
+  <div class="vp-stats">
+    <div class="stat-chip">
+      <i class="bi bi-images"></i>
+      <strong>{{ photos | length }}</strong> Photo{{ 's' if photos | length != 1 else '' }} uploaded
+    </div>
+    <div class="stat-chip">
+      <i class="bi bi-calendar-event"></i>
+      Event: <strong>{{ event_name }}</strong>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Delete selection bar -->
+  {% if photos %}
+  <div class="del-bar" id="delBar">
+    <div class="del-bar-left">
+      <i class="bi bi-check2-square"></i>
+      <span><span class="del-count" id="delCount">0</span> photo<span id="delPlural">s</span> selected</span>
+    </div>
+    <div class="del-bar-actions">
+      <button class="btn-del-cancel" onclick="toggleDeleteMode()">Cancel</button>
+      <button class="btn-del-done" id="delDoneBtn" onclick="openDelModal()" disabled>
+        <i class="bi bi-trash3-fill"></i> Delete Selected
+      </button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Photo grid -->
+  {% if photos %}
+  <form method="POST" action="{{ url_for('delete_photos', event_name=event_name) }}" id="deleteForm">
+  <div class="photo-grid" id="photoGrid">
+    {% for photo in photos %}
+    <div class="photo-item"
+         data-index="{{ loop.index0 }}"
+         data-src="{{ url_for('static', filename='photos/' + event_name + '/' + photo) }}"
+         data-filename="{{ photo }}"
+         data-delay="{{ loop.index0 }}">
+      <span class="photo-num">#{{ loop.index }}</span>
+      <div class="photo-check"><i class="bi bi-check-lg"></i></div>
+      <input type="checkbox" name="photos_to_delete" value="{{ photo }}"
+             style="display:none;" class="photo-checkbox">
+      <img src="{{ url_for('static', filename='photos/' + event_name + '/' + photo) }}"
+           alt="Photo {{ loop.index }}" loading="lazy">
+      <div class="photo-overlay">
+        <div class="photo-overlay-icon"><i class="bi bi-arrows-fullscreen"></i></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  </form>
+
+  {% else %}
+  <div class="vp-empty">
+    <div class="vp-empty-icon">📷</div>
+    <h3>No photos yet</h3>
+    <p>Upload photos to get started with AI face matching.</p>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose"><i class="bi bi-x-lg"></i></button>
+  <button class="lb-prev"  id="lbPrev"><i class="bi bi-chevron-left"></i></button>
+  <img class="lb-img" id="lbImg" src="" alt="">
+  <button class="lb-next"  id="lbNext"><i class="bi bi-chevron-right"></i></button>
+  <div class="lb-counter" id="lbCounter">1 / 1</div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="del-modal-overlay" id="delModal">
+  <div class="del-modal">
+    <div class="del-modal-icon">🗑️</div>
+    <div class="del-modal-title">Delete Photos?</div>
+    <div class="del-modal-sub" id="delModalSub">
+      You are about to permanently delete <strong id="delModalCount">0</strong> photo(s).<br>
+      This cannot be undone.
+    </div>
+    <div class="del-modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDelModal()">Cancel</button>
+      <button class="btn-modal-confirm" onclick="confirmDelete()">
+        <i class="bi bi-trash3-fill"></i> Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ── Flash auto-hide ── */
+  document.querySelectorAll('.vp-flash').forEach(function (el) {
+    setTimeout(function () { el.classList.add('hide'); setTimeout(function () { el.remove(); }, 650); }, 3000);
+  });
+
+  /* ── Stagger ── */
+  document.querySelectorAll('.photo-item[data-delay]').forEach(function (el) {
+    el.style.animationDelay = (parseFloat(el.getAttribute('data-delay')) * 0.04) + 's';
+  });
+
+  /* ── Confirm on match/send form ── */
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (!confirm(form.getAttribute('data-confirm'))) { e.preventDefault(); }
+    });
+  });
+
+  /* ══════════════════════════════════════
+     DELETE MODE
+  ══════════════════════════════════════ */
+  var deleteMode = false;
+  var selected   = new Set();
+
+  window.toggleDeleteMode = function () {
+    deleteMode = !deleteMode;
+    var btn  = document.getElementById('deleteModeBtn');
+    var bar  = document.getElementById('delBar');
+    var items = document.querySelectorAll('.photo-item');
+
+    if (deleteMode) {
+      btn.classList.add('active');
+      btn.innerHTML = '<i class="bi bi-x-lg"></i> Exit Delete Mode';
+      bar.classList.add('show');
+      items.forEach(function (el) { el.classList.add('selectable'); });
+    } else {
+      /* clear selection */
+      selected.clear();
+      items.forEach(function (el) {
+        el.classList.remove('selectable', 'selected');
+        var cb = el.querySelector('.photo-checkbox');
+        if (cb) cb.checked = false;
+      });
+      btn.classList.remove('active');
+      btn.innerHTML = '<i class="bi bi-trash3-fill"></i> Delete Photos';
+      bar.classList.remove('show');
+      updateDelCount();
+    }
+  };
+
+  function updateDelCount() {
+    var n = selected.size;
+    document.getElementById('delCount').textContent   = n;
+    document.getElementById('delPlural').textContent  = n === 1 ? '' : 's';
+    document.getElementById('delDoneBtn').disabled    = n === 0;
+  }
+
+  /* photo click in delete mode → toggle selection */
+  document.querySelectorAll('.photo-item').forEach(function (item) {
+    item.addEventListener('click', function (e) {
+      if (!deleteMode) return;          /* handled by lightbox below */
+      e.stopPropagation();
+      var fn = item.getAttribute('data-filename');
+      var cb = item.querySelector('.photo-checkbox');
+      if (selected.has(fn)) {
+        selected.delete(fn);
+        item.classList.remove('selected');
+        if (cb) cb.checked = false;
+      } else {
+        selected.add(fn);
+        item.classList.add('selected');
+        if (cb) cb.checked = true;
+      }
+      updateDelCount();
+    });
+  });
+
+  window.openDelModal = function () {
+    if (selected.size === 0) return;
+    document.getElementById('delModalCount').textContent = selected.size;
+    document.getElementById('delModal').classList.add('open');
+  };
+  window.closeDelModal = function () {
+    document.getElementById('delModal').classList.remove('open');
+  };
+  window.confirmDelete = function () {
+    document.getElementById('deleteForm').submit();
+  };
+
+  /* close modal on overlay click */
+  document.getElementById('delModal').addEventListener('click', function (e) {
+    if (e.target === document.getElementById('delModal')) { closeDelModal(); }
+  });
+
+  /* ══════════════════════════════════════
+     LIGHTBOX (only when NOT in delete mode)
+  ══════════════════════════════════════ */
+  var photos  = document.querySelectorAll('.photo-item[data-src]');
+  var lb      = document.getElementById('lightbox');
+  var lbImg   = document.getElementById('lbImg');
+  var lbCount = document.getElementById('lbCounter');
+  var current = 0;
+
+  function openLb(idx) {
+    if (deleteMode) return;
+    current = idx;
+    lbImg.src = photos[idx].getAttribute('data-src');
+    lbCount.textContent = (idx + 1) + ' / ' + photos.length;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLb() { lb.classList.remove('open'); lbImg.src = ''; document.body.style.overflow = ''; }
+  function prevPhoto() { openLb((current - 1 + photos.length) % photos.length); }
+  function nextPhoto() { openLb((current + 1) % photos.length); }
+
+  photos.forEach(function (item) {
+    item.addEventListener('click', function () {
+      if (deleteMode) return;
+      openLb(parseInt(item.getAttribute('data-index')));
+    });
+  });
+
+  document.getElementById('lbClose').addEventListener('click', closeLb);
+  document.getElementById('lbPrev').addEventListener('click', prevPhoto);
+  document.getElementById('lbNext').addEventListener('click', nextPhoto);
+  lb.addEventListener('click', function (e) { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLb();
+    if (e.key === 'ArrowLeft')  prevPhoto();
+    if (e.key === 'ArrowRight') nextPhoto();
+  });
+}());
+</script>
+
+{% endblock %}

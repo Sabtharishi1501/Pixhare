@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Registration Successful — Pixhare</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #f0f2f5;
+      --forest:    #0f7b56;
+      --forest2:   #13a372;
+      --forest-lt: #e0f5ed;
+      --plum:      #5240a8;
+      --plum2:     #6b58cc;
+      --amber:     #d97706;
+      --ink:       #16181d;
+      --ink2:      #434956;
+      --ink3:      #8a9099;
+      --ink4:      #c8cdd6;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── Mini top bar ── */
+    .mini-bar {
+      height: 52px;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 12px rgba(0,0,0,0.05);
+    }
+    .mini-brand {
+      display: flex; align-items: center; gap: 9px;
+      text-decoration: none;
+    }
+    .mini-brand-icon {
+      width: 30px; height: 30px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--forest), var(--plum2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 900; color: #fff;
+      font-family: 'Fraunces', serif;
+      box-shadow: 0 2px 8px rgba(15,123,86,0.28);
+    }
+    .mini-brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--ink);
+    }
+    .mini-brand-name span { color: var(--forest); }
+
+    /* ── Page ── */
+    .success-page {
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 20px 60px;
+      min-height: calc(100vh - 52px);
+    }
+
+    .success-wrap { width: 100%; max-width: 460px; text-align: center; }
+
+    /* ── Card ── */
+    .success-card {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+      position: relative;
+    }
+    .success-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--forest), var(--forest2), var(--plum));
+    }
+
+    /* ── Body ── */
+    .success-body { padding: 44px 36px 36px; }
+
+    /* animated checkmark */
+    .check-wrap {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--forest-lt);
+      border: 2.5px solid rgba(15,123,86,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      animation: popIn .5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .check-wrap i {
+      font-size: 2.2rem; color: var(--forest);
+      animation: popIn .5s .1s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .success-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.7rem; font-weight: 700;
+      letter-spacing: -1px; color: var(--ink);
+      margin-bottom: 8px;
+      animation: fadeUp .5s .15s ease both;
+    }
+    .success-title span { color: var(--forest); }
+
+    .success-sub {
+      font-size: 0.9rem; color: var(--ink3);
+      line-height: 1.65; margin-bottom: 28px;
+      animation: fadeUp .5s .2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* steps */
+    .steps-list {
+      display: flex; flex-direction: column; gap: 10px;
+      margin-bottom: 28px; text-align: left;
+      animation: fadeUp .5s .25s ease both;
+    }
+    .step-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 11px;
+      background: #f9f8f5; border: 1px solid rgba(0,0,0,0.06);
+      font-size: 0.84rem; color: var(--ink2); font-weight: 500;
+    }
+    .step-row-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; flex-shrink: 0;
+    }
+    .si-g { background: var(--forest-lt); }
+    .si-p { background: #eeebfb; }
+    .si-a { background: #fef3e2; }
+
+    /* countdown bar */
+    .countdown-wrap {
+      animation: fadeUp .5s .3s ease both;
+    }
+    .countdown-label {
+      font-size: 0.75rem; color: var(--ink3);
+      margin-bottom: 8px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .countdown-bar-bg {
+      background: rgba(0,0,0,0.07);
+      border-radius: 50px; height: 5px; overflow: hidden;
+    }
+    .countdown-bar {
+      height: 5px; border-radius: 50px;
+      background: linear-gradient(90deg, var(--forest), var(--forest2));
+      width: 100%;
+      animation: shrink 10s linear forwards;
+    }
+    @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+
+    /* footer strip */
+    .success-foot {
+      padding: 14px 32px 18px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      background: #fafaf8; text-align: center;
+    }
+    .success-foot p {
+      font-size: 0.78rem; color: var(--ink3); margin: 0;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mini top bar -->
+  <div class="mini-bar">
+    <a class="mini-brand" href="/">
+      <div class="mini-brand-icon">Px</div>
+      <span class="mini-brand-name">Pix<span>hare</span></span>
+    </a>
+  </div>
+
+  <!-- Page -->
+  <div class="success-page">
+    <div class="success-wrap">
+
+      <div class="success-card">
+
+        <div class="success-body">
+
+          <!-- Check icon -->
+          <div class="check-wrap">
+            <i class="bi bi-check-lg"></i>
+          </div>
+
+          <div class="success-title">
+            You're in, <span>{{ guest_name }}</span>!
+          </div>
+          <p class="success-sub">
+            You've successfully registered for the event.<br>
+            Once the photographer runs face matching, your personalised gallery will be sent straight to your inbox.
+          </p>
+
+          <!-- What happens next -->
+          <div class="steps-list">
+            <div class="step-row">
+              <div class="step-row-icon si-g">📸</div>
+              Photographer uploads event photos
+            </div>
+            <div class="step-row">
+              <div class="step-row-icon si-p">🤖</div>
+              AI matches your face to the photos
+            </div>
+            <div class="step-row">
+              <div class="step-row-icon si-a">✉️</div>
+              Your gallery link arrives via email
+            </div>
+          </div>
+
+          <!-- Countdown -->
+          <div class="countdown-wrap">
+            <div class="countdown-label">
+              <i class="bi bi-arrow-right-circle"></i>
+              Redirecting to home in <span id="countNum">10</span>s
+            </div>
+            <div class="countdown-bar-bg">
+              <div class="countdown-bar"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="success-foot">
+          <p>
+            <i class="bi bi-shield-lock" style="color:var(--forest)"></i>
+            Your photos are private and only visible to you.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto redirect after 10s -->
+  <meta http-equiv="refresh" content="10;url=/">
+
+  <script>
+    var n = 10;
+    var el = document.getElementById('countNum');
+    var t = setInterval(function () {
+      n--;
+      if (el) el.textContent = n;
+      if (n <= 0) clearInterval(t);
+    }, 1000);
+  </script>
+
+</body>
+</html>

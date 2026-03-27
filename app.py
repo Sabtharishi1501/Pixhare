@@ -12,9 +12,6 @@ from datetime import datetime, timedelta
 import random, smtplib, qrcode, os, shutil, cv2
 from chatbot import get_answer, initialize as init_chatbot
 from config import Config
-
-app.config.from_object(Config)
-
 # ─────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────

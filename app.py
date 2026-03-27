@@ -27,6 +27,8 @@ app = Flask(__name__, static_folder='static')
 app.config.from_object(Config)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 
+print("DATABASE:", app.config['SQLALCHEMY_DATABASE_URI'])
+
 db.init_app(app)
 app.secret_key = app.config['SECRET_KEY']
 with app.app_context():

@@ -30,6 +30,9 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 
 db.init_app(app)
 app.secret_key = app.config['SECRET_KEY']
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 
 # ─────────────────────────────────────────────

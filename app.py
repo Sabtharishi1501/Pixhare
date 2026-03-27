@@ -11,7 +11,9 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 import random, smtplib, qrcode, os, shutil, cv2
 from chatbot import get_answer, initialize as init_chatbot
+from config import Config
 
+app.config.from_object(Config)
 
 # ─────────────────────────────────────────────
 # Constants
@@ -30,8 +32,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 
 db.init_app(app)
 app.secret_key = app.config['SECRET_KEY']
-@app.before_first_request
-def create_tables():
+with app.app_context():
     db.create_all()
 
 

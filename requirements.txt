@@ -21,3 +21,4 @@ edge-tts==6.1.10
 
 flask-mail==0.9.1
 python-dotenv==1.0.1
+psycopg2-binary

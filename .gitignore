@@ -12,3 +12,7 @@ build/
 .idea/
 *.mp3
 .env
+static/photos/
+static/matches/
+static/guests/
+static/qrcodes/

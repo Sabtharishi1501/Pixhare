@@ -11,7 +11,8 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 import random, smtplib, qrcode, os, shutil, cv2
 from chatbot import get_answer, initialize as init_chatbot
-from config import Config
+
+
 # ─────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────
@@ -27,12 +28,8 @@ app = Flask(__name__, static_folder='static')
 app.config.from_object(Config)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 
-print("DATABASE:", app.config['SQLALCHEMY_DATABASE_URI'])
-
 db.init_app(app)
 app.secret_key = app.config['SECRET_KEY']
-with app.app_context():
-    db.create_all()
 
 
 # ─────────────────────────────────────────────
@@ -998,6 +995,7 @@ def transcribe():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    # Pre-load RAG pipeline (embeddings + vector DB) before first request
     Thread(target=init_chatbot, daemon=True).start()
-    app.run(debug=True)
+    # debug=True only in local dev, False in production
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

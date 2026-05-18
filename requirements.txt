@@ -11,6 +11,5 @@ groq
 faiss-cpu
 edge-tts
 numpy
-flask-mail
-python-dotenv
 psycopg2-binary
+python-dotenv

@@ -24,13 +24,27 @@ BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:5000")
 # ─────────────────────────────────────────────
 # App Setup
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# App Setup
+# ─────────────────────────────────────────────
 app = Flask(__name__, static_folder='static')
 app.config.from_object(Config)
+
+# PostgreSQL for Render production
+database_url = os.getenv("DATABASE_URL")
+
+if database_url:
+    database_url = database_url.replace("postgres://", "postgresql://")
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 
 db.init_app(app)
 app.secret_key = app.config['SECRET_KEY']
 
+# Automatically create database tables
+with app.app_context():
+    db.create_all()
 
 # ─────────────────────────────────────────────
 # Helpers
@@ -993,8 +1007,6 @@ def transcribe():
 # Main
 # ─────────────────────────────────────────────
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     Thread(target=init_chatbot, daemon=True).start()
     # debug=True only in local dev, False in production
     debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'

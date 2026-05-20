@@ -89,28 +89,15 @@ def preprocess_image(image_path, size=(224, 224)):
         return image_path
 
 
-def _send_email_async(msg):
-    """Send an EmailMessage in a background thread — non-blocking."""
-    def _send():
-        try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-                smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
-                smtp.send_message(msg)
-            print(f"✅ Email sent to {msg['To']}")
-        except smtplib.SMTPAuthenticationError:
-            print("❌ Gmail auth failed — check App Password in config.py")
-        except Exception as e:
-            print(f"❌ Email error: {e}")
-    Thread(target=_send, daemon=True).start()
-
-
 def send_otp_email(receiver_email, otp):
-    """Send registration OTP — fires in background, returns instantly."""
-    msg = EmailMessage()
-    msg['Subject'] = "Your OTP — Pixhare"
-    msg['From']    = Config.EMAIL_USER
-    msg['To']      = receiver_email.strip()
-    msg.set_content(f"""Hello,
+    """Send registration OTP."""
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = "Your OTP — Pixhare"
+        msg['From'] = Config.EMAIL_USER
+        msg['To'] = receiver_email.strip()
+
+        msg.set_content(f"""Hello,
 
 Your OTP for Pixhare registration is: {otp}
 
@@ -119,41 +106,68 @@ This OTP is valid for 5 minutes. Do not share it with anyone.
 Thanks,
 Pixhare Team
 """)
-    print(f"🔑 DEV — Registration OTP for {receiver_email}: {otp}")
-    _send_email_async(msg)
-    return True
+
+        print(f"🔑 Sending OTP to {receiver_email}")
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
+            smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
+            smtp.send_message(msg)
+
+        print(f"✅ OTP email sent to {receiver_email}")
+        return True
+
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ Gmail Authentication Error: {e}")
+        return False
+
+    except Exception as e:
+        print(f"❌ OTP Email Error: {e}")
+        return False
 
 
 def send_reset_otp_email(receiver_email, otp):
-    """Send password-reset OTP — fires in background, returns instantly."""
-    msg = EmailMessage()
-    msg['Subject'] = "Reset Your Pixhare Password"
-    msg['From']    = Config.EMAIL_USER
-    msg['To']      = receiver_email.strip()
-    msg.set_content(f"""Hello,
+    """Send password reset OTP."""
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = "Reset Your Pixhare Password"
+        msg['From'] = Config.EMAIL_USER
+        msg['To'] = receiver_email.strip()
+
+        msg.set_content(f"""Hello,
 
 We received a request to reset your Pixhare password.
 
 Your OTP is: {otp}
 
 This OTP is valid for 5 minutes.
-If you did not request a password reset, please ignore this email.
 
 Thanks,
 Pixhare Team
 """)
-    print(f"🔑 DEV — Password reset OTP for {receiver_email}: {otp}")
-    _send_email_async(msg)
-    return True
+
+        print(f"🔑 Sending reset OTP to {receiver_email}")
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
+            smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
+            smtp.send_message(msg)
+
+        print(f"✅ Reset OTP email sent to {receiver_email}")
+        return True
+
+    except Exception as e:
+        print(f"❌ Reset OTP email error: {e}")
+        return False
 
 
 def send_gallery_email(receiver_email, gallery_link, guest_name):
     """Send the personalised gallery link to a guest."""
-    msg = EmailMessage()
-    msg['Subject'] = "Your Event Photo Gallery - PhotoShare AI"
-    msg['From']    = Config.EMAIL_USER
-    msg['To']      = receiver_email
-    msg.set_content(f"""Hi {guest_name},
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = "Your Event Photo Gallery - Pixhare"
+        msg['From'] = Config.EMAIL_USER
+        msg['To'] = receiver_email
+
+        msg.set_content(f"""Hi {guest_name},
 
 Thanks for attending the event!
 
@@ -161,16 +175,18 @@ Here is your private photo gallery:
 {gallery_link}
 
 Enjoy your photos!
-— PhotoShare AI
+— Pixhare
 """)
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
             smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
             smtp.send_message(msg)
+
         print(f"✅ Gallery email sent to {receiver_email}")
+
     except Exception as e:
         print(f"❌ Error sending gallery email: {e}")
-
+        
 
 def match_and_send_for_event(event_name, app_context):
     """

@@ -109,10 +109,10 @@ Pixhare Team
 
         print(f"🔑 Sending OTP to {receiver_email}")
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
+        with smtplib.SMTP("smtp-relay.brevo.com", 587, timeout=20) as smtp:
+            smtp.starttls()
             smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
             smtp.send_message(msg)
-
         print(f"✅ OTP email sent to {receiver_email}")
         return True
 

@@ -4,7 +4,6 @@ from models import db, Photographer, Guest, Event
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from config import Config
-from deepface import DeepFace
 from threading import Thread
 from email.message import EmailMessage
 from uuid import uuid4

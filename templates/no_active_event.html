@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico', v='2') }}">
+  <title>No Active Event — Pixhare</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #f0f2f5;
+      --forest:    #0f7b56;
+      --forest2:   #13a372;
+      --forest-lt: #e0f5ed;
+      --plum:      #5240a8;
+      --amber:     #d97706;
+      --amber-lt:  #fef3e2;
+      --ink:       #16181d;
+      --ink2:      #434956;
+      --ink3:      #8a9099;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .mini-bar {
+      height: 52px;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 12px rgba(0,0,0,0.05);
+    }
+    .mini-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .mini-brand-icon {
+      width: 30px; height: 30px; border-radius: 9px;
+      object-fit: cover;
+      box-shadow: 0 2px 8px rgba(15,123,86,0.28);
+    }
+    .mini-brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--ink);
+    }
+    .mini-brand-name span { color: var(--forest); }
+
+    .nae-page {
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 20px 60px;
+      min-height: calc(100vh - 52px);
+    }
+    .nae-wrap { width: 100%; max-width: 440px; text-align: center; }
+
+    .nae-card {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+      position: relative;
+    }
+    .nae-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--amber), var(--forest), var(--plum));
+    }
+
+    .nae-body { padding: 48px 36px 40px; }
+
+    .nae-icon-wrap {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--amber-lt);
+      border: 2.5px solid rgba(217,119,6,0.2);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .nae-icon-wrap i { font-size: 2.1rem; color: var(--amber); }
+
+    .nae-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.55rem; font-weight: 700;
+      letter-spacing: -0.8px; color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .nae-sub {
+      font-size: 0.92rem; color: var(--ink3);
+      line-height: 1.6; margin-bottom: 6px;
+    }
+    .nae-studio {
+      font-size: 0.8rem; color: var(--ink3);
+      margin-top: 20px; padding-top: 20px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+    .nae-studio strong { color: var(--ink2); }
+
+    .nae-foot {
+      padding: 14px 32px 18px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      background: #fafaf8; text-align: center;
+    }
+    .nae-foot p {
+      font-size: 0.78rem; color: var(--ink3); margin: 0;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mini-bar">
+    <a class="mini-brand" href="/">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare" class="mini-brand-icon">
+      <span class="mini-brand-name">Pix<span>hare</span></span>
+    </a>
+  </div>
+
+  <div class="nae-page">
+    <div class="nae-wrap">
+      <div class="nae-card">
+        <div class="nae-body">
+
+          <div class="nae-icon-wrap">
+            <i class="bi bi-calendar-x"></i>
+          </div>
+
+          <div class="nae-title">No active event today</div>
+          <p class="nae-sub">Please contact your photographer.</p>
+
+          {% if photographer and photographer.studio_name %}
+          <div class="nae-studio">
+            You scanned the QR code for<br>
+            <strong>{{ photographer.studio_name }}</strong>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <div class="nae-foot">
+          <p>
+            <i class="bi bi-shield-lock" style="color:var(--forest)"></i>
+            Check back on the day of your event.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -668,10 +668,23 @@ def verify_otp():
                 email       = email,
                 password    = hashed_pw,
                 otp         = otp_sent,
-                is_verified = True
+                is_verified = True,
+                scan_token  = uuid4().hex
             )
             db.session.add(new_photographer)
             db.session.commit()
+
+            # One QR per photographer, generated once — guests scan this
+            # and get routed to whichever event is live today (see
+            # /scan/<scan_token>), instead of a separate QR per event.
+            try:
+                qr_storage_path = f"qrcodes/{new_photographer.scan_token}.png"
+                qr_bytes = generate_qr_code_bytes(f"{BASE_URL}/scan/{new_photographer.scan_token}")
+                storage.upload_bytes(qr_storage_path, qr_bytes, content_type="image/png")
+                new_photographer.qr_url = storage.get_public_url(qr_storage_path)
+                db.session.commit()
+            except Exception as e:
+                print(f"[qr] ⚠️ Could not generate photographer QR at registration: {e}")
 
             for key in ('register_name', 'register_studio_name', 'register_email',
                         'register_password', 'register_otp', 'otp_expiry'):
@@ -834,23 +847,36 @@ def photographer_dashboard():
         flash("User not found.", "danger")
         return redirect(url_for('photographer_login'))
 
+    # Backward compatibility — photographers who registered before the
+    # one-QR-per-photographer change won't have a scan_token yet.
+    if not photographer.scan_token:
+        try:
+            photographer.scan_token = uuid4().hex
+            qr_storage_path = f"qrcodes/{photographer.scan_token}.png"
+            qr_bytes = generate_qr_code_bytes(f"{BASE_URL}/scan/{photographer.scan_token}")
+            storage.upload_bytes(qr_storage_path, qr_bytes, content_type="image/png")
+            photographer.qr_url = storage.get_public_url(qr_storage_path)
+            db.session.commit()
+        except Exception as e:
+            print(f"[qr] ⚠️ Could not lazily generate photographer QR: {e}")
+
     events = Event.query.filter_by(photographer_id=photographer.id).all()
 
-    # Build stats dict for each event: guest count + photo count
+    # Build stats dict for each event: guest count + photo count.
+    # photo_count is now a cached column on Event (kept in sync by
+    # upload_photos/delete_photos) instead of a Storage list() network
+    # call per event — that was the real cause of the slow dashboard load.
     event_stats = {}
     for event in events:
         guest_count = Guest.query.filter_by(event_name=event.name).count()
-        photo_count = len([
-            f for f in storage.list_files(f"photos/{event.name}")
-            if allowed_file(f)
-        ])
         event_stats[event.name] = {
             'guests': guest_count,
-            'photos': photo_count,
+            'photos': event.photo_count or 0,
         }
 
     return render_template('photographer_dashboard.html',
-                           events=events, event_stats=event_stats)
+                           events=events, event_stats=event_stats,
+                           photographer=photographer)
 
 
 @app.route('/photographer/create_event', methods=['POST'])
@@ -858,28 +884,28 @@ def create_event():
     if 'email' not in session:
         return redirect(url_for('photographer_login'))
 
-    event_name = request.form['event_name'].strip()
-    event_date = request.form['event_date']
+    event_name  = request.form['event_name'].strip()
+    event_date  = request.form['event_date']
+    venue       = request.form.get('venue', '').strip()
+    event_time  = request.form.get('event_time', '').strip()
 
     photographer = Photographer.query.filter_by(email=session['email']).first()
     if not photographer:
         flash("User not found.", "danger")
         return redirect(url_for('photographer_login'))
 
-    if Event.query.filter_by(name=event_name, photographer_id=photographer.id).first():
-        flash('You already created an event with this name.', 'danger')
+    if Event.query.filter_by(name=event_name).first():
+        flash('That event name is already taken. Event names must be unique across all photographers on Pixhare — try something more specific, like adding your studio name or the date.', 'danger')
         return redirect(url_for('photographer_dashboard'))
 
-    # Generate QR code pointing to the dynamic BASE_URL, upload to Storage
-    qr_storage_path = f"qrcodes/{secure_filename(event_name)}_qr.png"
-    qr_bytes = generate_qr_code_bytes(f"{BASE_URL}/event/{event_name}/register")
-    storage.upload_bytes(qr_storage_path, qr_bytes, content_type="image/png")
-    qr_url = storage.get_public_url(qr_storage_path)
-
+    # No per-event QR anymore — guests scan the photographer's single QR
+    # (generated once at registration) and get routed to whichever event
+    # is live today. See /scan/<scan_token>.
     new_event = Event(
         name            = event_name,
         date            = event_date,
-        qr_filename     = qr_url,   # now holds the full public Storage URL
+        venue           = venue or None,
+        event_time      = event_time or None,
         photographer_id = photographer.id
     )
     db.session.add(new_event)
@@ -903,10 +929,12 @@ def delete_event(event_name):
     storage.delete_prefix(f"photos/{event_name}")
     storage.delete_prefix(f"guests/{event_name}")
 
-    # Remove QR code
-    storage.delete_file(f"qrcodes/{secure_filename(event_name)}_qr.png")
+    # No per-event QR to remove anymore — QR lives on the photographer now,
+    # shared across all their events.
 
     Guest.query.filter_by(event_name=event_name).delete()
+    EventPhoto.query.filter_by(event_name=event_name).delete()
+    PhotoFaceEmbedding.query.filter_by(event_name=event_name).delete()
     Event.query.filter_by(name=event_name).delete()
     db.session.commit()
 
@@ -928,11 +956,48 @@ def delete_photos(event_name):
         safe_name = os.path.basename(secure_filename(filename))
         if allowed_file(safe_name):
             storage.delete_file(f"photos/{event_name}/{safe_name}")
+            EventPhoto.query.filter_by(event_name=event_name, filename=safe_name).delete()
             deleted += 1
+
+    if deleted:
+        event = Event.query.filter_by(name=event_name).first()
+        if event:
+            event.photo_count = max(0, (event.photo_count or 0) - deleted)
+    db.session.commit()
 
     flash(f"{deleted} photo{'s' if deleted != 1 else ''} deleted successfully.", "success")
     return redirect(url_for('view_event_photos', event_name=event_name))
 
+
+
+# ─────────────────────────────────────────────
+# Routes – Photographer QR scan (one QR per photographer)
+# ─────────────────────────────────────────────
+@app.route('/scan/<scan_token>')
+def scan_photographer_qr(scan_token):
+    photographer = Photographer.query.filter_by(scan_token=scan_token).first()
+    if not photographer:
+        return render_template('event_not_found.html', event_name=None), 404
+
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    live_events = Event.query.filter_by(
+        photographer_id=photographer.id, date=today
+    ).order_by(Event.event_time).all()
+
+    if len(live_events) == 1:
+        # Case 1 — exactly one live event today: go straight to it.
+        # guest_register.html already shows event name/venue/date and the
+        # "Take Selfie" capture flow, so no separate confirmation page.
+        return redirect(url_for('guest_register', event_name=live_events[0].name))
+
+    elif len(live_events) > 1:
+        # Case 2 — multiple live events today: let the guest choose.
+        return render_template('select_event.html',
+                               events=live_events, photographer=photographer)
+
+    else:
+        # Case 3 — nothing live today.
+        return render_template('no_active_event.html', photographer=photographer)
 
 
 # ─────────────────────────────────────────────
@@ -987,7 +1052,9 @@ def guest_register(event_name):
 
         return render_template('guest_success.html', guest_name=name)
 
-    return render_template('guest_register.html', event_name=event_name)
+    return render_template('guest_register.html', event_name=event_name,
+                           venue=event.venue, event_date=event.date,
+                           event_time=event.event_time)
 
 
 # ─────────────────────────────────────────────
@@ -1024,9 +1091,15 @@ def upload_photos(event_name):
                     .filter(EventPhoto.filename.in_(uploaded_filenames))
                     .all()
             }
-            for filename in uploaded_filenames:
-                if filename not in existing:
-                    db.session.add(EventPhoto(event_name=event_name, filename=filename, matched=False))
+            new_filenames = [f for f in uploaded_filenames if f not in existing]
+            for filename in new_filenames:
+                db.session.add(EventPhoto(event_name=event_name, filename=filename, matched=False))
+
+            if new_filenames:
+                event = Event.query.filter_by(name=event_name).first()
+                if event:
+                    event.photo_count = (event.photo_count or 0) + len(new_filenames)
+
             db.session.commit()
 
         flash(
@@ -1312,5 +1385,6 @@ def transcribe():
 # ─────────────────────────────────────────────
 if __name__ == '__main__':
     Thread(target=init_chatbot, daemon=True).start()
+    # debug=True only in local dev, False in production
     debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     app.run(debug=debug, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

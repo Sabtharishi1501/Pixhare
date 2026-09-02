@@ -167,10 +167,12 @@
            href="{{ url_for('home') }}">
           <i class="bi bi-house"></i> Home
         </a>
-        <a class="ps-nav-link {% if request.endpoint == 'photographer_dashboard' %}active{% endif %}"
+        {% if request.endpoint != 'photographer_dashboard' %}
+        <a class="ps-nav-link"
            href="{{ url_for('photographer_dashboard') }}">
           <i class="bi bi-grid"></i> Dashboard
         </a>
+        {% endif %}
         <a class="ps-nav-link nav-logout" href="{{ url_for('photographer_logout') }}">
           <i class="bi bi-box-arrow-right"></i> Logout
         </a>

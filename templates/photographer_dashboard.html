@@ -572,7 +572,14 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
         <div class="hero-stat-num">{{ events | length }}</div>
         <div class="hero-stat-lbl">Event{{ 's' if events | length != 1 else '' }}</div>
       </div>
-      <div class="hero-brand-chip">📸 &nbsp;PhotoShare AI</div>
+      {% if photographer and photographer.qr_url %}
+      <button class="hero-brand-chip" style="cursor:pointer; border:none;"
+              data-qr-src="{{ photographer.qr_url }}"
+              data-qr-name="{{ photographer.studio_name }}"
+              onclick="openQrModal(this)">
+        <i class="bi bi-qr-code-scan"></i> Your Check-in QR
+      </button>
+      {% endif %}
     </div>
   </div>
 
@@ -596,6 +603,15 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
             <div class="f-group">
               <label class="f-label">Event Date</label>
               <input type="date" name="event_date" class="f-input" required>
+            </div>
+            <div class="f-group">
+              <label class="f-label">Venue</label>
+              <input type="text" name="venue" class="f-input"
+                     placeholder="e.g., Taj Palace, Delhi">
+            </div>
+            <div class="f-group">
+              <label class="f-label">Time</label>
+              <input type="time" name="event_time" class="f-input">
             </div>
             <button type="submit" class="btn-create">
               <i class="bi bi-plus-lg"></i> Create Event
@@ -661,13 +677,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
           </button>
         </div>
         <div class="det-actions">
-          <button class="ab ab-qr"
-                  data-qr-src="{{ event.qr_filename }}"
-                  data-qr-name="{{ event.name }}"
-                  onclick="openQrModal(this)">
-            <i class="bi bi-qr-code-scan"></i> QR Code
-          </button>
-          <div class="sep"></div>
           <a href="{{ url_for('upload_photos', event_name=event.name) }}" class="ab ab-upload">
             <i class="bi bi-cloud-arrow-up-fill"></i> Upload Photos
           </a>

@@ -123,6 +123,13 @@
     }
     .guest-title span { color: var(--amber); }
     .guest-sub { font-size: 0.84rem; color: var(--ink3); line-height: 1.5; }
+    .guest-event-meta {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      font-size: 0.8rem; color: var(--ink2); font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .guest-event-meta span { display: flex; align-items: center; gap: 5px; }
+    .guest-event-meta i { color: var(--forest); }
 
     /* ── Body ── */
     .guest-body { padding: 26px 32px 30px; }
@@ -320,6 +327,12 @@
             {{ event_name }}
           </div>
           <div class="guest-title">Join the <span>event</span></div>
+          {% if venue or event_date %}
+          <div class="guest-event-meta">
+            {% if venue %}<span><i class="bi bi-geo-alt"></i> {{ venue }}</span>{% endif %}
+            {% if event_date %}<span><i class="bi bi-calendar3"></i> {{ event_date }}{% if event_time %} · {{ event_time }}{% endif %}</span>{% endif %}
+          </div>
+          {% endif %}
           <div class="guest-sub">Register below so we can find your photos and send them directly to you.</div>
         </div>
 

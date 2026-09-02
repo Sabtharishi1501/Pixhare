@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico', v='2') }}">
+  <title>Select Your Event — Pixhare</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #f0f2f5;
+      --forest:    #0f7b56;
+      --forest2:   #13a372;
+      --forest-lt: #e0f5ed;
+      --plum:      #5240a8;
+      --plum2:     #6b58cc;
+      --amber:     #d97706;
+      --amber-lt:  #fef3e2;
+      --ink:       #16181d;
+      --ink2:      #434956;
+      --ink3:      #8a9099;
+      --ink4:      #c8cdd6;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .mini-bar {
+      height: 52px;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 12px rgba(0,0,0,0.05);
+    }
+    .mini-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .mini-brand-icon {
+      width: 30px; height: 30px; border-radius: 9px;
+      object-fit: cover;
+      box-shadow: 0 2px 8px rgba(15,123,86,0.28);
+    }
+    .mini-brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--ink);
+    }
+    .mini-brand-name span { color: var(--forest); }
+
+    .se-page {
+      display: flex; justify-content: center;
+      padding: 48px 20px 60px;
+      min-height: calc(100vh - 52px);
+    }
+    .se-wrap { width: 100%; max-width: 480px; }
+
+    .se-head { text-align: center; margin-bottom: 28px; }
+    .se-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--amber-lt); border: 1px solid rgba(217,119,6,0.2);
+      border-radius: 50px; padding: 4px 14px;
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 14px;
+    }
+    .se-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.7rem; font-weight: 700;
+      letter-spacing: -0.9px; color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .se-sub { font-size: 0.86rem; color: var(--ink3); }
+
+    .se-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .se-card {
+      display: flex; align-items: center; gap: 14px;
+      background: #fff;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      border-radius: 16px;
+      padding: 18px 20px;
+      text-decoration: none; color: inherit;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.05);
+      transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .se-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(15,123,86,0.14);
+      border-color: rgba(15,123,86,0.3);
+    }
+    .se-card-icon {
+      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+      background: var(--forest-lt);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; color: var(--forest);
+    }
+    .se-card-body { flex: 1; min-width: 0; }
+    .se-card-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--ink); margin-bottom: 4px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .se-card-meta {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      font-size: 0.78rem; color: var(--ink3);
+    }
+    .se-card-meta span { display: flex; align-items: center; gap: 4px; }
+    .se-card-arrow {
+      font-size: 1.1rem; color: var(--ink4); flex-shrink: 0;
+      transition: transform .15s ease, color .15s ease;
+    }
+    .se-card:hover .se-card-arrow { transform: translateX(3px); color: var(--forest); }
+  </style>
+</head>
+<body>
+
+  <div class="mini-bar">
+    <a class="mini-brand" href="/">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare" class="mini-brand-icon">
+      <span class="mini-brand-name">Pix<span>hare</span></span>
+    </a>
+  </div>
+
+  <div class="se-page">
+    <div class="se-wrap">
+
+      <div class="se-head">
+        <div class="se-eyebrow">
+          <i class="bi bi-calendar-event"></i> {{ photographer.studio_name if photographer else 'Multiple Events Today' }}
+        </div>
+        <div class="se-title">Which event are you attending?</div>
+        <p class="se-sub">A few events are happening today — pick yours to continue.</p>
+      </div>
+
+      <div class="se-list">
+        {% for event in events %}
+        <a class="se-card" href="{{ url_for('guest_register', event_name=event.name) }}">
+          <div class="se-card-icon"><i class="bi bi-camera-fill"></i></div>
+          <div class="se-card-body">
+            <div class="se-card-name">{{ event.name }}</div>
+            <div class="se-card-meta">
+              {% if event.venue %}<span><i class="bi bi-geo-alt"></i> {{ event.venue }}</span>{% endif %}
+              {% if event.event_time %}<span><i class="bi bi-clock"></i> {{ event.event_time }}</span>{% endif %}
+            </div>
+          </div>
+          <i class="bi bi-arrow-right se-card-arrow"></i>
+        </a>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

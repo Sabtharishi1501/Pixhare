@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico', v='2') }}">
   <title>Pixhare</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -66,12 +67,8 @@
     }
     .ps-nav-brand-icon {
       width: 34px; height: 34px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--forest), var(--plum2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 900; color: #fff;
-      letter-spacing: -0.5px;
+      object-fit: cover;
       box-shadow: 0 3px 10px rgba(15,123,86,0.3);
-      font-family: 'Fraunces', serif;
     }
     .ps-nav-brand-name {
       font-family: 'Fraunces', serif;
@@ -148,7 +145,7 @@
 
     <!-- Brand -->
     <a class="ps-nav-brand" href="{{ url_for('home') }}">
-      <div class="ps-nav-brand-icon">Px</div>
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare" class="ps-nav-brand-icon">
       <span class="ps-nav-brand-name">Pix<span>hare</span></span>
     </a>
 

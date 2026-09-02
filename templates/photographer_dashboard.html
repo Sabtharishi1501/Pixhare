@@ -662,7 +662,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
         </div>
         <div class="det-actions">
           <button class="ab ab-qr"
-                  data-qr-src="{{ url_for('static', filename='qrcodes/' + event.qr_filename) }}"
+                  data-qr-src="{{ event.qr_filename }}"
                   data-qr-name="{{ event.name }}"
                   onclick="openQrModal(this)">
             <i class="bi bi-qr-code-scan"></i> QR Code
@@ -959,11 +959,15 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
   }
 
   /* ── Flash auto-hide ── */
-  document.querySelectorAll('.fl-item').forEach(function (el) {
+  var flashItems = document.querySelectorAll('.fl-item');
+  if (flashItems.length > 0) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  flashItems.forEach(function (el) {
     setTimeout(function () {
       el.classList.add('hide');
       setTimeout(function () { el.remove(); }, 650);
-    }, 3000);
+    }, 5000);
   });
 
   /* ── Cards: stagger + click ── */

@@ -13,3 +13,4 @@ edge-tts
 numpy
 psycopg2-binary
 python-dotenv
+supabase

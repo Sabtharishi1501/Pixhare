@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import db, Photographer, Guest, Event
+from models import db, Photographer, Guest, Event, EventPhoto, PhotoFaceEmbedding
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from config import Config
@@ -8,8 +8,11 @@ from threading import Thread
 from email.message import EmailMessage
 from uuid import uuid4
 from datetime import datetime, timedelta
-import random, smtplib, qrcode, os, shutil, cv2
+import random, smtplib, qrcode, os, shutil, cv2, io, json
+import numpy as np
+from PIL import Image
 from chatbot import get_answer, initialize as init_chatbot
+import storage
 
 
 # ─────────────────────────────────────────────
@@ -56,13 +59,48 @@ def allowed_file(filename):
     )
 
 
-def generate_qr_code(data, filename):
-    """Generate and save a QR code image."""
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+def generate_qr_code_bytes(data):
+    """Generate a QR code with the Pixhare mark centered in it, returned as
+    PNG bytes (no local disk). Uses HIGH error correction (~30% of the code
+    can be obscured and still scan) specifically so the center logo doesn't
+    break scannability — the logo is sized well under that recoverable
+    fraction, with a white backdrop for clean contrast against the modules
+    directly behind it."""
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=5
+    )
     qr.add_data(data)
     qr.make(fit=True)
-    img = qr.make_image(fill='black', back_color='white')
-    img.save(filename)
+    qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
+
+    try:
+        logo = Image.open(os.path.join('static', 'images', 'qr_mark.png')).convert('RGB')
+        qr_w, qr_h = qr_img.size
+
+        # ~20% of the QR width — a clear brand mark, small enough that
+        # ERROR_CORRECT_H can still recover the modules it covers.
+        logo_size = int(qr_w * 0.20)
+        logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
+
+        # White backdrop, slightly larger than the logo, so it reads
+        # cleanly regardless of which modules sit behind it.
+        pad = int(logo_size * 0.12)
+        backdrop_size = logo_size + pad * 2
+        backdrop = Image.new('RGB', (backdrop_size, backdrop_size), 'white')
+
+        backdrop_pos = ((qr_w - backdrop_size) // 2, (qr_h - backdrop_size) // 2)
+        qr_img.paste(backdrop, backdrop_pos)
+        logo_pos = ((qr_w - logo_size) // 2, (qr_h - logo_size) // 2)
+        qr_img.paste(logo, logo_pos)
+    except Exception as e:
+        print(f"[qr] ⚠️ Could not add logo to QR code: {e}")
+
+    buf = io.BytesIO()
+    qr_img.save(buf, format='PNG')
+    return buf.getvalue()
 
 
 def generate_otp():
@@ -109,15 +147,14 @@ Pixhare Team
 
         print(f"🔑 Sending OTP to {receiver_email}")
 
-        with smtplib.SMTP("smtp-relay.brevo.com", 587, timeout=20) as smtp:
-            smtp.starttls()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
             smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
             smtp.send_message(msg)
         print(f"✅ OTP email sent to {receiver_email}")
         return True
 
     except smtplib.SMTPAuthenticationError as e:
-        print(f"❌ Gmail Authentication Error: {e}")
+        print(f"❌ Gmail SMTP Authentication Error: {e}")
         return False
 
     except Exception as e:
@@ -160,7 +197,7 @@ Pixhare Team
 
 
 def send_gallery_email(receiver_email, gallery_link, guest_name):
-    """Send the personalised gallery link to a guest."""
+    """Send the personalised gallery link to a guest — first time only."""
     try:
         msg = EmailMessage()
         msg['Subject'] = "Your Event Photo Gallery - Pixhare"
@@ -186,16 +223,48 @@ Enjoy your photos!
 
     except Exception as e:
         print(f"❌ Error sending gallery email: {e}")
+
+
+def send_new_photos_email(receiver_email, gallery_link, guest_name, new_count):
+    """Notify a guest who already has a gallery that more photos were just added."""
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = "New photos added to your gallery - Pixhare"
+        msg['From'] = Config.EMAIL_USER
+        msg['To'] = receiver_email
+
+        msg.set_content(f"""Hi {guest_name},
+
+{new_count} new photo{'s' if new_count != 1 else ''} of you just got added to your gallery:
+{gallery_link}
+
+Enjoy!
+— Pixhare
+""")
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
+            smtp.login(Config.EMAIL_USER, Config.EMAIL_PASS)
+            smtp.send_message(msg)
+
+        print(f"✅ 'New photos' email sent to {receiver_email}")
+
+    except Exception as e:
+        print(f"❌ Error sending 'new photos' email: {e}")
         
 
 def match_and_send_for_event(event_name, app_context):
     """
-    Production-grade matching pipeline:
-    1. RetinaFace  — detect & align faces in event photos
+    Incremental matching pipeline — only processes photos uploaded since the
+    last run (tracked via EventPhoto.matched), so a repeat 'Send Gallery'
+    click after more photos are added doesn't re-embed the whole event.
+
+    1. RetinaFace  — detect & align every face in each NEW event photo
     2. ArcFace     — generate 512-dim face embeddings
-    3. FAISS       — lightning-fast similarity search (replaces slow cosine loop)
-    4. Per-guest   — query FAISS index with selfie embedding → get matched photos
-    5. Email       — send gallery link to each matched guest
+    3. FAISS       — similarity search over just the new photos
+    4. Per-guest   — query with all captured angles → get newly matched photos,
+                     copied ADD-ON-TOP of whatever's already in their gallery
+    5. Email       — first-time guests get the full "gallery ready" email;
+                     returning guests only get emailed if new photos matched
     """
     import numpy as np
     import faiss
@@ -207,113 +276,312 @@ def match_and_send_for_event(event_name, app_context):
     THRESHOLD = 0.40          # cosine distance threshold (lower = stricter)
     DIM       = 512           # ArcFace embedding dimension
 
+    # Quality gate: RetinaFace occasionally "detects" a face in a shirt
+    # pattern, a blurred background object, etc. Below this confidence,
+    # the detection is more likely junk than a real face — skip it rather
+    # than let a spurious low-quality embedding pollute the index.
+    MIN_FACE_CONFIDENCE = 0.85
+
+    # Group/crowd photos often contain faces well under 100px wide. ArcFace
+    # embeds whatever crop RetinaFace hands it — a tiny, low-res crop makes
+    # for a noisier embedding. For small faces we additionally upscale the
+    # crop and re-embed it, adding a SECOND candidate embedding for that
+    # face. Both compete for the same photo in matching (best distance
+    # wins), so this only ever helps, never overrides the original.
+    MIN_FACE_SIZE_FOR_REFINEMENT = 100    # px, bounding box width
+    REFINEMENT_UPSCALE_TARGET    = 220    # px, upscale small crops to at least this
+
+    # Soft reranking: a borderline-distance match from a high-confidence,
+    # cleanly detected face should be trusted slightly more than the same
+    # distance from a barely-passing detection. This nudges (never flips a
+    # clearly-wrong match into an accept) the effective distance used for
+    # the threshold decision, bounded to a small range.
+    QUALITY_BONUS_SCALE = 0.05
+
     with app_context:
         guests = Guest.query.filter_by(event_name=event_name).all()
-        event_photos_folder = os.path.join('static', 'photos', event_name)
-
-        if not os.path.exists(event_photos_folder):
-            print(f"[match] No photo folder for event: {event_name}")
-            return
-
-        photo_files = [f for f in os.listdir(event_photos_folder) if allowed_file(f)]
-
-        if not photo_files:
-            print(f"[match] No photos in folder: {event_name}")
-            return
-
         if not guests:
             print(f"[match] No guests for event: {event_name}")
             return
 
-        # ── STEP 1 & 2: RetinaFace detect + ArcFace embed all event photos ──
-        print(f"[match] Embedding {len(photo_files)} photos with ArcFace + RetinaFace...")
-        photo_names  = []   # ordered list of photo filenames
-        embeddings   = []   # corresponding embeddings
+        # Photos uploaded since the last run — the expensive embedding step
+        # only ever runs on these.
+        new_photo_rows = EventPhoto.query.filter_by(event_name=event_name, matched=False).all()
+        new_filenames = [row.filename for row in new_photo_rows if allowed_file(row.filename)]
 
-        for photo in photo_files:
-            photo_path = os.path.join(event_photos_folder, photo)
-            try:
-                emb = DeepFace.represent(
-                    img_path         = photo_path,
-                    model_name       = MODEL,
-                    detector_backend = BACKEND,
-                    enforce_detection= False
-                )
-                if emb:
-                    vec = np.array(emb[0]['embedding'], dtype='float32')
-                    # L2-normalise for cosine similarity via inner product
-                    vec = vec / (np.linalg.norm(vec) + 1e-10)
-                    photo_names.append(photo)
-                    embeddings.append(vec)
-            except Exception as e:
-                print(f"[match] ⚠️ Could not embed {photo}: {e}")
+        # Guests who have never been matched before need checking against
+        # the event's FULL photo history, not just this run's new batch —
+        # otherwise someone who registers after photos are already uploaded
+        # would never be matched to anything that came before them.
+        never_matched_guests = [g for g in guests if g.gallery_sent_at is None]
 
-        if not embeddings:
-            print("[match] No valid photo embeddings. Aborting.")
+        if not new_filenames and not never_matched_guests:
+            print(f"[match] Nothing new for event: {event_name} — no new photos, no new guests")
             return
 
-        # ── STEP 3: Build FAISS index ──
-        print(f"[match] Building FAISS index for {len(embeddings)} photos...")
-        matrix = np.stack(embeddings)   # shape: (n_photos, 512)
+        def load_image_array(storage_path):
+            """Download a Storage object and decode it into a BGR numpy array
+            (what DeepFace/cv2 expect) — no local disk involved."""
+            data = storage.download_bytes(storage_path)
+            if data is None:
+                return None
+            arr = np.frombuffer(data, dtype=np.uint8)
+            return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
-        # IndexFlatIP = exact inner product search
-        # Since vecs are L2-normalised, inner product == cosine similarity
-        index = faiss.IndexFlatIP(DIM)
-        index.add(matrix)
-        print(f"[match] FAISS index ready — {index.ntotal} vectors indexed.")
-
-        # ── STEP 4: Match each guest selfie against FAISS index ──
-        def process_guest(guest):
-            match_folder = os.path.join('static', 'matches', guest.gallery_token)
-            os.makedirs(match_folder, exist_ok=True)
-            matched = 0
-
+        def refine_small_face(img, facial_area):
+            """Crop a small detected face out of the full photo, upscale it,
+            and re-embed just that crop for a cleaner second embedding.
+            Returns (vec, confidence) or None if it can't be refined."""
             try:
-                selfie_raw = DeepFace.represent(
-                    img_path         = guest.selfie_path,
+                x, y, w, h = facial_area['x'], facial_area['y'], facial_area['w'], facial_area['h']
+                if w >= MIN_FACE_SIZE_FOR_REFINEMENT:
+                    return None
+                # Small margin around the box so alignment isn't cut off
+                pad = int(max(w, h) * 0.25)
+                y1, y2 = max(0, y - pad), min(img.shape[0], y + h + pad)
+                x1, x2 = max(0, x - pad), min(img.shape[1], x + w + pad)
+                crop = img[y1:y2, x1:x2]
+                if crop.size == 0:
+                    return None
+                scale = max(1.0, REFINEMENT_UPSCALE_TARGET / max(w, h))
+                upscaled = cv2.resize(crop, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+
+                refined = DeepFace.represent(
+                    img_path         = upscaled,
                     model_name       = MODEL,
                     detector_backend = BACKEND,
                     enforce_detection= False
                 )
-                if not selfie_raw:
-                    print(f"[match] ⚠️ No face in selfie for {guest.name}")
+                if not refined:
+                    return None
+                best = max(refined, key=lambda f: f.get('face_confidence', 1.0))
+                conf = best.get('face_confidence', 1.0)
+                if conf < MIN_FACE_CONFIDENCE:
+                    return None
+                vec = np.array(best['embedding'], dtype='float32')
+                vec = vec / (np.linalg.norm(vec) + 1e-10)
+                return vec, conf
+            except Exception:
+                return None
+
+        # ── STEP 1 & 2: RetinaFace detect + ArcFace embed the NEW photos ──
+        # Every face in a photo gets embedded, not just one — a photo with
+        # several people contributes one entry per person, plus a second
+        # refined entry for any small/distant face. Each embedding is cached
+        # to PhotoFaceEmbedding so it's never recomputed on a later run.
+        new_names = []   # one entry per embedding (a photo/face can repeat)
+        new_vecs  = []
+        new_confs = []
+
+        if new_filenames:
+            print(f"[match] Embedding {len(new_filenames)} new photo(s) with ArcFace + RetinaFace...")
+            skipped_low_confidence = 0
+            refined_count = 0
+
+            for photo in new_filenames:
+                img = load_image_array(f"photos/{event_name}/{photo}")
+                if img is None:
+                    print(f"[match] ⚠️ Could not download {photo}")
+                    continue
+                try:
+                    faces = DeepFace.represent(
+                        img_path         = img,
+                        model_name       = MODEL,
+                        detector_backend = BACKEND,
+                        enforce_detection= False
+                    )
+                    for face in faces or []:
+                        confidence = face.get('face_confidence', 1.0)
+                        if confidence < MIN_FACE_CONFIDENCE:
+                            skipped_low_confidence += 1
+                            continue
+                        vec = np.array(face['embedding'], dtype='float32')
+                        # L2-normalise for cosine similarity via inner product
+                        vec = vec / (np.linalg.norm(vec) + 1e-10)
+                        new_names.append(photo)
+                        new_vecs.append(vec)
+                        new_confs.append(confidence)
+                        db.session.add(PhotoFaceEmbedding(
+                            event_name = event_name,
+                            filename   = photo,
+                            embedding  = json.dumps(vec.tolist()),
+                            confidence = confidence
+                        ))
+
+                        # Second candidate embedding for small/distant faces —
+                        # common in group and crowd photos.
+                        refined = refine_small_face(img, face.get('facial_area', {}))
+                        if refined:
+                            r_vec, r_conf = refined
+                            new_names.append(photo)
+                            new_vecs.append(r_vec)
+                            new_confs.append(r_conf)
+                            refined_count += 1
+                            db.session.add(PhotoFaceEmbedding(
+                                event_name = event_name,
+                                filename   = photo,
+                                embedding  = json.dumps(r_vec.tolist()),
+                                confidence = r_conf
+                            ))
+                except Exception as e:
+                    print(f"[match] ⚠️ Could not embed {photo}: {e}")
+
+            if skipped_low_confidence:
+                print(f"[match] Filtered {skipped_low_confidence} low-confidence face detection(s) (< {MIN_FACE_CONFIDENCE})")
+            if refined_count:
+                print(f"[match] Added {refined_count} refined embedding(s) for small/distant faces")
+
+            # Mark every attempted photo as processed regardless of outcome —
+            # a photo that failed to download/embed just won't contribute a
+            # match; retrying it forever on every future run isn't useful.
+            for row in new_photo_rows:
+                row.matched = True
+            db.session.commit()
+
+        # ── STEP 3: Build the "new photos only" FAISS index ──
+        # This is what already-matched (returning) guests are checked
+        # against — cheap, since it's just this run's batch.
+        new_index = None
+        if new_vecs:
+            new_index = faiss.IndexFlatIP(DIM)
+            new_index.add(np.stack(new_vecs))
+            print(f"[match] New-photos index ready — {new_index.ntotal} face(s).")
+
+        # ── Build the "full history" FAISS index, only if needed ──
+        # Only guests being matched for the very first time need this — skip
+        # the DB read entirely when everyone present is a returning guest.
+        full_index = None
+        full_names = []
+        full_confs = []
+        if never_matched_guests:
+            rows = PhotoFaceEmbedding.query.filter_by(event_name=event_name).all()
+            for row in rows:
+                full_names.append(row.filename)
+                full_confs.append(row.confidence if row.confidence is not None else 1.0)
+            if rows:
+                full_matrix = np.array([json.loads(r.embedding) for r in rows], dtype='float32')
+                full_index = faiss.IndexFlatIP(DIM)
+                full_index.add(full_matrix)
+                print(f"[match] Full-history index ready — {full_index.ntotal} face(s) — for {len(never_matched_guests)} new guest(s).")
+
+        # ── STEP 4: Match each guest against the appropriate index ──
+        # New photos get copied into the guest's existing match folder — this
+        # ADDS to whatever they already have, nothing gets removed/replaced.
+        def process_guest(guest):
+            matched = 0
+            is_first_run  = guest.gallery_sent_at is None
+            index         = full_index if is_first_run else new_index
+            photo_names   = full_names if is_first_run else new_names
+            photo_confs   = full_confs if is_first_run else new_confs
+
+            if index is None or index.ntotal == 0:
+                return guest, 0
+
+            try:
+                # Dedupe: guests who used the upload fallback have the same
+                # file saved under all three angle fields, so skip re-embedding
+                # the identical image more than once.
+                angle_paths = list(dict.fromkeys(filter(None, [
+                    guest.selfie_center_path, guest.selfie_left_path, guest.selfie_right_path
+                ])))
+
+                if not angle_paths:
+                    print(f"[match] ⚠️ No selfie on file for {guest.name}")
                     return guest, 0
 
-                selfie_vec = np.array(selfie_raw[0]['embedding'], dtype='float32')
-                selfie_vec = selfie_vec / (np.linalg.norm(selfie_vec) + 1e-10)
-                selfie_vec = selfie_vec.reshape(1, -1)
-
-                # FAISS search — returns cosine similarities (higher = more similar)
-                scores, indices = index.search(selfie_vec, len(photo_names))
-
-                for score, idx in zip(scores[0], indices[0]):
-                    if idx < 0:
+                angle_vecs = []
+                for path in angle_paths:
+                    img = load_image_array(path)
+                    if img is None:
+                        print(f"[match] ⚠️ Could not download selfie angle for {guest.name}")
                         continue
-                    cosine_distance = 1.0 - float(score)  # convert similarity → distance
+                    try:
+                        raw = DeepFace.represent(
+                            img_path         = img,
+                            model_name       = MODEL,
+                            detector_backend = BACKEND,
+                            enforce_detection= False
+                        )
+                        if raw:
+                            best_face = max(raw, key=lambda f: f.get('face_confidence', 1.0))
+                            if best_face.get('face_confidence', 1.0) < MIN_FACE_CONFIDENCE:
+                                print(f"[match] ⚠️ Low-confidence selfie angle skipped for {guest.name}")
+                                continue
+                            v = np.array(best_face['embedding'], dtype='float32')
+                            v = v / (np.linalg.norm(v) + 1e-10)
+                            angle_vecs.append(v)
+                    except Exception as e:
+                        print(f"[match] ⚠️ Could not embed an angle for {guest.name}: {e}")
+
+                if not angle_vecs:
+                    print(f"[match] ⚠️ No face detected in any selfie for {guest.name}")
+                    return guest, 0
+
+                # For each candidate photo, keep the BEST (lowest) QUALITY-
+                # ADJUSTED distance seen across all of the guest's captured
+                # angles. The adjustment gives a small edge to matches coming
+                # from higher-confidence face detections — it can nudge a
+                # borderline case, but is bounded small enough that it never
+                # turns a clearly-wrong match into an accept. We still search
+                # every photo per angle (no top-K cap).
+                best_distance = {}
+                for vec in angle_vecs:
+                    vec = vec.reshape(1, -1)
+                    scores, indices = index.search(vec, len(photo_names))
+                    for score, idx in zip(scores[0], indices[0]):
+                        if idx < 0:
+                            continue
+                        distance = 1.0 - float(score)
+                        confidence = photo_confs[idx] if idx < len(photo_confs) else 1.0
+                        quality_bonus = max(0.0, confidence - MIN_FACE_CONFIDENCE) * QUALITY_BONUS_SCALE
+                        adjusted_distance = distance - quality_bonus
+                        photo = photo_names[idx]
+                        if photo not in best_distance or adjusted_distance < best_distance[photo]:
+                            best_distance[photo] = adjusted_distance
+
+                for photo, cosine_distance in best_distance.items():
                     if cosine_distance <= THRESHOLD:
-                        photo     = photo_names[idx]
-                        src_path  = os.path.join(event_photos_folder, photo)
-                        dest_path = os.path.join(match_folder, photo)
-                        if not os.path.exists(dest_path):
-                            shutil.copy(src_path, dest_path)
+                        try:
+                            storage.copy_file(
+                                f"photos/{event_name}/{photo}",
+                                f"matches/{guest.gallery_token}/{photo}"
+                            )
                             print(f"[match] ✅ {photo} → {guest.name} (dist={cosine_distance:.3f})")
-                        matched += 1
+                            matched += 1
+                        except Exception as e:
+                            print(f"[match] ⚠️ Could not copy {photo} for {guest.name}: {e}")
 
             except Exception as e:
                 print(f"[match] ⚠️ Error for {guest.name}: {e}")
 
             return guest, matched
 
-        # ── STEP 5: Process guests in parallel + email galleries ──
-        print(f"[match] Matching {len(guests)} guest(s) in parallel...")
+        # ── STEP 5: Process guests in parallel, then email on the main thread ──
+        print(f"[match] Matching {len(guests)} guest(s) — {len(new_filenames)} new photo(s), {len(never_matched_guests)} first-time guest(s)...")
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = {executor.submit(process_guest, g): g for g in guests}
             for future in as_completed(futures):
                 try:
                     guest, count = future.result()
                     gallery_link = f"{BASE_URL}/gallery/{guest.gallery_token}"
-                    send_gallery_email(guest.email, gallery_link, guest.name)
-                    print(f"[match] 📧 Gallery sent to {guest.name} ({count} photos matched)")
+
+                    if guest.gallery_sent_at is None:
+                        # First time this guest has ever been matched for this
+                        # event — send their permanent gallery link regardless
+                        # of whether this batch matched them, so they have it
+                        # ready for whenever new photos of them do show up.
+                        send_gallery_email(guest.email, gallery_link, guest.name)
+                        guest.gallery_sent_at = datetime.utcnow()
+                        db.session.commit()
+                        print(f"[match] 📧 Gallery link sent to {guest.name} ({count} photo(s) matched)")
+                    elif count > 0:
+                        # Returning guest — only notify if this run actually
+                        # added something new to their existing gallery.
+                        send_new_photos_email(guest.email, gallery_link, guest.name, count)
+                        print(f"[match] 📧 'New photos' email sent to {guest.name} ({count} new)")
+                    else:
+                        print(f"[match] No new matches for {guest.name} this run — no email sent")
+
                 except Exception as e:
                     print(f"[match] ⚠️ Error processing guest: {e}")
 
@@ -572,13 +840,10 @@ def photographer_dashboard():
     event_stats = {}
     for event in events:
         guest_count = Guest.query.filter_by(event_name=event.name).count()
-        photo_folder = os.path.join('static', 'photos', event.name)
-        photo_count = 0
-        if os.path.exists(photo_folder):
-            photo_count = len([
-                f for f in os.listdir(photo_folder)
-                if allowed_file(f)
-            ])
+        photo_count = len([
+            f for f in storage.list_files(f"photos/{event.name}")
+            if allowed_file(f)
+        ])
         event_stats[event.name] = {
             'guests': guest_count,
             'photos': photo_count,
@@ -605,16 +870,16 @@ def create_event():
         flash('You already created an event with this name.', 'danger')
         return redirect(url_for('photographer_dashboard'))
 
-    # Generate QR code pointing to the dynamic BASE_URL
-    qr_filename = secure_filename(f"{event_name}_qr.png")
-    qr_path     = os.path.join('static', 'qrcodes', qr_filename)
-    os.makedirs(os.path.dirname(qr_path), exist_ok=True)
-    generate_qr_code(f"{BASE_URL}/event/{event_name}/register", qr_path)
+    # Generate QR code pointing to the dynamic BASE_URL, upload to Storage
+    qr_storage_path = f"qrcodes/{secure_filename(event_name)}_qr.png"
+    qr_bytes = generate_qr_code_bytes(f"{BASE_URL}/event/{event_name}/register")
+    storage.upload_bytes(qr_storage_path, qr_bytes, content_type="image/png")
+    qr_url = storage.get_public_url(qr_storage_path)
 
     new_event = Event(
         name            = event_name,
         date            = event_date,
-        qr_filename     = qr_filename,
+        qr_filename     = qr_url,   # now holds the full public Storage URL
         photographer_id = photographer.id
     )
     db.session.add(new_event)
@@ -632,18 +897,14 @@ def delete_event(event_name):
     # Remove all match folders for guests of this event
     guests = Guest.query.filter_by(event_name=event_name).all()
     for guest in guests:
-        shutil.rmtree(os.path.join('static', 'matches', guest.gallery_token), ignore_errors=True)
+        storage.delete_prefix(f"matches/{guest.gallery_token}")
 
     # Remove photo and selfie folders
-    shutil.rmtree(os.path.join('static', 'photos',  event_name), ignore_errors=True)
-    shutil.rmtree(os.path.join('static', 'guests',  event_name), ignore_errors=True)
+    storage.delete_prefix(f"photos/{event_name}")
+    storage.delete_prefix(f"guests/{event_name}")
 
     # Remove QR code
-    event = Event.query.filter_by(name=event_name).first()
-    if event and event.qr_filename:
-        qr_path = os.path.join('static', 'qrcodes', event.qr_filename)
-        if os.path.exists(qr_path):
-            os.remove(qr_path)
+    storage.delete_file(f"qrcodes/{secure_filename(event_name)}_qr.png")
 
     Guest.query.filter_by(event_name=event_name).delete()
     Event.query.filter_by(name=event_name).delete()
@@ -660,15 +921,13 @@ def delete_photos(event_name):
         return redirect(url_for('photographer_login'))
 
     filenames = request.form.getlist('photos_to_delete')
-    folder    = os.path.join('static', 'photos', event_name)
     deleted   = 0
 
     for filename in filenames:
         # Sanitise — only allow the filename, no path traversal
         safe_name = os.path.basename(secure_filename(filename))
-        file_path = os.path.join(folder, safe_name)
-        if os.path.exists(file_path) and allowed_file(safe_name):
-            os.remove(file_path)
+        if allowed_file(safe_name):
+            storage.delete_file(f"photos/{event_name}/{safe_name}")
             deleted += 1
 
     flash(f"{deleted} photo{'s' if deleted != 1 else ''} deleted successfully.", "success")
@@ -689,27 +948,39 @@ def guest_register(event_name):
     if request.method == 'POST':
         name   = request.form['name'].strip()
         email  = request.form['email'].strip()
-        selfie = request.files.get('selfie')
 
-        # Validate selfie upload
-        if not selfie or not allowed_file(selfie.filename):
-            flash("Please upload a valid JPG or PNG selfie.", "danger")
+        selfie_center = request.files.get('selfie_center')
+        selfie_left   = request.files.get('selfie_left')
+        selfie_right  = request.files.get('selfie_right')
+
+        # Center angle is mandatory. Left/right are strongly recommended but
+        # optional at the DB level — the upload fallback in guest_register.html
+        # sends the same photo under all three fields, so this validates the
+        # one field guaranteed to be present either way.
+        if not selfie_center or not allowed_file(selfie_center.filename):
+            flash("Please complete face verification or upload a valid JPG/PNG photo.", "danger")
             return redirect(request.url)
 
-        selfie_folder   = os.path.join('static', 'guests', event_name)
-        os.makedirs(selfie_folder, exist_ok=True)
+        def save_angle(file_storage):
+            if not file_storage or not allowed_file(file_storage.filename):
+                return None
+            filename = secure_filename(f"{uuid4()}.jpg")
+            storage_path = f"guests/{event_name}/{filename}"
+            return storage.upload_fileobj(storage_path, file_storage)
 
-        selfie_filename = secure_filename(f"{uuid4()}.jpg")
-        selfie_path     = os.path.join(selfie_folder, selfie_filename)
-        selfie.save(selfie_path)
+        center_path = save_angle(selfie_center)
+        left_path   = save_angle(selfie_left)
+        right_path  = save_angle(selfie_right)
 
         gallery_token = str(uuid4())
         guest = Guest(
-            name          = name,
-            email         = email,
-            event_name    = event_name,
-            selfie_path   = selfie_path,
-            gallery_token = gallery_token
+            name               = name,
+            email              = email,
+            event_name         = event_name,
+            selfie_center_path = center_path,
+            selfie_left_path   = left_path,
+            selfie_right_path  = right_path,
+            gallery_token      = gallery_token
         )
         db.session.add(guest)
         db.session.commit()
@@ -728,20 +999,35 @@ def upload_photos(event_name):
         return redirect(url_for('photographer_login'))
 
     if request.method == 'POST':
-        files         = request.files.getlist('photos')
-        upload_folder = os.path.join('static', 'photos', event_name)
-        os.makedirs(upload_folder, exist_ok=True)
+        files = request.files.getlist('photos')
 
         saved_count   = 0
         skipped_count = 0
+        uploaded_filenames = []
 
         for file in files:
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(upload_folder, filename))
+                storage.upload_fileobj(f"photos/{event_name}/{filename}", file)
+                uploaded_filenames.append(filename)
                 saved_count += 1
             else:
                 skipped_count += 1
+
+        if uploaded_filenames:
+            # Only insert filenames we haven't seen before for this event —
+            # re-uploading an existing filename just refreshes the Storage
+            # object without resetting its already-matched status.
+            existing = {
+                row.filename for row in EventPhoto.query
+                    .filter_by(event_name=event_name)
+                    .filter(EventPhoto.filename.in_(uploaded_filenames))
+                    .all()
+            }
+            for filename in uploaded_filenames:
+                if filename not in existing:
+                    db.session.add(EventPhoto(event_name=event_name, filename=filename, matched=False))
+            db.session.commit()
 
         flash(
             f"{saved_count} photo(s) uploaded."
@@ -761,11 +1047,14 @@ def view_event_photos(event_name):
     if 'email' not in session:
         return redirect(url_for('photographer_login'))
 
-    folder = os.path.join('static', 'photos', event_name)
-    if not os.path.exists(folder):
+    filenames = [f for f in storage.list_files(f"photos/{event_name}") if allowed_file(f)]
+    if not filenames:
         return f"No photos found for event: {event_name}", 404
 
-    photos = [f for f in os.listdir(folder) if allowed_file(f)]
+    photos = [
+        {"name": f, "url": storage.get_public_url(f"photos/{event_name}/{f}")}
+        for f in filenames
+    ]
 
     if request.method == 'POST':
         # ── Run matching asynchronously so the page responds immediately ──
@@ -793,7 +1082,7 @@ def send_gallery(event_name):
     if 'email' not in session:
         return redirect(url_for('photographer_login'))
 
-    if not os.path.exists(os.path.join('static', 'photos', event_name)):
+    if not storage.list_files(f"photos/{event_name}"):
         flash(f"No event photos found for '{event_name}'.", "danger")
         return redirect(url_for('photographer_dashboard'))
 
@@ -816,13 +1105,13 @@ def send_gallery(event_name):
 # ─────────────────────────────────────────────
 @app.route('/gallery/<uuid>')
 def view_gallery(uuid):
-    guest  = Guest.query.filter_by(gallery_token=uuid).first_or_404()
-    folder = os.path.join('static', 'matches', uuid)
+    guest = Guest.query.filter_by(gallery_token=uuid).first_or_404()
+    filenames = [f for f in storage.list_files(f"matches/{uuid}") if allowed_file(f)]
 
-    if not os.path.exists(folder) or not os.listdir(folder):
+    if not filenames:
         return render_template('gallery.html', guest=guest, photos=[], message="No matched photos yet. Please check back soon.")
 
-    photos = [f"/static/matches/{uuid}/{f}" for f in os.listdir(folder) if allowed_file(f)]
+    photos = [storage.get_public_url(f"matches/{uuid}/{f}") for f in filenames]
     return render_template('gallery.html', guest=guest, photos=photos)
 
 
@@ -1023,6 +1312,5 @@ def transcribe():
 # ─────────────────────────────────────────────
 if __name__ == '__main__':
     Thread(target=init_chatbot, daemon=True).start()
-    # debug=True only in local dev, False in production
     debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     app.run(debug=debug, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

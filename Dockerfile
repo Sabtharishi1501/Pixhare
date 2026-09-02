@@ -22,17 +22,21 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create required folders
+# NOTE: these are still created for local scratch use (e.g. temp file
+# handling during a request), but nothing written here persists between
+# requests on Vercel — see the storage note below.
 RUN mkdir -p static/photos static/qrcodes static/matches \
              static/guests uploads/qr_codes uploads/selfies instance
 
-# Expose Render's default port
-EXPOSE 10000
+# Vercel container Functions expect the app to listen on $PORT
+# (defaults to 80 if unset — Render's fixed 10000 doesn't apply here)
+EXPOSE 80
 
-# Production server — gunicorn (NOT flask dev server)
-CMD ["gunicorn", \
-     "--bind", "0.0.0.0:10000", \
-     "--workers", "1", \
-     "--threads", "4", \
-     "--timeout", "120", \
-     "--preload", \
-     "app:app"]
+# Shell form so $PORT is expanded at container start
+CMD gunicorn \
+    --bind 0.0.0.0:${PORT:-80} \
+    --workers 1 \
+    --threads 4 \
+    --timeout 120 \
+    --preload \
+    app:app

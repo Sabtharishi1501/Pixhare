@@ -433,14 +433,14 @@
     {% for photo in photos %}
     <div class="photo-item"
          data-index="{{ loop.index0 }}"
-         data-src="{{ url_for('static', filename='photos/' + event_name + '/' + photo) }}"
-         data-filename="{{ photo }}"
+         data-src="{{ photo.url }}"
+         data-filename="{{ photo.name }}"
          data-delay="{{ loop.index0 }}">
       <span class="photo-num">#{{ loop.index }}</span>
       <div class="photo-check"><i class="bi bi-check-lg"></i></div>
-      <input type="checkbox" name="photos_to_delete" value="{{ photo }}"
+      <input type="checkbox" name="photos_to_delete" value="{{ photo.name }}"
              style="display:none;" class="photo-checkbox">
-      <img src="{{ url_for('static', filename='photos/' + event_name + '/' + photo) }}"
+      <img src="{{ photo.url }}"
            alt="Photo {{ loop.index }}" loading="lazy">
       <div class="photo-overlay">
         <div class="photo-overlay-icon"><i class="bi bi-arrows-fullscreen"></i></div>

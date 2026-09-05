@@ -8,7 +8,7 @@ from threading import Thread
 from email.message import EmailMessage
 from uuid import uuid4
 from datetime import datetime, timedelta
-import random, smtplib, qrcode, os, shutil, cv2, io, json
+import random, smtplib, qrcode, os, shutil, cv2, io, json, base64, tempfile
 import numpy as np
 from PIL import Image
 from chatbot import get_answer, initialize as init_chatbot
@@ -77,7 +77,8 @@ def generate_qr_code_bytes(data):
     qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
 
     try:
-        logo = Image.open(os.path.join('static', 'images', 'qr_mark.png')).convert('RGB')
+        logo_path = os.path.join(app.root_path, 'static', 'images', 'logo.png')
+        logo = Image.open(logo_path).convert('RGB')
         qr_w, qr_h = qr_img.size
 
         # ~20% of the QR width — a clear brand mark, small enough that
@@ -328,6 +329,48 @@ def match_and_send_for_event(event_name, app_context):
             arr = np.frombuffer(data, dtype=np.uint8)
             return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
+        # Timestamps (seconds) matching the midpoint of each guided phase in
+        # guest_register.html's recording script (0-1.7s center, 1.7-3.35s
+        # right, 3.35-5s left) — grabbing the middle of each window gives the
+        # best chance the guest was actually holding that pose steadily.
+        VIDEO_FRAME_TIMESTAMPS = [0.85, 2.5, 4.2]
+
+        def extract_video_frames(storage_path):
+            """Download a guest's selfie video and pull frames at the three
+            guided-phase timestamps. cv2.VideoCapture needs a real file path
+            (no in-memory buffer support), so this writes to a short-lived
+            temp file and always cleans it up, even on failure."""
+            data = storage.download_bytes(storage_path)
+            if data is None:
+                return []
+
+            tmp_path = os.path.join(tempfile.gettempdir(), f"pixhare_video_{uuid4().hex}.webm")
+            frames = []
+            try:
+                with open(tmp_path, 'wb') as f:
+                    f.write(data)
+
+                cap = cv2.VideoCapture(tmp_path)
+                if not cap.isOpened():
+                    print(f"[match] ⚠️ Could not open video {storage_path}")
+                    return []
+
+                for ts in VIDEO_FRAME_TIMESTAMPS:
+                    cap.set(cv2.CAP_PROP_POS_MSEC, ts * 1000)
+                    ok, frame = cap.read()
+                    if ok and frame is not None:
+                        frames.append(frame)
+                    else:
+                        print(f"[match] ⚠️ Could not read frame at {ts}s from {storage_path}")
+                cap.release()
+            except Exception as e:
+                print(f"[match] ⚠️ Video frame extraction failed for {storage_path}: {e}")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
+            return frames
+
         def refine_small_face(img, facial_area):
             """Crop a small detected face out of the full photo, upscale it,
             and re-embed just that crop for a cleaner second embedding.
@@ -478,23 +521,25 @@ def match_and_send_for_event(event_name, app_context):
                 return guest, 0
 
             try:
-                # Dedupe: guests who used the upload fallback have the same
-                # file saved under all three angle fields, so skip re-embedding
-                # the identical image more than once.
-                angle_paths = list(dict.fromkeys(filter(None, [
-                    guest.selfie_center_path, guest.selfie_left_path, guest.selfie_right_path
-                ])))
+                if guest.selfie_is_video and guest.selfie_center_path:
+                    frames = extract_video_frames(guest.selfie_center_path)
+                    if not frames:
+                        print(f"[match] ⚠️ Could not extract any frames from video for {guest.name}")
+                        return guest, 0
+                elif guest.selfie_center_path:
+                    # Upload fallback — a single static photo, used as-is.
+                    img = load_image_array(guest.selfie_center_path)
+                    frames = [img] if img is not None else []
+                else:
+                    print(f"[match] ⚠️ No selfie on file for {guest.name}")
+                    return guest, 0
 
-                if not angle_paths:
+                if not frames:
                     print(f"[match] ⚠️ No selfie on file for {guest.name}")
                     return guest, 0
 
                 angle_vecs = []
-                for path in angle_paths:
-                    img = load_image_array(path)
-                    if img is None:
-                        print(f"[match] ⚠️ Could not download selfie angle for {guest.name}")
-                        continue
+                for img in frames:
                     try:
                         raw = DeepFace.represent(
                             img_path         = img,
@@ -505,13 +550,13 @@ def match_and_send_for_event(event_name, app_context):
                         if raw:
                             best_face = max(raw, key=lambda f: f.get('face_confidence', 1.0))
                             if best_face.get('face_confidence', 1.0) < MIN_FACE_CONFIDENCE:
-                                print(f"[match] ⚠️ Low-confidence selfie angle skipped for {guest.name}")
+                                print(f"[match] ⚠️ Low-confidence selfie frame skipped for {guest.name}")
                                 continue
                             v = np.array(best_face['embedding'], dtype='float32')
                             v = v / (np.linalg.norm(v) + 1e-10)
                             angle_vecs.append(v)
                     except Exception as e:
-                        print(f"[match] ⚠️ Could not embed an angle for {guest.name}: {e}")
+                        print(f"[match] ⚠️ Could not embed a selfie frame for {guest.name}: {e}")
 
                 if not angle_vecs:
                     print(f"[match] ⚠️ No face detected in any selfie for {guest.name}")
@@ -874,9 +919,21 @@ def photographer_dashboard():
             'photos': event.photo_count or 0,
         }
 
+    # Base64-embed the QR for the poster canvas — loading it as a plain
+    # <img src="https://...supabase.co/...">  with crossOrigin='anonymous'
+    # depends on Supabase Storage returning CORS headers on that response,
+    # which isn't reliable to depend on. A data: URI has no cross-origin
+    # fetch at all, so canvas.toDataURL() (used for the poster download)
+    # never fails with a tainted-canvas error.
+    qr_data_uri = None
+    if photographer.scan_token:
+        qr_bytes = storage.download_bytes(f"qrcodes/{photographer.scan_token}.png")
+        if qr_bytes:
+            qr_data_uri = "data:image/png;base64," + base64.b64encode(qr_bytes).decode('ascii')
+
     return render_template('photographer_dashboard.html',
                            events=events, event_stats=event_stats,
-                           photographer=photographer)
+                           photographer=photographer, qr_data_uri=qr_data_uri)
 
 
 @app.route('/photographer/create_event', methods=['POST'])
@@ -1014,37 +1071,34 @@ def guest_register(event_name):
         name   = request.form['name'].strip()
         email  = request.form['email'].strip()
 
-        selfie_center = request.files.get('selfie_center')
-        selfie_left   = request.files.get('selfie_left')
-        selfie_right  = request.files.get('selfie_right')
+        selfie_video    = request.files.get('selfie_video')
+        selfie_fallback = request.files.get('selfie_fallback')
 
-        # Center angle is mandatory. Left/right are strongly recommended but
-        # optional at the DB level — the upload fallback in guest_register.html
-        # sends the same photo under all three fields, so this validates the
-        # one field guaranteed to be present either way.
-        if not selfie_center or not allowed_file(selfie_center.filename):
+        is_video    = bool(selfie_video and selfie_video.filename)
+        selfie_file = selfie_video if is_video else (
+            selfie_fallback if (selfie_fallback and selfie_fallback.filename) else None
+        )
+
+        # Fallback path still needs the JPG/PNG check; the video path is
+        # programmatically generated by MediaRecorder, not user-picked, so
+        # it doesn't go through the same extension allowlist.
+        if not selfie_file or (not is_video and not allowed_file(selfie_file.filename)):
             flash("Please complete face verification or upload a valid JPG/PNG photo.", "danger")
             return redirect(request.url)
 
-        def save_angle(file_storage):
-            if not file_storage or not allowed_file(file_storage.filename):
-                return None
-            filename = secure_filename(f"{uuid4()}.jpg")
-            storage_path = f"guests/{event_name}/{filename}"
-            return storage.upload_fileobj(storage_path, file_storage)
-
-        center_path = save_angle(selfie_center)
-        left_path   = save_angle(selfie_left)
-        right_path  = save_angle(selfie_right)
+        ext = 'webm' if is_video else 'jpg'
+        content_type = selfie_file.mimetype or ('video/webm' if is_video else 'image/jpeg')
+        filename = secure_filename(f"{uuid4()}.{ext}")
+        storage_path = f"guests/{event_name}/{filename}"
+        saved_path = storage.upload_fileobj(storage_path, selfie_file, content_type=content_type)
 
         gallery_token = str(uuid4())
         guest = Guest(
             name               = name,
             email              = email,
             event_name         = event_name,
-            selfie_center_path = center_path,
-            selfie_left_path   = left_path,
-            selfie_right_path  = right_path,
+            selfie_center_path = saved_path,
+            selfie_is_video    = is_video,
             gallery_token      = gallery_token
         )
         db.session.add(guest)

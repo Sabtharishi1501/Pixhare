@@ -122,6 +122,36 @@
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 50px; padding: 7px 16px;
   font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.hero-brand-chip:hover { text-decoration: none; }
+
+/* View QR — primary action, filled amber so it pops against the hero
+   gradient. This is the one guests-facing / most-used action. */
+.hero-qr-view {
+  background: linear-gradient(135deg, #d97706, #e8920a);
+  border: none; color: #fff;
+  box-shadow: 0 4px 16px rgba(217,119,6,0.35);
+}
+.hero-qr-view:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(217,119,6,0.45);
+  color: #fff;
+}
+
+/* Download QR — secondary action, quieter glass style so it doesn't
+   compete visually with View QR, but is still clearly a separate,
+   deliberate control (not just decorative). */
+.hero-qr-download {
+  background: rgba(255,255,255,0.08);
+  border: 1.5px dashed rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.8);
+}
+.hero-qr-download:hover {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.55);
+  color: #fff;
 }
 
 /* ═══════════════════════════════════
@@ -572,13 +602,18 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
         <div class="hero-stat-num">{{ events | length }}</div>
         <div class="hero-stat-lbl">Event{{ 's' if events | length != 1 else '' }}</div>
       </div>
-      {% if photographer and photographer.qr_url %}
-      <button class="hero-brand-chip" style="cursor:pointer; border:none;"
-              data-qr-src="{{ photographer.qr_url }}"
+      {% if photographer and qr_data_uri %}
+      <button class="hero-brand-chip hero-qr-view" style="cursor:pointer;"
+              data-qr-src="{{ qr_data_uri }}"
               data-qr-name="{{ photographer.studio_name }}"
               onclick="openQrModal(this)">
-        <i class="bi bi-qr-code-scan"></i> Your Check-in QR
+        <i class="bi bi-qr-code-scan"></i> View QR
       </button>
+      <a class="hero-brand-chip hero-qr-download"
+         href="{{ photographer.qr_url }}" download="pixhare_checkin_qr.png"
+         title="Download the raw QR image">
+        <i class="bi bi-download"></i> Download QR
+      </a>
       {% endif %}
     </div>
   </div>
@@ -821,7 +856,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
     if (e.key === 'Escape') { document.getElementById('qrModal').classList.remove('open'); }
   });
 
-  function renderPoster(qrSrc, eventName) {
+  function renderPoster(qrSrc, studioName) {
     var canvas = document.getElementById('posterCanvas');
     var ctx    = canvas.getContext('2d');
     var W = 600, H = 780;
@@ -854,100 +889,117 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
     ctx.fillStyle = line;
     ctx.fillRect(0, 0, W, 5);
 
-    /* ── PIXHARE logo text ── */
-    ctx.font = 'bold 42px serif';
     ctx.textAlign = 'center';
-    /* shadow */
-    ctx.shadowColor = 'rgba(15,123,86,0.4)';
-    ctx.shadowBlur  = 20;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('Pix', W/2 - 42, 90);
-    ctx.fillStyle = '#13a372';
-    ctx.fillText('hare', W/2 + 28, 90);
-    ctx.shadowBlur = 0;
 
-    /* ── Tagline ── */
-    ctx.font = '300 18px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText('AI-Powered Event Photo Sharing', W/2, 122);
+    /* ── Real logo image + wordmark (same-origin static asset — never
+       hits the CORS problem the QR itself used to have) ── */
+    var logoImg = new Image();
+    logoImg.onload = function () {
+      var logoSize = 56;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(W/2, 58, logoSize/2, 0, Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(logoImg, W/2 - logoSize/2, 58 - logoSize/2, logoSize, logoSize);
+      ctx.restore();
 
-    /* ── Divider ── */
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(60, 142); ctx.lineTo(W-60, 142); ctx.stroke();
+      drawRestOfPoster();
+    };
+    logoImg.onerror = drawRestOfPoster;   // don't block the whole poster on a missing logo
+    logoImg.src = '{{ url_for("static", filename="images/logo.png") }}';
 
-    /* ── "You're invited to" label ── */
-    ctx.font = '500 16px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillText('YOU\'RE INVITED TO', W/2, 175);
-
-    /* ── Event name ── */
-    ctx.font = 'bold 38px serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = 'rgba(19,163,114,0.3)';
-    ctx.shadowBlur  = 16;
-    /* truncate if long */
-    var evName = eventName.length > 20 ? eventName.substring(0, 18) + '…' : eventName;
-    ctx.fillText(evName, W/2, 220);
-    ctx.shadowBlur = 0;
-
-    /* ── QR white card background ── */
-    var qrSize   = 260;
-    var qrX      = (W - qrSize) / 2;
-    var qrY      = 255;
-    var cardPad  = 18;
-    roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 20, '#ffffff');
-
-    /* ── Draw QR image ── */
-    var qrImg = new Image();
-    qrImg.crossOrigin = 'anonymous';
-    qrImg.onload = function () {
-      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-      /* ── "Scan to register" label ── */
-      ctx.font = 'bold 20px sans-serif';
+    function drawRestOfPoster() {
+      /* ── "Pixhare" wordmark ── */
+      ctx.font = 'bold 34px serif';
+      ctx.shadowColor = 'rgba(15,123,86,0.4)';
+      ctx.shadowBlur  = 16;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('Pix', W/2 - 34, 108);
       ctx.fillStyle = '#13a372';
-      ctx.fillText('📷  Scan to Register', W/2, 590);
+      ctx.fillText('hare', W/2 + 22, 108);
+      ctx.shadowBlur = 0;
 
-      ctx.font = '400 15px sans-serif';
+      /* ── Explanation / tagline ── */
+      ctx.font = '300 16px sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fillText('Get your personalised photo gallery after the event', W/2, 618);
+      ctx.fillText('AI-Powered Event Photo Sharing — scan, snap, get your photos', W/2, 132);
 
-      /* ── Bottom divider ── */
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      /* ── Divider ── */
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(60, 645); ctx.lineTo(W-60, 645); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(60, 152); ctx.lineTo(W-60, 152); ctx.stroke();
 
-      /* ── Steps row ── */
-      var steps = ['📸 Upload Selfie', '🤖 AI Matches You', '✉️ Get Your Photos'];
-      var stepX = [120, 300, 480];
-      steps.forEach(function (s, i) {
-        ctx.font = '500 13px sans-serif';
+      /* ── Studio name section ── */
+      ctx.font = '500 15px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText('CHECK IN WITH', W/2, 184);
+
+      ctx.font = 'bold 36px serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(19,163,114,0.3)';
+      ctx.shadowBlur  = 16;
+      var name = (studioName || 'Pixhare Studio');
+      if (name.length > 22) { name = name.substring(0, 20) + '…'; }
+      ctx.fillText(name, W/2, 226);
+      ctx.shadowBlur = 0;
+
+      /* ── QR white card background ── */
+      var qrSize   = 250;
+      var qrX      = (W - qrSize) / 2;
+      var qrY      = 258;
+      var cardPad  = 18;
+      roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 20, '#ffffff');
+
+      /* ── Draw QR (base64 data URI — no cross-origin fetch, so this
+         never fails the way the old public-URL version could) ── */
+      var qrImg = new Image();
+      qrImg.onload = function () {
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+        /* ── "Scan to register" label ── */
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillStyle = '#13a372';
+        ctx.fillText('📷  Scan to Check In', W/2, 578);
+
+        ctx.font = '400 15px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillText('Get your personalised photo gallery after the event', W/2, 606);
+
+        /* ── Bottom divider ── */
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(60, 632); ctx.lineTo(W-60, 632); ctx.stroke();
+
+        /* ── Steps row ── */
+        var steps = ['📸 Take Selfie', '🤖 AI Matches You', '✉️ Get Your Photos'];
+        var stepX = [120, 300, 480];
+        steps.forEach(function (s, i) {
+          ctx.font = '500 13px sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.fillText(s, stepX[i], 668);
+        });
+
+        /* ── Footer ── */
+        ctx.font = '400 12px sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.fillText(s, stepX[i], 680);
-      });
+        ctx.fillText('pixhare.ai', W/2, 745);
 
-      /* ── Footer ── */
-      ctx.font = '400 12px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.fillText('pixhare.ai', W/2, 750);
-
-      /* ── Wire up download ── */
-      var dlBtn = document.getElementById('posterDlBtn');
-      dlBtn.onclick = function () {
-        var link = document.createElement('a');
-        link.download = eventName + '_pixhare_poster.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        /* ── Wire up download ── */
+        var dlBtn = document.getElementById('posterDlBtn');
+        dlBtn.onclick = function () {
+          var link = document.createElement('a');
+          link.download = (studioName || 'pixhare') + '_checkin_poster.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
       };
-    };
-    qrImg.onerror = function () {
-      /* fallback if CORS blocks — just show text */
-      ctx.font = 'bold 16px sans-serif';
-      ctx.fillStyle = '#f87171';
-      ctx.fillText('QR image could not load', W/2, 400);
-    };
-    qrImg.src = qrSrc;
+      qrImg.onerror = function () {
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('QR image could not load', W/2, 390);
+      };
+      qrImg.src = qrSrc;
+    }
   }
 
   /* helper: rounded rectangle fill */

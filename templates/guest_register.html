@@ -165,98 +165,58 @@
     }
     .fi::placeholder { color: var(--ink4); }
 
-    /* ── Selfie ── */
     .selfie-label {
       font-size: 0.73rem; font-weight: 800;
       color: var(--ink2); letter-spacing: 0.07em;
       text-transform: uppercase; margin-bottom: 10px; display: block;
     }
-    .selfie-options {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
-    }
-    .selfie-btn {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 8px; padding: 18px 12px;
-      border-radius: 13px; cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color .2s, transform .15s, box-shadow .2s;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 0.8rem; font-weight: 700;
-      text-align: center; user-select: none;
-    }
-    .selfie-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-    .selfie-btn.camera-btn { border-color: rgba(15,123,86,0.25); background: var(--forest-lt); color: var(--forest); }
-    .selfie-btn.camera-btn:hover { border-color: var(--forest); }
-    .selfie-btn.upload-btn { border-color: rgba(82,64,168,0.25); background: var(--plum-lt);   color: var(--plum); }
-    .selfie-btn.upload-btn:hover { border-color: var(--plum); }
-    .selfie-btn-icon {
-      width: 44px; height: 44px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
-    }
-    .camera-btn .selfie-btn-icon { background: rgba(15,123,86,0.15); }
-    .upload-btn .selfie-btn-icon { background: rgba(82,64,168,0.15); }
 
-    /* Camera modal */
-    #cameraModal {
-      display: none; margin-bottom: 14px;
-      border-radius: 13px; overflow: hidden; background: #000;
+    /* ── Guided face capture ── */
+    .capture-wrap { margin-bottom: 14px; }
+    .capture-stage {
+      position: relative; width: 100%; aspect-ratio: 3/4; max-height: 340px;
+      background: #14161a; border-radius: 16px; overflow: hidden;
     }
-    #cameraStream {
-      width: 100%; max-height: 260px; object-fit: cover; display: block;
+    .capture-stage video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
     }
-    .cam-controls {
-      display: flex; gap: 10px; padding: 12px;
-      background: rgba(0,0,0,0.6); justify-content: center;
+    .capture-stage canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
     }
-    .btn-snap {
-      background: var(--forest); color: #fff; border: none;
-      border-radius: 50px; padding: 10px 24px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-weight: 800; font-size: 0.88rem; cursor: pointer;
-      display: flex; align-items: center; gap: 7px;
+    .capture-status {
+      position: absolute; left: 0; right: 0; bottom: 14px;
+      text-align: center; color: #fff; font-size: 0.85rem; font-weight: 700;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.6); padding: 0 16px;
     }
-    .btn-cam-cancel {
-      background: rgba(255,255,255,0.15); color: #fff;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 50px; padding: 10px 20px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    .capture-progress { display: flex; justify-content: center; gap: 26px; margin: 12px 0; }
+    .cp-dot { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .cp-dot::before {
+      content: ''; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--ink4); transition: background .25s;
+      display: block; margin: 0 auto;
+    }
+    .cp-dot.done::before { background: var(--forest); }
+    .cp-dot span { font-size: 0.68rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .05em; }
+
+    .btn-start-capture {
+      width: 100%; background: var(--forest); color: #fff; border: none;
+      border-radius: 11px; padding: 13px; font-weight: 800; font-size: 0.9rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-start-capture:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-retake {
+      width: 100%; margin-top: 8px; background: transparent; border: 1.5px solid rgba(0,0,0,0.12);
+      color: var(--ink2); border-radius: 11px; padding: 11px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    }
+    .capture-fallback { text-align: center; margin-top: 8px; }
+    .capture-fallback a { font-size: 0.78rem; color: var(--ink3); text-decoration: underline; cursor: pointer; }
+    .capture-done-badge {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--forest-lt); color: var(--forest); border-radius: 11px;
+      padding: 12px; font-weight: 800; font-size: 0.85rem; margin-bottom: 10px;
     }
 
-    /* Preview */
-    .selfie-preview {
-      display: none; margin-top: 12px;
-      border-radius: 13px; overflow: hidden;
-      border: 2px solid rgba(15,123,86,0.25); position: relative;
-    }
-    .selfie-preview img {
-      width: 100%; max-height: 220px; object-fit: cover; display: block;
-    }
-    .selfie-preview-badge {
-      position: absolute; top: 10px; left: 10px;
-      background: var(--forest); color: #fff;
-      font-size: 0.7rem; font-weight: 800;
-      padding: 4px 10px; border-radius: 50px;
-      display: flex; align-items: center; gap: 5px;
-    }
-    .selfie-clear {
-      position: absolute; top: 10px; right: 10px;
-      background: rgba(0,0,0,0.5); color: #fff;
-      border: none; border-radius: 50%;
-      width: 28px; height: 28px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; transition: background .18s;
-    }
-    .selfie-clear:hover { background: rgba(220,38,83,0.8); }
-
-    .selfie-hint {
-      font-size: 0.75rem; color: var(--ink3); text-align: center;
-      margin-top: 8px;
-      display: flex; align-items: center; justify-content: center; gap: 5px;
-    }
-
-    /* Submit */
+    /* ── Submit ── */
     .btn-submit {
       width: 100%; margin-top: 20px;
       background: linear-gradient(135deg, var(--amber), #e8920a);
@@ -271,7 +231,7 @@
     .btn-submit:active { transform: translateY(0); }
     .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* Flash */
+    /* ── Flash ── */
     .g-flash {
       display: flex; align-items: center; gap: 10px;
       padding: 12px 16px; border-radius: 10px;
@@ -281,7 +241,13 @@
     .g-flash.success { background: var(--forest-lt); border: 1px solid rgba(15,123,86,0.2);  color: var(--forest); }
     .g-flash.info    { background: var(--plum-lt);   border: 1px solid rgba(82,64,168,0.2);  color: var(--plum); }
 
-    /* Footer strip */
+    .selfie-hint {
+      font-size: 0.75rem; color: var(--ink3); text-align: center;
+      margin-top: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+
+    /* ── Footer strip ── */
     .guest-foot {
       padding: 14px 32px 18px;
       border-top: 1px solid rgba(0,0,0,0.06);
@@ -293,7 +259,6 @@
     }
 
     @media (max-width: 420px) {
-      .selfie-options { grid-template-columns: 1fr; }
       .guest-body { padding: 20px 20px 24px; }
       .guest-head { padding: 22px 20px 18px; }
     }
@@ -366,53 +331,47 @@
                      required placeholder="you@example.com">
             </div>
 
-            <span class="selfie-label">Your Selfie</span>
+            <span class="selfie-label">Face verification</span>
 
-            <div class="selfie-options">
-              <div class="selfie-btn camera-btn" id="openCameraBtn">
-                <div class="selfie-btn-icon">📷</div>
-                Take a Selfie
-                <small style="font-weight:500;opacity:.7">Use your camera</small>
+            <div class="capture-wrap" id="captureWrap">
+              <div class="capture-stage" id="captureStage">
+                <video id="camVideo" autoplay playsinline muted></video>
+                <canvas id="ovalCanvas"></canvas>
+                <div class="capture-status" id="captureStatus">Tap start to begin</div>
               </div>
-              <div class="selfie-btn upload-btn" onclick="document.getElementById('uploadInput').click()">
-                <div class="selfie-btn-icon">🖼️</div>
-                Upload Photo
-                <small style="font-weight:500;opacity:.7">From your gallery</small>
-              </div>
-            </div>
 
-            <!-- Camera -->
-            <div id="cameraModal">
-              <video id="cameraStream" autoplay playsinline></video>
-              <div class="cam-controls">
-                <button type="button" id="snapBtn" class="btn-snap">
-                  <i class="bi bi-camera-fill"></i> Capture
-                </button>
-                <button type="button" id="closeCameraBtn" class="btn-cam-cancel">
-                  Cancel
-                </button>
+              <div class="capture-progress">
+                <div class="cp-dot" id="cpCenter"><span>Center</span></div>
+                <div class="cp-dot" id="cpLeft"><span>Left</span></div>
+                <div class="cp-dot" id="cpRight"><span>Right</span></div>
               </div>
-            </div>
-            <canvas id="snapCanvas" style="display:none;"></canvas>
 
-            <!-- Hidden inputs -->
-            <input type="file" id="selfieInput" name="selfie" accept="image/*" style="display:none;">
-            <input type="file" id="uploadInput" accept="image/*" style="display:none;">
-
-            <!-- Preview -->
-            <div class="selfie-preview" id="selfiePreview">
-              <img id="previewImg" src="" alt="Selfie preview">
-              <div class="selfie-preview-badge">
-                <i class="bi bi-check-circle-fill"></i> Photo selected
+              <div class="capture-done-badge" id="captureDoneBadge" style="display:none;">
+                <i class="bi bi-check-circle-fill"></i>
+                <span id="captureDoneText">Face verified — all angles captured</span>
               </div>
-              <button type="button" class="selfie-clear" onclick="clearSelfie()">
-                <i class="bi bi-x"></i>
+
+              <button type="button" class="btn-start-capture" id="startCaptureBtn">
+                <i class="bi bi-camera-fill"></i> Start face verification
+              </button>
+              <button type="button" class="btn-retake" id="retakeBtn" style="display:none;">
+                Retake
               </button>
             </div>
 
+            <div class="capture-fallback">
+              <a id="fallbackUploadLink">Can't use your camera? Upload a photo instead</a>
+            </div>
+
+            <!-- Hidden inputs submitted with the form. The primary path is
+                 one video (server extracts 3 angle frames from it); the
+                 upload fallback sends a single static photo instead. -->
+            <input type="file" id="selfieVideoInput"    name="selfie_video"    accept="video/*" style="display:none;">
+            <input type="file" id="selfieFallbackInput" name="selfie_fallback" accept="image/*" style="display:none;">
+
             <p class="selfie-hint">
               <i class="bi bi-info-circle"></i>
-              Make sure your face is clearly visible for best AI matching.
+              We record a short video so your photos are matched more accurately.
             </p>
 
             <button type="submit" class="btn-submit" id="submitBtn" disabled>
@@ -426,7 +385,7 @@
         <div class="guest-foot">
           <p>
             <i class="bi bi-shield-lock" style="color:var(--forest)"></i>
-            Your photo is only used for face matching. It stays private.
+            Your photos are only used for face matching. They stay private.
           </p>
         </div>
 
@@ -436,87 +395,254 @@
 
   <script>
   (function () {
-    var openCameraBtn  = document.getElementById('openCameraBtn');
-    var closeCameraBtn = document.getElementById('closeCameraBtn');
-    var cameraModal    = document.getElementById('cameraModal');
-    var cameraStream   = document.getElementById('cameraStream');
-    var snapBtn        = document.getElementById('snapBtn');
-    var snapCanvas     = document.getElementById('snapCanvas');
-    var uploadInput    = document.getElementById('uploadInput');
-    var selfieInput    = document.getElementById('selfieInput');
-    var preview        = document.getElementById('selfiePreview');
-    var previewImg     = document.getElementById('previewImg');
-    var submitBtn      = document.getElementById('submitBtn');
-    var mediaStream    = null;
+    var video         = document.getElementById('camVideo');
+    var canvas        = document.getElementById('ovalCanvas');
+    var ctx           = canvas.getContext('2d');
+    var statusEl      = document.getElementById('captureStatus');
+    var startBtn      = document.getElementById('startCaptureBtn');
+    var retakeBtn     = document.getElementById('retakeBtn');
+    var doneBadge     = document.getElementById('captureDoneBadge');
+    var doneText      = document.getElementById('captureDoneText');
+    var stageEl       = document.getElementById('captureStage');
+    var submitBtn     = document.getElementById('submitBtn');
+    var fallbackLink  = document.getElementById('fallbackUploadLink');
+    var fallbackInput = document.getElementById('selfieFallbackInput');
+    var videoInput    = document.getElementById('selfieVideoInput');
 
-    openCameraBtn.addEventListener('click', function () {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Camera not supported on this browser. Please upload a photo instead.');
+    var dots = {
+      center: document.getElementById('cpCenter'),
+      left:   document.getElementById('cpLeft'),
+      right:  document.getElementById('cpRight')
+    };
+
+    var OVAL = { cx: 0.5, cy: 0.42, rx: 0.30, ry: 0.36 };
+    var RECORD_MS = 5000;
+
+    // Timed script the guest follows while a single video records — no
+    // real-time pose detection needed client-side. The server extracts a
+    // frame from near the midpoint of each phase (0.85s / 2.5s / 4.2s)
+    // using the same RetinaFace detector already used for matching.
+    var PHASES = [
+      { key: 'center', label: 'Look straight ahead',  arrow: null,    start: 0,    end: 1700 },
+      { key: 'right',  label: 'Turn your head right',  arrow: 'right', start: 1700, end: 3350 },
+      { key: 'left',   label: 'Turn your head left',   arrow: 'left',  start: 3350, end: 5000 }
+    ];
+
+    var stream   = null;
+    var recorder = null;
+    var chunks   = [];
+
+    function setStatus(text) { statusEl.textContent = text; }
+
+    function resizeCanvasToVideo() {
+      canvas.width  = video.videoWidth  || 480;
+      canvas.height = video.videoHeight || 640;
+    }
+
+    function drawOval(color, dashed) {
+      var w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.ellipse(OVAL.cx * w, OVAL.cy * h, OVAL.rx * w, OVAL.ry * h, 0, 0, Math.PI * 2);
+      ctx.lineWidth = Math.max(3, w * 0.008);
+      ctx.strokeStyle = color;
+      ctx.setLineDash(dashed ? [w * 0.02, w * 0.02] : []);
+      ctx.stroke();
+    }
+
+    // Big, clear directional arrow above the head — primary cue for
+    // "which way do I turn", not just the text status at the bottom.
+    function drawDirectionArrow(direction, color) {
+      var w = canvas.width, h = canvas.height;
+      var cx = OVAL.cx * w;
+      var topY = (OVAL.cy - OVAL.ry) * h - 34;
+      var size = Math.max(26, w * 0.075);
+
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      if (direction === 'left') {
+        ctx.moveTo(cx - size, topY);
+        ctx.lineTo(cx + size * 0.35, topY - size * 0.65);
+        ctx.lineTo(cx + size * 0.35, topY + size * 0.65);
+      } else {
+        ctx.moveTo(cx + size, topY);
+        ctx.lineTo(cx - size * 0.35, topY - size * 0.65);
+        ctx.lineTo(cx - size * 0.35, topY + size * 0.65);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function pickMimeType() {
+      var candidates = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm',
+        'video/mp4'
+      ];
+      for (var i = 0; i < candidates.length; i++) {
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])) {
+          return candidates[i];
+        }
+      }
+      return '';
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        stream = null;
+      }
+    }
+
+    function resetCaptureState() {
+      dots.center.classList.remove('done');
+      dots.left.classList.remove('done');
+      dots.right.classList.remove('done');
+      videoInput.value = '';
+      fallbackInput.value = '';
+      doneBadge.style.display = 'none';
+      stageEl.style.display = 'block';
+      startBtn.style.display = 'flex';
+      startBtn.disabled = false;
+      retakeBtn.style.display = 'none';
+      submitBtn.disabled = true;
+      setStatus('Tap start to begin');
+    }
+
+    function finishRecording(blob) {
+      var file = new File([blob], 'selfie_video.webm', { type: blob.type || 'video/webm' });
+      try {
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        videoInput.files = dt.files;
+      } catch (e) {}
+
+      dots.center.classList.add('done');
+      dots.left.classList.add('done');
+      dots.right.classList.add('done');
+
+      stopCamera();
+      stageEl.style.display = 'none';
+      doneText.textContent = 'Face verified — video captured';
+      doneBadge.style.display = 'flex';
+      startBtn.style.display = 'none';
+      retakeBtn.style.display = 'block';
+      submitBtn.disabled = false;
+    }
+
+    function runGuidedRecording() {
+      resizeCanvasToVideo();
+
+      var mimeType = pickMimeType();
+      chunks = [];
+      try {
+        recorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+      } catch (e) {
+        console.error('[capture] MediaRecorder init failed:', e);
+        setStatus('Recording not supported on this browser — please use "Upload a photo instead" below');
+        startBtn.disabled = false;
+        stopCamera();
         return;
       }
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-        .then(function (stream) {
-          mediaStream = stream;
-          cameraStream.srcObject = stream;
-          cameraModal.style.display = 'block';
+
+      recorder.ondataavailable = function (e) {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+      recorder.onstop = function () {
+        var blob = new Blob(chunks, { type: mimeType || 'video/webm' });
+        finishRecording(blob);
+      };
+
+      recorder.start();
+
+      var startTime = performance.now();
+      var currentPhaseIndex = -1;
+
+      function tick() {
+        var elapsed = performance.now() - startTime;
+        if (elapsed >= RECORD_MS) {
+          recorder.stop();
+          return;
+        }
+
+        var phaseIndex = -1;
+        for (var i = 0; i < PHASES.length; i++) {
+          if (elapsed >= PHASES[i].start && elapsed < PHASES[i].end) { phaseIndex = i; break; }
+        }
+        if (phaseIndex !== -1 && phaseIndex !== currentPhaseIndex) {
+          if (currentPhaseIndex >= 0) dots[PHASES[currentPhaseIndex].key].classList.add('done');
+          currentPhaseIndex = phaseIndex;
+          setStatus(PHASES[phaseIndex].label);
+        }
+
+        drawOval('#13a372', false);
+        var phase = PHASES[currentPhaseIndex] || PHASES[0];
+        if (phase.arrow) {
+          drawDirectionArrow(phase.arrow, '#378ADD');
+        }
+
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function startCapture() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Camera not supported on this browser. Please use the upload option instead.');
+        return;
+      }
+      if (!window.MediaRecorder) {
+        alert('Video recording not supported on this browser. Please use the upload option instead.');
+        return;
+      }
+
+      startBtn.disabled = true;
+      setStatus('Starting camera…');
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false })
+        .then(function (s) {
+          stream = s;
+          video.srcObject = s;
+          video.onloadedmetadata = function () {
+            setStatus('Get ready…');
+            setTimeout(function () { runGuidedRecording(); }, 1200);
+          };
         })
         .catch(function (err) {
+          startBtn.disabled = false;
           if (err.name === 'NotAllowedError') {
-            alert('Camera permission denied. Please allow camera access and try again.');
+            alert('Camera permission denied. Please allow camera access, or use the upload option.');
           } else {
             alert('Could not open camera: ' + err.message);
           }
         });
-    });
-
-    snapBtn.addEventListener('click', function () {
-      snapCanvas.width  = cameraStream.videoWidth;
-      snapCanvas.height = cameraStream.videoHeight;
-      snapCanvas.getContext('2d').drawImage(cameraStream, 0, 0);
-      snapCanvas.toBlob(function (blob) {
-        var file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
-        setFile(file);
-        stopCamera();
-      }, 'image/jpeg', 0.92);
-    });
-
-    closeCameraBtn.addEventListener('click', stopCamera);
-
-    function stopCamera() {
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(function (t) { t.stop(); });
-        mediaStream = null;
-      }
-      cameraStream.srcObject = null;
-      cameraModal.style.display = 'none';
     }
 
-    uploadInput.addEventListener('change', function () {
-      if (uploadInput.files.length > 0) { setFile(uploadInput.files[0]); }
+    startBtn.addEventListener('click', startCapture);
+    retakeBtn.addEventListener('click', resetCaptureState);
+
+    fallbackLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      fallbackInput.click();
     });
 
-    function setFile(file) {
-      try {
-        var dt = new DataTransfer();
-        dt.items.add(file);
-        selfieInput.files = dt.files;
-      } catch(e) {}
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        previewImg.src = e.target.result;
-        preview.style.display = 'block';
-        submitBtn.disabled = false;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    window.clearSelfie = function () {
-      selfieInput.value = '';
-      uploadInput.value = '';
-      previewImg.src    = '';
-      preview.style.display = 'none';
-      submitBtn.disabled = true;
-    };
+    fallbackInput.addEventListener('change', function () {
+      if (fallbackInput.files.length === 0) return;
+      dots.center.classList.add('done');
+      dots.left.classList.add('done');
+      dots.right.classList.add('done');
+      stageEl.style.display = 'none';
+      startBtn.style.display = 'none';
+      doneText.textContent = 'Photo uploaded';
+      doneBadge.style.display = 'flex';
+      retakeBtn.style.display = 'block';
+      submitBtn.disabled = false;
+    });
   }());
   </script>
 

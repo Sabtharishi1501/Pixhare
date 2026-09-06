@@ -39,6 +39,20 @@ if database_url:
     database_url = database_url.replace("postgres://", "postgresql://")
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
+# Supabase (and most hosted Postgres) close idle connections after a while.
+# Without this, Flask-SQLAlchemy's pool can hand out a connection the
+# server already dropped, causing "server closed the connection
+# unexpectedly" on the next query after any period of inactivity — exactly
+# what happens between manual test requests on a dev server.
+#   pool_pre_ping: cheap "is this connection still alive" check before each
+#                  use; transparently reconnects if it's dead.
+#   pool_recycle:  proactively replace connections older than this many
+#                  seconds, before the server has a chance to drop them.
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,
+}
+
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 
 db.init_app(app)
@@ -329,23 +343,32 @@ def match_and_send_for_event(event_name, app_context):
             arr = np.frombuffer(data, dtype=np.uint8)
             return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
-        # Timestamps (seconds) matching the midpoint of each guided phase in
-        # guest_register.html's recording script (0-1.7s center, 1.7-3.35s
-        # right, 3.35-5s left) — grabbing the middle of each window gives the
-        # best chance the guest was actually holding that pose steadily.
-        VIDEO_FRAME_TIMESTAMPS = [0.85, 2.5, 4.2]
+        # Each phase window from guest_register.html's guided recording
+        # script (0-1.7s center, 1.7-3.35s right, 3.35-5s left). Rather than
+        # trusting one fixed timestamp — which might catch the guest mid-turn
+        # or before they've reacted to the prompt — sample a few candidates
+        # from the LATTER part of each window (giving reaction + turn time)
+        # and keep whichever has the highest face-detection confidence.
+        VIDEO_PHASE_CANDIDATES = {
+            'center': [1.00, 1.30, 1.55],
+            'right':  [2.30, 2.70, 3.05],
+            'left':   [3.90, 4.30, 4.65],
+        }
 
-        def extract_video_frames(storage_path):
-            """Download a guest's selfie video and pull frames at the three
-            guided-phase timestamps. cv2.VideoCapture needs a real file path
-            (no in-memory buffer support), so this writes to a short-lived
-            temp file and always cleans it up, even on failure."""
+        def extract_best_video_frames(storage_path):
+            """Download a guest's selfie video and, for each guided phase,
+            pick the clearest candidate frame (highest RetinaFace detection
+            confidence) rather than one blind fixed timestamp. Returns a
+            list of up to 3 BGR numpy arrays, one per phase that found an
+            acceptable face. cv2.VideoCapture needs a real file path (no
+            in-memory buffer support), so this writes to a short-lived temp
+            file and always cleans it up, even on failure."""
             data = storage.download_bytes(storage_path)
             if data is None:
                 return []
 
             tmp_path = os.path.join(tempfile.gettempdir(), f"pixhare_video_{uuid4().hex}.webm")
-            frames = []
+            best_frames = []
             try:
                 with open(tmp_path, 'wb') as f:
                     f.write(data)
@@ -355,13 +378,35 @@ def match_and_send_for_event(event_name, app_context):
                     print(f"[match] ⚠️ Could not open video {storage_path}")
                     return []
 
-                for ts in VIDEO_FRAME_TIMESTAMPS:
-                    cap.set(cv2.CAP_PROP_POS_MSEC, ts * 1000)
-                    ok, frame = cap.read()
-                    if ok and frame is not None:
-                        frames.append(frame)
+                for phase, timestamps in VIDEO_PHASE_CANDIDATES.items():
+                    best_conf  = -1.0
+                    best_frame = None
+                    for ts in timestamps:
+                        cap.set(cv2.CAP_PROP_POS_MSEC, ts * 1000)
+                        ok, frame = cap.read()
+                        if not ok or frame is None:
+                            continue
+                        try:
+                            raw = DeepFace.represent(
+                                img_path         = frame,
+                                model_name       = MODEL,
+                                detector_backend = BACKEND,
+                                enforce_detection= False
+                            )
+                            if not raw:
+                                continue
+                            conf = max(f.get('face_confidence', 0.0) for f in raw)
+                            if conf > best_conf:
+                                best_conf  = conf
+                                best_frame = frame
+                        except Exception:
+                            continue  # this candidate failed, try the next timestamp
+
+                    if best_frame is not None and best_conf >= MIN_FACE_CONFIDENCE:
+                        best_frames.append(best_frame)
                     else:
-                        print(f"[match] ⚠️ Could not read frame at {ts}s from {storage_path}")
+                        print(f"[match] ⚠️ No acceptable '{phase}' frame found for video {storage_path}")
+
                 cap.release()
             except Exception as e:
                 print(f"[match] ⚠️ Video frame extraction failed for {storage_path}: {e}")
@@ -369,7 +414,7 @@ def match_and_send_for_event(event_name, app_context):
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
 
-            return frames
+            return best_frames
 
         def refine_small_face(img, facial_area):
             """Crop a small detected face out of the full photo, upscale it,
@@ -522,7 +567,7 @@ def match_and_send_for_event(event_name, app_context):
 
             try:
                 if guest.selfie_is_video and guest.selfie_center_path:
-                    frames = extract_video_frames(guest.selfie_center_path)
+                    frames = extract_best_video_frames(guest.selfie_center_path)
                     if not frames:
                         print(f"[match] ⚠️ Could not extract any frames from video for {guest.name}")
                         return guest, 0

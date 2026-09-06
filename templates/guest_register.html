@@ -450,28 +450,39 @@
       ctx.stroke();
     }
 
-    // Big, clear directional arrow above the head — primary cue for
-    // "which way do I turn", not just the text status at the bottom.
+    // Simple "-->" style arrow, positioned just above the status text at
+    // the bottom of the frame — not above the head, where the previous
+    // version's math actually placed it off the top edge of the canvas.
     function drawDirectionArrow(direction, color) {
       var w = canvas.width, h = canvas.height;
-      var cx = OVAL.cx * w;
-      var topY = (OVAL.cy - OVAL.ry) * h - 34;
-      var size = Math.max(26, w * 0.075);
+      var arrowY = h * 0.80;
+      var cx = w / 2;
+      var shaftHalf = Math.max(28, w * 0.11);
+      var headSize  = Math.max(14, w * 0.05);
+      var dir = direction === 'right' ? 1 : -1;
+
+      var startX = cx - dir * shaftHalf;
+      var endX   = cx + dir * shaftHalf;
 
       ctx.save();
-      ctx.fillStyle = color;
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
-      ctx.shadowBlur = 8;
+      ctx.strokeStyle = color;
+      ctx.fillStyle   = color;
+      ctx.lineWidth   = Math.max(4, w * 0.012);
+      ctx.lineCap     = 'round';
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur  = 6;
+
+      // shaft
       ctx.beginPath();
-      if (direction === 'left') {
-        ctx.moveTo(cx - size, topY);
-        ctx.lineTo(cx + size * 0.35, topY - size * 0.65);
-        ctx.lineTo(cx + size * 0.35, topY + size * 0.65);
-      } else {
-        ctx.moveTo(cx + size, topY);
-        ctx.lineTo(cx - size * 0.35, topY - size * 0.65);
-        ctx.lineTo(cx - size * 0.35, topY + size * 0.65);
-      }
+      ctx.moveTo(startX, arrowY);
+      ctx.lineTo(endX, arrowY);
+      ctx.stroke();
+
+      // arrowhead
+      ctx.beginPath();
+      ctx.moveTo(endX, arrowY);
+      ctx.lineTo(endX - dir * headSize, arrowY - headSize * 0.7);
+      ctx.lineTo(endX - dir * headSize, arrowY + headSize * 0.7);
       ctx.closePath();
       ctx.fill();
       ctx.restore();

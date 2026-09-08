@@ -415,7 +415,14 @@
       right:  document.getElementById('cpRight')
     };
 
-    var OVAL = { cx: 0.5, cy: 0.42, rx: 0.30, ry: 0.36 };
+    // The canvas's internal pixel grid matches the camera's native
+    // resolution (landscape, e.g. 640x480), but it displays inside a
+    // portrait 3:4 CSS box. Canvas has no object-fit support like <video>
+    // does, so it just stretches non-uniformly to fill that box — meaning
+    // rx/ry drawn here do NOT end up in the same ratio once displayed.
+    // These values are chosen so the RESULT, after that stretch, is an
+    // actual oval (not the near-circle the previous values produced).
+    var OVAL = { cx: 0.5, cy: 0.40, rx: 0.26, ry: 0.47 };
     var RECORD_MS = 5000;
 
     // Timed script the guest follows while a single video records — no

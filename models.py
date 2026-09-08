@@ -5,8 +5,8 @@ db = SQLAlchemy()
 
 class Photographer(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
-    name          = db.Column(db.String(120), nullable=False)          # NEW
-    studio_name   = db.Column(db.String(120), nullable=False)          # NEW
+    name          = db.Column(db.String(120), nullable=False)         
+    studio_name   = db.Column(db.String(120), nullable=False)      
     email         = db.Column(db.String(120), unique=True, nullable=False)
     otp           = db.Column(db.String(6))
     password      = db.Column(db.String(200), nullable=False)
@@ -27,6 +27,7 @@ class Guest(db.Model):
     selfie_is_video     = db.Column(db.Boolean, default=False)
     gallery_token       = db.Column(db.String(120), unique=True)
     gallery_sent_at     = db.Column(db.DateTime)
+    last_emailed_photo_count = db.Column(db.Integer, default=0)
 
 class EventPhoto(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
@@ -45,6 +46,17 @@ class PhotoFaceEmbedding(db.Model):
     filename   = db.Column(db.String(300), nullable=False)
     embedding  = db.Column(db.Text, nullable=False)
     confidence = db.Column(db.Float)
+
+class GuestFaceEmbedding(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    guest_id   = db.Column(db.Integer, db.ForeignKey('guest.id'), nullable=False)
+    phase      = db.Column(db.String(20), nullable=False)
+    embedding  = db.Column(db.Text, nullable=False)
+    confidence = db.Column(db.Float)
+
+    __table_args__ = (
+        db.UniqueConstraint('guest_id', 'phase', name='uq_guest_phase_embedding'),
+    )
 
 class Event(db.Model):
     id              = db.Column(db.Integer, primary_key=True)

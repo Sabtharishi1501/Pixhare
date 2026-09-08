@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import db, Photographer, Guest, Event, EventPhoto, PhotoFaceEmbedding
+from models import db, Photographer, Guest, Event, EventPhoto, PhotoFaceEmbedding, GuestFaceEmbedding
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from config import Config
@@ -267,19 +267,24 @@ Enjoy!
         print(f"❌ Error sending 'new photos' email: {e}")
         
 
-def match_and_send_for_event(event_name, app_context):
+def run_matching_for_event(event_name, app_context):
     """
     Incremental matching pipeline — only processes photos uploaded since the
-    last run (tracked via EventPhoto.matched), so a repeat 'Send Gallery'
-    click after more photos are added doesn't re-embed the whole event.
+    last run (tracked via EventPhoto.matched), so calling this again after
+    more photos are added doesn't re-embed the whole event.
 
     1. RetinaFace  — detect & align every face in each NEW event photo
     2. ArcFace     — generate 512-dim face embeddings
     3. FAISS       — similarity search over just the new photos
     4. Per-guest   — query with all captured angles → get newly matched photos,
                      copied ADD-ON-TOP of whatever's already in their gallery
-    5. Email       — first-time guests get the full "gallery ready" email;
-                     returning guests only get emailed if new photos matched
+
+    This is matching only — no email is sent here. It's fired automatically
+    in the background right after every photo upload, and is safe to call
+    repeatedly/concurrently: already-embedded photos are skipped via
+    EventPhoto.matched, and re-copying an already-matched file into a
+    guest's `matches/{token}/` folder is a harmless no-op overwrite.
+    See send_galleries_for_event() for the separate, explicit email step.
     """
     import numpy as np
     import faiss
@@ -344,31 +349,44 @@ def match_and_send_for_event(event_name, app_context):
             return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
         # Each phase window from guest_register.html's guided recording
-        # script (0-1.7s center, 1.7-3.35s right, 3.35-5s left). Rather than
-        # trusting one fixed timestamp — which might catch the guest mid-turn
-        # or before they've reacted to the prompt — sample a few candidates
-        # from the LATTER part of each window (giving reaction + turn time)
-        # and keep whichever has the highest face-detection confidence.
-        VIDEO_PHASE_CANDIDATES = {
-            'center': [1.00, 1.30, 1.55],
-            'right':  [2.30, 2.70, 3.05],
-            'left':   [3.90, 4.30, 4.65],
+        # script (0-1.7s center, 1.7-3.35s right, 3.35-5s left). We sample
+        # the LATTER part of each window (giving reaction + turn time), not
+        # the whole thing — early frames in 'right'/'left' still show the
+        # guest mid-turn.
+        #
+        # IMPORTANT: we do NOT seek with cap.set(CAP_PROP_POS_MSEC, ...).
+        # Browser MediaRecorder webm blobs almost never carry a proper
+        # duration/seek index, so millisecond seeking on them is unreliable
+        # in OpenCV/FFmpeg — cap.read() after a seek can silently return
+        # garbage or fail outright, which is exactly what was happening
+        # here (100% of guests, 100% of phases, in production). Reading the
+        # file sequentially from frame 0 always works, even on files with
+        # no seek index, so we scan every frame once and use elapsed frame
+        # count (not a seek target) to know which phase window we're in.
+        PHASE_WINDOWS = {
+            'center': (0.80, 1.70),
+            'right':  (2.00, 3.35),
+            'left':   (3.60, 5.00),
         }
+        FALLBACK_FPS = 30.0     # used only if the container reports a bogus fps
+        SAMPLE_STRIDE = 3       # only run DeepFace on every 3rd in-window frame
 
         def extract_best_video_frames(storage_path):
-            """Download a guest's selfie video and, for each guided phase,
-            pick the clearest candidate frame (highest RetinaFace detection
-            confidence) rather than one blind fixed timestamp. Returns a
-            list of up to 3 BGR numpy arrays, one per phase that found an
-            acceptable face. cv2.VideoCapture needs a real file path (no
-            in-memory buffer support), so this writes to a short-lived temp
-            file and always cleans it up, even on failure."""
+            """Download a guest's selfie video, decode it sequentially start
+            to finish (no seeking — see note above), and for each guided
+            phase keep the frame with the highest RetinaFace detection
+            confidence. Returns a dict {phase: BGR numpy array} for
+            whichever phases found an acceptable face. cv2.VideoCapture
+            needs a real file path (no in-memory buffer support), so this
+            writes to a short-lived temp file and always cleans it up."""
             data = storage.download_bytes(storage_path)
             if data is None:
-                return []
+                return {}
 
             tmp_path = os.path.join(tempfile.gettempdir(), f"pixhare_video_{uuid4().hex}.webm")
-            best_frames = []
+            best_conf   = {phase: -1.0 for phase in PHASE_WINDOWS}
+            best_frame  = {phase: None for phase in PHASE_WINDOWS}
+            frames_read = 0
             try:
                 with open(tmp_path, 'wb') as f:
                     f.write(data)
@@ -376,16 +394,26 @@ def match_and_send_for_event(event_name, app_context):
                 cap = cv2.VideoCapture(tmp_path)
                 if not cap.isOpened():
                     print(f"[match] ⚠️ Could not open video {storage_path}")
-                    return []
+                    return {}
 
-                for phase, timestamps in VIDEO_PHASE_CANDIDATES.items():
-                    best_conf  = -1.0
-                    best_frame = None
-                    for ts in timestamps:
-                        cap.set(cv2.CAP_PROP_POS_MSEC, ts * 1000)
-                        ok, frame = cap.read()
-                        if not ok or frame is None:
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                if not fps or fps <= 1 or fps > 120:
+                    fps = FALLBACK_FPS  # metadata missing/bogus — common for MediaRecorder blobs
+
+                frame_idx = 0
+                while True:
+                    ok, frame = cap.read()
+                    if not ok or frame is None:
+                        break
+                    frames_read += 1
+                    t = frame_idx / fps
+                    frame_idx += 1
+
+                    for phase, (start, end) in PHASE_WINDOWS.items():
+                        if not (start <= t <= end):
                             continue
+                        if frame_idx % SAMPLE_STRIDE != 0:
+                            break  # in this window, but skip this frame to bound DeepFace calls
                         try:
                             raw = DeepFace.represent(
                                 img_path         = frame,
@@ -394,27 +422,101 @@ def match_and_send_for_event(event_name, app_context):
                                 enforce_detection= False
                             )
                             if not raw:
-                                continue
+                                break
                             conf = max(f.get('face_confidence', 0.0) for f in raw)
-                            if conf > best_conf:
-                                best_conf  = conf
-                                best_frame = frame
+                            if conf > best_conf[phase]:
+                                best_conf[phase]  = conf
+                                best_frame[phase] = frame.copy()
                         except Exception:
-                            continue  # this candidate failed, try the next timestamp
-
-                    if best_frame is not None and best_conf >= MIN_FACE_CONFIDENCE:
-                        best_frames.append(best_frame)
-                    else:
-                        print(f"[match] ⚠️ No acceptable '{phase}' frame found for video {storage_path}")
+                            pass
+                        break  # windows are disjoint — no need to check the others
 
                 cap.release()
+
+                if frames_read == 0:
+                    print(f"[match] ⚠️ Video decoded 0 frames for {storage_path} — file may be corrupt")
             except Exception as e:
                 print(f"[match] ⚠️ Video frame extraction failed for {storage_path}: {e}")
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+                return {}
             finally:
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
 
-            return best_frames
+            result = {}
+            for phase in PHASE_WINDOWS:
+                if best_frame[phase] is not None and best_conf[phase] >= MIN_FACE_CONFIDENCE:
+                    result[phase] = best_frame[phase]
+                else:
+                    print(f"[match] ⚠️ No acceptable '{phase}' frame found for video {storage_path} "
+                          f"(best confidence: {max(best_conf[phase], 0.0):.3f}, {frames_read} frame(s) read)")
+
+            return result
+
+        def get_guest_angle_vectors(guest):
+            """Return this guest's face-embedding vectors — one per captured
+            angle (center/right/left), or one for the JPG/PNG upload
+            fallback. First call for a guest: extracts frames from their
+            selfie video, embeds each with ArcFace, and caches the result
+            in GuestFaceEmbedding. Every later call — a new photo upload, a
+            'Match & Send' click, another guest registering — just reads
+            those cached rows back instead of re-downloading the video and
+            re-running detection/embedding on it."""
+            cached = GuestFaceEmbedding.query.filter_by(guest_id=guest.id).all()
+            if cached:
+                return [np.array(json.loads(row.embedding), dtype='float32') for row in cached]
+
+            if not guest.selfie_center_path:
+                print(f"[match] ⚠️ No selfie on file for {guest.name}")
+                return []
+
+            if guest.selfie_is_video:
+                phase_frames = extract_best_video_frames(guest.selfie_center_path)
+            else:
+                img = load_image_array(guest.selfie_center_path)
+                phase_frames = {'upload': img} if img is not None else {}
+
+            if not phase_frames:
+                print(f"[match] ⚠️ No usable frame found in selfie for {guest.name}")
+                return []
+
+            vectors = []
+            for phase, frame in phase_frames.items():
+                try:
+                    raw = DeepFace.represent(
+                        img_path         = frame,
+                        model_name       = MODEL,
+                        detector_backend = BACKEND,
+                        enforce_detection= False
+                    )
+                    if not raw:
+                        continue
+                    best_face = max(raw, key=lambda f: f.get('face_confidence', 1.0))
+                    confidence = best_face.get('face_confidence', 1.0)
+                    if confidence < MIN_FACE_CONFIDENCE:
+                        print(f"[match] ⚠️ Low-confidence '{phase}' frame skipped for {guest.name}")
+                        continue
+                    vec = np.array(best_face['embedding'], dtype='float32')
+                    vec = vec / (np.linalg.norm(vec) + 1e-10)
+
+                    db.session.add(GuestFaceEmbedding(
+                        guest_id   = guest.id,
+                        phase      = phase,
+                        embedding  = json.dumps(vec.tolist()),
+                        confidence = confidence
+                    ))
+                    vectors.append(vec)
+                except Exception as e:
+                    print(f"[match] ⚠️ Could not embed '{phase}' frame for {guest.name}: {e}")
+
+            if vectors:
+                db.session.commit()
+                print(f"[match] ✅ Cached {len(vectors)} selfie embedding(s) for {guest.name}")
+            else:
+                print(f"[match] ⚠️ No face detected in any selfie for {guest.name}")
+
+            return vectors
 
         def refine_small_face(img, facial_area):
             """Crop a small detected face out of the full photo, upscale it,
@@ -451,6 +553,14 @@ def match_and_send_for_event(event_name, app_context):
                 return vec, conf
             except Exception:
                 return None
+
+        # ── STEP 0: make sure every guest's selfie embedding is cached ──
+        # The only place video-frame extraction + ArcFace embedding happens
+        # for guests. Run sequentially, in the main thread, so these DB
+        # writes never race each other or the parallel matching step below —
+        # guests already cached just cost one cheap SELECT each.
+        print(f"[match] Ensuring selfie embeddings are cached for {len(guests)} guest(s)...")
+        guest_vectors = {g.id: get_guest_angle_vectors(g) for g in guests}
 
         # ── STEP 1 & 2: RetinaFace detect + ArcFace embed the NEW photos ──
         # Every face in a photo gets embedded, not just one — a photo with
@@ -566,45 +676,8 @@ def match_and_send_for_event(event_name, app_context):
                 return guest, 0
 
             try:
-                if guest.selfie_is_video and guest.selfie_center_path:
-                    frames = extract_best_video_frames(guest.selfie_center_path)
-                    if not frames:
-                        print(f"[match] ⚠️ Could not extract any frames from video for {guest.name}")
-                        return guest, 0
-                elif guest.selfie_center_path:
-                    # Upload fallback — a single static photo, used as-is.
-                    img = load_image_array(guest.selfie_center_path)
-                    frames = [img] if img is not None else []
-                else:
-                    print(f"[match] ⚠️ No selfie on file for {guest.name}")
-                    return guest, 0
-
-                if not frames:
-                    print(f"[match] ⚠️ No selfie on file for {guest.name}")
-                    return guest, 0
-
-                angle_vecs = []
-                for img in frames:
-                    try:
-                        raw = DeepFace.represent(
-                            img_path         = img,
-                            model_name       = MODEL,
-                            detector_backend = BACKEND,
-                            enforce_detection= False
-                        )
-                        if raw:
-                            best_face = max(raw, key=lambda f: f.get('face_confidence', 1.0))
-                            if best_face.get('face_confidence', 1.0) < MIN_FACE_CONFIDENCE:
-                                print(f"[match] ⚠️ Low-confidence selfie frame skipped for {guest.name}")
-                                continue
-                            v = np.array(best_face['embedding'], dtype='float32')
-                            v = v / (np.linalg.norm(v) + 1e-10)
-                            angle_vecs.append(v)
-                    except Exception as e:
-                        print(f"[match] ⚠️ Could not embed a selfie frame for {guest.name}: {e}")
-
+                angle_vecs = guest_vectors.get(guest.id, [])
                 if not angle_vecs:
-                    print(f"[match] ⚠️ No face detected in any selfie for {guest.name}")
                     return guest, 0
 
                 # For each candidate photo, keep the BEST (lowest) QUALITY-
@@ -646,36 +719,81 @@ def match_and_send_for_event(event_name, app_context):
 
             return guest, matched
 
-        # ── STEP 5: Process guests in parallel, then email on the main thread ──
+        # ── STEP 5: Match + copy for every guest, in parallel. No email here —
+        # that's a separate, explicit step (see send_galleries_for_event). ──
         print(f"[match] Matching {len(guests)} guest(s) — {len(new_filenames)} new photo(s), {len(never_matched_guests)} first-time guest(s)...")
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = {executor.submit(process_guest, g): g for g in guests}
             for future in as_completed(futures):
                 try:
                     guest, count = future.result()
-                    gallery_link = f"{BASE_URL}/gallery/{guest.gallery_token}"
-
-                    if guest.gallery_sent_at is None:
-                        # First time this guest has ever been matched for this
-                        # event — send their permanent gallery link regardless
-                        # of whether this batch matched them, so they have it
-                        # ready for whenever new photos of them do show up.
-                        send_gallery_email(guest.email, gallery_link, guest.name)
-                        guest.gallery_sent_at = datetime.utcnow()
-                        db.session.commit()
-                        print(f"[match] 📧 Gallery link sent to {guest.name} ({count} photo(s) matched)")
-                    elif count > 0:
-                        # Returning guest — only notify if this run actually
-                        # added something new to their existing gallery.
-                        send_new_photos_email(guest.email, gallery_link, guest.name, count)
-                        print(f"[match] 📧 'New photos' email sent to {guest.name} ({count} new)")
-                    else:
-                        print(f"[match] No new matches for {guest.name} this run — no email sent")
-
+                    if count > 0:
+                        print(f"[match] ✅ {count} photo(s) matched for {guest.name}")
                 except Exception as e:
                     print(f"[match] ⚠️ Error processing guest: {e}")
 
-        print(f"[match] ✅ Done for event: {event_name}")
+        print(f"[match] ✅ Matching done for event: {event_name}")
+
+
+def send_galleries_for_event(event_name, app_context):
+    """
+    Explicit send step — separate from run_matching_for_event() so that
+    matching (triggered automatically on every upload) and emailing
+    (triggered only by the photographer's 'Match & Send Galleries' click)
+    can happen on completely independent schedules.
+
+    For each guest, compares how many photos are currently sitting in their
+    matches/{gallery_token}/ folder against Guest.last_emailed_photo_count
+    (how many they were last emailed about):
+      - Never emailed before → send the full "gallery ready" email, even if
+        0 photos matched so far, so they have the link ready whenever
+        matches do show up.
+      - Emailed before, count has grown → send a "N new photos added" email
+        for just the delta.
+      - No change → nothing to send.
+    """
+    with app_context:
+        guests = Guest.query.filter_by(event_name=event_name).all()
+        if not guests:
+            print(f"[send] No guests for event: {event_name}")
+            return
+
+        print(f"[send] Checking galleries for {len(guests)} guest(s) in event: {event_name}")
+        for guest in guests:
+            try:
+                current_count = len(storage.list_files(f"matches/{guest.gallery_token}"))
+                gallery_link = f"{BASE_URL}/gallery/{guest.gallery_token}"
+                last_count = guest.last_emailed_photo_count or 0
+
+                if guest.gallery_sent_at is None:
+                    send_gallery_email(guest.email, gallery_link, guest.name)
+                    guest.gallery_sent_at = datetime.utcnow()
+                    guest.last_emailed_photo_count = current_count
+                    db.session.commit()
+                    print(f"[send] 📧 Gallery link sent to {guest.name} ({current_count} photo(s))")
+                elif current_count > last_count:
+                    new_count = current_count - last_count
+                    send_new_photos_email(guest.email, gallery_link, guest.name, new_count)
+                    guest.last_emailed_photo_count = current_count
+                    db.session.commit()
+                    print(f"[send] 📧 'New photos' email sent to {guest.name} ({new_count} new)")
+                else:
+                    print(f"[send] No new photos for {guest.name} — no email sent")
+            except Exception as e:
+                print(f"[send] ⚠️ Error sending for {guest.name}: {e}")
+
+        print(f"[send] ✅ Done sending for event: {event_name}")
+
+
+def match_and_send_for_event(event_name, app_context):
+    """
+    Used by the photographer's explicit 'Match & Send Galleries' button.
+    Runs matching first (idempotent — cheap no-op for anything already
+    embedded/matched, and only actually does work if something slipped
+    through, e.g. a guest registered seconds ago), then sends.
+    """
+    run_matching_for_event(event_name, app_context)
+    send_galleries_for_event(event_name, app_context)
 
 
 # ─────────────────────────────────────────────
@@ -1149,6 +1267,18 @@ def guest_register(event_name):
         db.session.add(guest)
         db.session.commit()
 
+        # ── Auto-match this guest the instant they register ──
+        # If photos were already uploaded before this guest signed up,
+        # run_matching_for_event() will pick them up via the
+        # never_matched_guests path and check them against the FULL
+        # cached embedding history — not just newly uploaded photos.
+        # No email is sent here; that's still the explicit "Match & Send
+        # Galleries" step, same as after a photo upload.
+        Thread(
+            target=run_matching_for_event,
+            args=(event_name, app.app_context())
+        ).start()
+
         return render_template('guest_success.html', guest_name=name)
 
     return render_template('guest_register.html', event_name=event_name,
@@ -1170,6 +1300,7 @@ def upload_photos(event_name):
         saved_count   = 0
         skipped_count = 0
         uploaded_filenames = []
+        new_filenames = []
 
         for file in files:
             if file and allowed_file(file.filename):
@@ -1201,9 +1332,22 @@ def upload_photos(event_name):
 
             db.session.commit()
 
+        # ── Auto-trigger matching the instant new photos land ──
+        # Runs detection/embedding/FAISS-matching in the background so the
+        # upload response comes back immediately; the photographer doesn't
+        # need to click anything for matching to start. Sending gallery
+        # emails is still a separate, explicit step (the "Match & Send
+        # Galleries" button) — see send_galleries_for_event().
+        if new_filenames:
+            Thread(
+                target=run_matching_for_event,
+                args=(event_name, app.app_context())
+            ).start()
+
         flash(
             f"{saved_count} photo(s) uploaded."
-            + (f" {skipped_count} file(s) skipped (invalid type)." if skipped_count else ""),
+            + (f" {skipped_count} file(s) skipped (invalid type)." if skipped_count else "")
+            + (" Matching started automatically." if new_filenames else ""),
             "success" if saved_count else "warning"
         )
         return render_template('upload_photos.html', event_name=event_name, uploaded=True)

@@ -7,436 +7,535 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
   /* ═══════════════════════════════════════════
      TOKENS
   ═══════════════════════════════════════════ */
   :root {
-    --bg:         #f5f1ea;
-    --bg2:        #ede8df;
-    --card:       #ffffff;
+    --dark:       #0a1f17;
+    --dark2:      #0e2a1f;
+    --dark3:      #123727;
+    --dark-line:  rgba(255,255,255,0.12);
     --forest:     #0f7b56;
-    --forest2:    #13a372;
-    --forest-lt:  #dff2ea;
+    --forest2:    #17a374;
+    --mint:       #7fe9bd;
+    --mint-soft:  rgba(127,233,189,0.14);
+    --cream:      #faf7ef;
+    --cream2:     #f2ecdf;
+    --card:       #ffffff;
+    --amber:      #f0b429;
+    --amber-dp:   #c8600a;
+    --amber-lt:   #fef0e0;
     --plum:       #4e3598;
-    --plum2:      #6b52c8;
-    --plum-lt:    #ece8fb;
-    --amber:      #c8600a;
-    --amber-lt:   #fef0e4;
+    --plum-lt:    #ece7fb;
     --rose:       #d42b52;
-    --ink:        #18160f;
-    --ink2:       #46423a;
-    --ink3:       #8a847a;
-    --ink4:       #c5c0b8;
+    --rose-lt:    #fdeaee;
+    --ink:        #16150f;
+    --ink2:       #45433a;
+    --ink3:       #8a857a;
+    --ink4:       #cfcabf;
     --r:          18px;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
 
+  html { scroll-behavior: smooth; }
   html, body {
     margin: 0; padding: 0;
-    background: var(--bg);
+    background: var(--cream);
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: var(--ink);
     overflow-x: hidden;
   }
+  a { text-decoration: none; }
+  .script { font-family: 'Caveat', cursive; }
+
+  .container-px { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
 
   /* ═══════════════════════════════════════════
      NAVBAR
   ═══════════════════════════════════════════ */
   .pix-nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(245,241,234,0.88);
+    position: sticky; top: 0; z-index: 500;
+    background: rgba(250,247,239,0.92);
     backdrop-filter: blur(18px);
     border-bottom: 1px solid rgba(0,0,0,0.07);
-    height: 64px;
+    height: 72px;
     display: flex; align-items: center;
-    padding: 0 48px;
-    gap: 16px;
+    padding: 0 40px;
+    gap: 20px;
   }
-  .pix-brand {
-    display: flex; align-items: center; gap: 10px;
-    text-decoration: none; flex-shrink: 0;
-  }
+  .pix-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .pix-brand-logo {
-    width: 36px; height: 36px; border-radius: 10px;
+    width: 38px; height: 38px; border-radius: 10px;
     object-fit: cover;
     box-shadow: 0 3px 12px rgba(15,123,86,0.28);
   }
+  .pix-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
   .pix-brand-name {
     font-family: 'Fraunces', serif;
-    font-size: 1.35rem; font-weight: 700;
-    color: var(--ink); letter-spacing: -0.5px;
+    font-size: 1.25rem; font-weight: 700;
+    color: var(--ink); letter-spacing: -0.4px;
   }
   .pix-brand-name span { color: var(--forest); }
+  .pix-brand-tag { font-size: 0.66rem; color: var(--ink3); font-weight: 500; letter-spacing: 0.02em; }
 
   .nav-spacer { flex: 1; }
-
-  .nav-links {
-    display: flex; align-items: center; gap: 4px;
-  }
+  .nav-links { display: flex; align-items: center; gap: 2px; }
   .nav-lnk {
-    text-decoration: none;
-    font-size: 0.85rem; font-weight: 600; color: var(--ink2);
-    padding: 8px 16px; border-radius: 9px;
+    font-size: 0.86rem; font-weight: 600; color: var(--ink2);
+    padding: 9px 15px; border-radius: 9px;
     transition: background .18s, color .18s;
   }
-  .nav-lnk:hover { background: var(--forest-lt); color: var(--forest); text-decoration: none; }
-  .nav-lnk.cta {
-    background: var(--forest);
-    color: #fff;
-    box-shadow: 0 3px 14px rgba(15,123,86,0.28);
-    transition: transform .15s, box-shadow .18s;
+  .nav-lnk:hover { background: rgba(15,123,86,0.09); color: var(--forest); }
+  .nav-lnk.active { color: var(--forest); }
+
+  .nav-actions { display: flex; align-items: center; gap: 10px; margin-left: 8px; }
+  .btn-nav-outline {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: 700; color: var(--ink);
+    padding: 9px 20px; border-radius: 50px;
+    border: 1.5px solid rgba(0,0,0,0.15);
+    transition: border-color .18s, background .18s;
   }
-  .nav-lnk.cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,123,86,0.36); color: #fff; background: var(--forest); }
-  .nav-lnk.dash { background: var(--plum-lt); color: var(--plum); border: 1px solid rgba(78,53,152,0.18); }
-  .nav-lnk.dash:hover { background: #e0d8f8; color: var(--plum); }
-  .nav-lnk.out  { background: #fdeaed; color: var(--rose); border: 1px solid rgba(212,43,82,0.16); }
-  .nav-lnk.out:hover { background: #fbd4dc; color: var(--rose); }
+  .btn-nav-outline:hover { border-color: var(--ink); background: rgba(0,0,0,0.03); color: var(--ink); }
+  .btn-nav-solid {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.85rem; font-weight: 700; color: #fff;
+    background: var(--dark); padding: 10px 22px; border-radius: 50px;
+    box-shadow: 0 4px 16px rgba(10,31,23,0.28);
+    transition: transform .16s, box-shadow .18s, background .18s;
+  }
+  .btn-nav-solid:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(10,31,23,0.36); background: var(--forest); color: #fff; }
+  .btn-nav-dash { background: var(--plum-lt); color: var(--plum); border: 1px solid rgba(78,53,152,0.18); border-radius: 50px; padding: 9px 18px; font-weight: 700; font-size: 0.85rem; }
+  .btn-nav-dash:hover { background: #e0d8f8; color: var(--plum); }
+  .btn-nav-out { background: var(--rose-lt); color: var(--rose); border: 1px solid rgba(212,43,82,0.16); border-radius: 50px; padding: 9px 18px; font-weight: 700; font-size: 0.85rem; }
+  .btn-nav-out:hover { background: #fbd4dc; color: var(--rose); }
+
+  .nav-burger { display: none; background: none; border: none; font-size: 1.4rem; color: var(--ink); }
+
+  /* ═══════════════════════════════════════════
+     SECTION EYEBROW / HEADING HELPERS
+  ═══════════════════════════════════════════ */
+  .eyebrow {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em;
+    text-transform: uppercase; margin-bottom: 14px; display: block;
+  }
+  .eyebrow.on-dark { color: var(--amber); }
+  .eyebrow.on-light { color: var(--forest); }
+
+  .h2-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+    font-weight: 800; letter-spacing: -1px; line-height: 1.12;
+  }
+  .h2-title .it { font-style: italic; }
+  .on-dark .h2-title { color: #fff; }
+  .on-dark .h2-title .it { color: var(--mint); }
+  .on-light .h2-title { color: var(--ink); }
+  .on-light .h2-title .it { color: var(--forest); }
+
+  .sec-sub { font-size: 1rem; line-height: 1.7; max-width: 560px; margin-top: 12px; }
+  .on-dark .sec-sub { color: rgba(255,255,255,0.68); }
+  .on-light .sec-sub { color: var(--ink3); }
 
   /* ═══════════════════════════════════════════
      HERO
   ═══════════════════════════════════════════ */
   .hero {
-    min-height: calc(100vh - 64px);
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    text-align: center;
-    padding: 80px 24px 60px;
     position: relative; overflow: hidden;
+    background: radial-gradient(ellipse 60% 55% at 78% 15%, rgba(127,233,189,0.16) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 50% at 10% 90%, rgba(240,180,41,0.10) 0%, transparent 55%),
+                linear-gradient(160deg, var(--dark) 0%, var(--dark2) 55%, var(--dark) 100%);
+    padding: 76px 40px 90px;
   }
-
-  /* animated background mesh */
-  .hero-mesh {
-    position: absolute; inset: 0; z-index: 0; pointer-events: none;
-    background:
-      radial-gradient(ellipse 55% 45% at 15%  20%, rgba(15,123,86,0.1)  0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 85%  15%, rgba(78,53,152,0.09)  0%, transparent 55%),
-      radial-gradient(ellipse 60% 50% at 50% 100%, rgba(200,96,10,0.07)  0%, transparent 55%);
-    animation: meshShift 12s ease-in-out infinite alternate;
+  .hero-grid {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: 1.05fr 0.95fr;
+    gap: 40px; align-items: center;
   }
-  @keyframes meshShift {
-    from { opacity: 0.7; }
-    to   { opacity: 1; }
-  }
-
-  /* floating deco shapes */
-  .hero-deco {
-    position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    overflow: hidden;
-  }
-  .deco-circle {
-    position: absolute; border-radius: 50%;
-    border: 1.5px solid rgba(15,123,86,0.15);
-    animation: floatUp 8s ease-in-out infinite;
-  }
-  .deco-circle:nth-child(1) { width: 280px; height: 280px; top: -60px; left: -80px; animation-delay: 0s; }
-  .deco-circle:nth-child(2) { width: 180px; height: 180px; top: 30%; right: -40px; border-color: rgba(78,53,152,0.12); animation-delay: 2s; }
-  .deco-circle:nth-child(3) { width: 120px; height: 120px; bottom: 10%; left: 10%; border-color: rgba(200,96,10,0.12); animation-delay: 4s; }
-  @keyframes floatUp {
-    0%,100% { transform: translateY(0) rotate(0deg); }
-    50%     { transform: translateY(-18px) rotate(6deg); }
-  }
-
-  .hero-content { position: relative; z-index: 1; max-width: 760px; }
 
   .hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--card); border: 1px solid rgba(0,0,0,0.09);
-    border-radius: 50px; padding: 6px 16px 6px 10px;
-    font-size: 0.72rem; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--forest); margin-bottom: 24px;
-    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
-    animation: fadeDown .7s ease both;
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 18px;
   }
-  .eyebrow-dot {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--forest-lt);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem;
-  }
-
   .hero-h1 {
     font-family: 'Fraunces', serif;
-    font-size: clamp(2.8rem, 6vw, 5rem);
-    font-weight: 900; letter-spacing: -2.5px;
-    line-height: 1.0; color: var(--ink);
-    margin-bottom: 20px;
-    animation: fadeDown .7s .1s ease both;
+    font-size: clamp(2.6rem, 4.6vw, 3.9rem);
+    font-weight: 800; letter-spacing: -1.5px; line-height: 1.05;
+    color: #fff; margin-bottom: 20px;
   }
-  .hero-h1 .accent {
-    color: var(--forest);
-    font-style: italic;
-  }
-  .hero-h1 .accent2 {
-    background: linear-gradient(135deg, var(--plum), var(--plum2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
+  .hero-h1 .it { font-style: italic; color: var(--mint); }
   .hero-sub {
-    font-size: 1.05rem; color: var(--ink2);
-    font-weight: 400; line-height: 1.7;
-    max-width: 540px; margin: 0 auto 36px;
-    animation: fadeDown .7s .2s ease both;
+    font-size: 1.02rem; line-height: 1.75; color: rgba(255,255,255,0.7);
+    max-width: 460px; margin-bottom: 30px;
   }
-
-  .hero-cta-row {
-    display: flex; align-items: center; justify-content: center;
-    gap: 12px; flex-wrap: wrap;
-    animation: fadeDown .7s .3s ease both;
-  }
+  .hero-cta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 40px; }
   .btn-hero-primary {
     display: inline-flex; align-items: center; gap: 9px;
-    background: linear-gradient(135deg, var(--forest), var(--forest2));
-    color: #fff; text-decoration: none;
-    font-weight: 800; font-size: 0.95rem;
-    padding: 15px 32px; border-radius: 50px;
-    box-shadow: 0 6px 28px rgba(15,123,86,0.3);
+    background: #fff; color: var(--dark);
+    font-weight: 800; font-size: 0.94rem;
+    padding: 15px 30px; border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.28);
     transition: transform .18s, box-shadow .2s;
-    border: none; cursor: pointer;
   }
-  .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(15,123,86,0.38); color: #fff; text-decoration: none; }
-
-  .btn-hero-secondary {
-    display: inline-flex; align-items: center; gap: 9px;
-    background: var(--card); color: var(--ink2);
-    text-decoration: none;
-    font-weight: 700; font-size: 0.9rem;
-    padding: 14px 28px; border-radius: 50px;
-    border: 1.5px solid rgba(0,0,0,0.1);
-    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
-    transition: transform .18s, border-color .2s, color .2s;
+  .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(0,0,0,0.34); color: var(--dark); }
+  .btn-hero-play {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: #fff; font-weight: 700; font-size: 0.92rem;
   }
-  .btn-hero-secondary:hover { transform: translateY(-2px); border-color: var(--forest); color: var(--forest); text-decoration: none; }
-
-  /* hero trust bar */
-  .hero-trust {
-    margin-top: 52px; display: flex; align-items: center;
-    justify-content: center; gap: 28px; flex-wrap: wrap;
-    animation: fadeDown .7s .45s ease both;
-  }
-  .trust-item {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 0.8rem; font-weight: 600; color: var(--ink3);
-  }
-  .trust-icon {
-    width: 28px; height: 28px; border-radius: 8px;
+  .play-circle {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.4);
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.8rem;
+    transition: background .18s, border-color .18s;
   }
-  .ti-g { background: var(--forest-lt); }
-  .ti-p { background: var(--plum-lt); }
-  .ti-a { background: var(--amber-lt); }
-  .trust-divider { width: 4px; height: 4px; border-radius: 50%; background: var(--ink4); }
+  .btn-hero-play:hover .play-circle { background: rgba(255,255,255,0.12); border-color: #fff; }
+  .btn-hero-play:hover { color: #fff; }
 
-  @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-14px); }
-    to   { opacity: 1; transform: translateY(0); }
+  .hero-stats { display: flex; gap: 34px; margin-bottom: 26px; flex-wrap: wrap; }
+  .hero-stat-num {
+    font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 800; color: #fff;
   }
+  .hero-stat-lbl { font-size: 0.76rem; color: rgba(255,255,255,0.55); font-weight: 600; margin-top: 2px; }
+
+  .hero-trust { display: flex; align-items: center; gap: 12px; }
+  .avatar-stack { display: flex; }
+  .avatar-mini {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem; font-weight: 800; color: #fff;
+    border: 2px solid var(--dark2);
+    margin-left: -9px;
+  }
+  .avatar-mini:first-child { margin-left: 0; }
+  .hero-trust-text { font-size: 0.78rem; color: rgba(255,255,255,0.75); font-weight: 600; }
+  .hero-trust-stars { color: var(--amber); font-size: 0.78rem; margin-top: 1px; }
+
+  /* hero visual collage */
+  .hero-visual { position: relative; height: 480px; }
+  .hv-photo {
+    position: absolute; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    border: 5px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.6rem;
+  }
+  .hv-1 { width: 210px; height: 250px; top: 6%; left: 4%; background: linear-gradient(155deg,#2b6b52,#0f7b56); transform: rotate(-6deg); }
+  .hv-2 { width: 150px; height: 120px; top: 2%; right: 6%; background: linear-gradient(155deg,#6b52c8,#4e3598); transform: rotate(5deg); }
+  .hv-3 { width: 160px; height: 130px; bottom: 20%; right: 0%; background: linear-gradient(155deg,#1c3d64,#12233d); transform: rotate(-4deg); }
+  .hv-4 { width: 150px; height: 150px; bottom: 0%; left: 18%; background: linear-gradient(155deg,#c8600a,#8c4306); transform: rotate(4deg); }
+  .hv-5 { width: 130px; height: 105px; bottom: 4%; right: 22%; background: linear-gradient(155deg,#a8305a,#6e1836); transform: rotate(7deg); }
+
+  .hv-card {
+    position: absolute; background: #fff; border-radius: 14px;
+    padding: 12px 16px; box-shadow: 0 14px 32px rgba(0,0,0,0.28);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hv-card-ai { top: 34%; right: -2%; }
+  .hv-card-qr { top: 44%; left: 30%; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .hv-ic { width: 34px; height: 34px; border-radius: 9px; background: var(--forest-lt, #dff2ea); color: var(--forest); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .hv-card-title { font-size: 0.78rem; font-weight: 800; color: var(--ink); }
+  .hv-card-sub { font-size: 0.68rem; color: var(--ink3); font-weight: 500; }
+
+  .hv-script {
+    position: absolute; font-family: 'Caveat', cursive; font-weight: 700;
+    color: var(--mint); font-size: 1.3rem; line-height: 1.1;
+  }
+  .hv-script-1 { top: -2%; left: 32%; text-align: center; transform: rotate(-4deg); }
+  .hv-script-2 { bottom: -4%; right: -4%; text-align: right; transform: rotate(3deg); color: rgba(255,255,255,0.7); }
+
+  /* ═══════════════════════════════════════════
+     EVENTS WE CAPTURE (dark, carousel)
+  ═══════════════════════════════════════════ */
+  .events-sec { background: var(--dark2); padding: 64px 0 70px; }
+  .events-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; padding: 0 40px; max-width: 1280px; margin: 0 auto 34px;
+    flex-wrap: wrap;
+  }
+  .events-head-right { text-align: right; }
+  .events-head-right p { color: rgba(255,255,255,0.6); font-size: 0.9rem; font-weight: 600; margin: 0 0 10px; }
+  .carousel-arrows { display: flex; gap: 8px; justify-content: flex-end; }
+  .car-arrow {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background .18s;
+  }
+  .car-arrow:hover { background: rgba(255,255,255,0.18); }
+
+  .events-track {
+    display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth;
+    padding: 4px 40px 14px; scrollbar-width: none;
+  }
+  .events-track::-webkit-scrollbar { display: none; }
+  .ev-card {
+    flex: 0 0 150px; height: 210px; border-radius: 16px; position: relative;
+    overflow: hidden; display: flex; align-items: flex-end; padding: 14px;
+    color: #fff; scroll-snap-align: start;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+  }
+  .ev-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 55%);
+  }
+  .ev-card-icon, .ev-card-label { position: relative; z-index: 1; }
+  .ev-card-icon { font-size: 1.3rem; margin-bottom: 8px; opacity: 0.95; }
+  .ev-card-label { font-size: 0.86rem; font-weight: 700; }
+
+  /* ═══════════════════════════════════════════
+     GENERIC SECTION WRAPPER
+  ═══════════════════════════════════════════ */
+  .section { padding: 84px 40px; }
+  .section-inner { max-width: 1280px; margin: 0 auto; }
+
+  /* ═══════════════════════════════════════════
+     FEATURES GRID
+  ═══════════════════════════════════════════ */
+  .feat-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+    margin-top: 44px;
+  }
+  .feat-card {
+    background: var(--card); border-radius: 18px; padding: 26px 22px;
+    box-shadow: 0 4px 22px rgba(20,20,10,0.05);
+    border: 1px solid rgba(0,0,0,0.05);
+    position: relative;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .feat-card:hover { transform: translateY(-5px); box-shadow: 0 14px 30px rgba(20,20,10,0.09); }
+  .feat-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+  .feat-icon {
+    width: 46px; height: 46px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+  }
+  .feat-arrow { color: var(--ink4); font-size: 1rem; }
+  .feat-title { font-weight: 800; font-size: 1.02rem; color: var(--ink); margin-bottom: 8px; line-height: 1.3; }
+  .feat-desc { font-size: 0.86rem; color: var(--ink3); line-height: 1.55; }
+
+  /* ═══════════════════════════════════════════
+     STATS BAND (dark)
+  ═══════════════════════════════════════════ */
+  .stats-band {
+    background: var(--dark); padding: 52px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 40px;
+    flex-wrap: wrap;
+  }
+  .stats-list { display: flex; gap: 46px; flex-wrap: wrap; }
+  .stat-item { display: flex; align-items: center; gap: 12px; }
+  .stat-ic {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(255,255,255,0.08); color: var(--mint);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+  }
+  .stat-num { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 800; color: #fff; }
+  .stat-lbl { font-size: 0.74rem; color: rgba(255,255,255,0.55); font-weight: 600; }
+  .stats-quote {
+    display: flex; gap: 14px; max-width: 340px; align-items: flex-start;
+    border-left: 2px solid rgba(240,180,41,0.5); padding-left: 20px;
+  }
+  .stats-quote i { color: var(--amber); font-size: 1.4rem; }
+  .stats-quote p { color: #fff; font-family: 'Fraunces', serif; font-style: italic; font-size: 1.05rem; line-height: 1.45; margin: 0; }
 
   /* ═══════════════════════════════════════════
      HOW IT WORKS
   ═══════════════════════════════════════════ */
-  .section { padding: 100px 48px; }
-  .section-inner { max-width: 1100px; margin: 0 auto; }
-
-  .section-kicker {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 0.68rem; font-weight: 800;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--forest); margin-bottom: 12px;
+  .hiw-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 50px; align-items: center; margin-top: 46px; }
+  .steps-row { display: flex; position: relative; }
+  .step-col { flex: 1; text-align: center; position: relative; padding: 0 8px; }
+  .step-col:not(:last-child)::after {
+    content: ''; position: absolute; top: 24px; left: 58%; width: 84%;
+    border-top: 2px dashed var(--ink4);
   }
-  .section-kicker::before {
-    content: '';
-    display: inline-block; width: 16px; height: 2px;
-    background: var(--forest); border-radius: 2px;
-  }
-  .section-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    font-weight: 700; letter-spacing: -1.5px;
-    color: var(--ink); margin-bottom: 14px; line-height: 1.1;
-  }
-  .section-sub {
-    font-size: 0.95rem; color: var(--ink3); max-width: 480px;
-    line-height: 1.7; margin-bottom: 56px;
-  }
-
-  /* steps */
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-  }
-  .step-card {
-    background: var(--card);
-    border: 1px solid rgba(0,0,0,0.07);
-    border-radius: var(--r);
-    padding: 30px 24px 26px;
-    position: relative; overflow: hidden;
-    box-shadow: 0 3px 18px rgba(0,0,0,0.055);
-    transition: transform .22s, box-shadow .22s;
-    animation: riseIn .55s cubic-bezier(0.22,1,0.36,1) both;
-  }
-  @keyframes riseIn {
-    from { opacity: 0; transform: translateY(22px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .step-card:hover { transform: translateY(-5px); box-shadow: 0 14px 42px rgba(0,0,0,0.1); }
-
-  /* top accent stripe */
-  .step-card:nth-child(1)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--forest),var(--forest2)); }
-  .step-card:nth-child(2)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--plum),var(--plum2)); }
-  .step-card:nth-child(3)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--amber),#f59e0b); }
-  .step-card:nth-child(4)::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--rose),#f43f5e); }
-
-  .step-num {
-    font-family: 'Fraunces', serif;
-    font-size: 3rem; font-weight: 900;
-    line-height: 1; margin-bottom: 16px;
-    opacity: 0.1; letter-spacing: -3px;
-  }
-  .step-card:nth-child(1) .step-num { color: var(--forest); opacity: 0.12; }
-  .step-card:nth-child(2) .step-num { color: var(--plum);  opacity: 0.1; }
-  .step-card:nth-child(3) .step-num { color: var(--amber); opacity: 0.1; }
-  .step-card:nth-child(4) .step-num { color: var(--rose);  opacity: 0.1; }
-
-  .step-icon {
-    width: 48px; height: 48px; border-radius: 14px;
+  .step-num-circ {
+    width: 48px; height: 48px; border-radius: 50%; background: var(--dark);
+    color: #fff; font-weight: 800; font-size: 0.86rem;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.3rem; margin-bottom: 16px;
+    margin: 0 auto 14px; position: relative; z-index: 1;
   }
-  .step-card:nth-child(1) .step-icon { background: var(--forest-lt); }
-  .step-card:nth-child(2) .step-icon { background: var(--plum-lt); }
-  .step-card:nth-child(3) .step-icon { background: var(--amber-lt); }
-  .step-card:nth-child(4) .step-icon { background: #fdeaed; }
+  .step-ic { font-size: 1.5rem; margin-bottom: 10px; color: var(--forest); }
+  .step-title { font-weight: 800; font-size: 0.92rem; color: var(--ink); margin-bottom: 6px; }
+  .step-desc { font-size: 0.78rem; color: var(--ink3); line-height: 1.5; }
 
-  .step-title {
-    font-size: 1rem; font-weight: 800;
-    letter-spacing: -0.3px; color: var(--ink);
-    margin-bottom: 8px;
+  /* phone mockup */
+  .phone-wrap { display: flex; justify-content: center; position: relative; }
+  .phone {
+    width: 240px; background: var(--dark); border-radius: 34px;
+    padding: 14px 10px; box-shadow: 0 30px 60px rgba(20,20,10,0.25);
+    position: relative;
   }
-  .step-desc {
-    font-size: 0.84rem; color: var(--ink3);
-    line-height: 1.6;
+  .phone-notch { width: 60px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 0 auto 10px; }
+  .phone-screen { background: var(--cream); border-radius: 22px; padding: 14px; }
+  .phone-app-brand { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: var(--forest); margin-bottom: 10px; }
+  .phone-event-name { font-size: 0.9rem; font-weight: 800; color: var(--ink); }
+  .phone-event-sub { font-size: 0.64rem; color: var(--ink3); margin-bottom: 10px; }
+  .phone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .phone-grid div { aspect-ratio: 1; border-radius: 7px; }
+  .phone-toast {
+    position: absolute; left: -30px; bottom: 26px; background: #fff;
+    border-radius: 12px; padding: 9px 13px; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 12px 26px rgba(0,0,0,0.18); font-size: 0.68rem; font-weight: 700; color: var(--ink);
   }
+  .phone-toast .chk { width: 20px; height: 20px; border-radius: 50%; background: var(--forest); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
   /* ═══════════════════════════════════════════
-     AUTH CARDS (logged-out state)
+     FOR PHOTOGRAPHERS (auth cards)
   ═══════════════════════════════════════════ */
-  .auth-section {
-    background: linear-gradient(135deg, #0f7b56 0%, #4e3598 60%, #13a372 100%);
-    padding: 80px 48px;
-    position: relative; overflow: hidden;
-  }
-  .auth-section::before {
-    content: '';
-    position: absolute; top: -100px; right: -100px;
-    width: 400px; height: 400px; border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-  }
-  .auth-section::after {
-    content: '';
-    position: absolute; bottom: -80px; left: 20%;
-    width: 300px; height: 300px; border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-  }
-  .auth-inner {
-    max-width: 900px; margin: 0 auto;
-    position: relative; z-index: 1;
-    text-align: center;
-  }
-  .auth-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.6rem, 3vw, 2.4rem);
-    font-weight: 700; color: #fff;
-    letter-spacing: -1px; margin-bottom: 10px;
-  }
-  .auth-sub {
-    font-size: 0.92rem; color: rgba(255,255,255,0.7);
-    margin-bottom: 40px;
-  }
-  .auth-cards {
-    display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
-  }
+  .auth-section { background: var(--cream2); padding: 84px 40px; text-align: center; }
+  .auth-inner { max-width: 900px; margin: 0 auto; }
+  .auth-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
   .auth-card {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(16px);
-    border-radius: var(--r); padding: 32px 28px;
-    width: 260px; text-align: left;
-    transition: transform .2s, background .2s;
+    background: var(--card); border-radius: 20px; padding: 34px 28px; text-align: left;
+    box-shadow: 0 4px 22px rgba(20,20,10,0.05); border: 1px solid rgba(0,0,0,0.05);
   }
-  .auth-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.16); }
   .auth-card-icon {
-    width: 46px; height: 46px; border-radius: 13px;
-    background: rgba(255,255,255,0.18);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.3rem; margin-bottom: 16px;
+    width: 48px; height: 48px; border-radius: 13px; background: var(--forest-lt, #dff2ea);
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 16px;
   }
-  .auth-card-title {
-    font-size: 1rem; font-weight: 800; color: #fff;
-    margin-bottom: 8px; letter-spacing: -0.3px;
-  }
-  .auth-card-desc {
-    font-size: 0.82rem; color: rgba(255,255,255,0.65);
-    line-height: 1.55; margin-bottom: 20px;
-  }
+  .auth-card-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
+  .auth-card-desc { font-size: 0.86rem; color: var(--ink3); line-height: 1.55; margin-bottom: 20px; }
   .auth-card-btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    text-decoration: none; font-size: 0.83rem; font-weight: 800;
-    padding: 10px 20px; border-radius: 50px;
-    transition: transform .15s, box-shadow .18s;
+    display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.86rem;
+    padding: 11px 22px; border-radius: 50px; transition: transform .16s;
   }
-  .auth-card-btn:hover { transform: translateY(-2px); text-decoration: none; }
-  .btn-white { background: #fff; color: var(--forest); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
-  .btn-outline-w { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); }
-  .btn-outline-w:hover { background: rgba(255,255,255,0.25); color: #fff; }
+  .auth-card-btn:hover { transform: translateY(-2px); }
+  .btn-dark-pill { background: var(--dark); color: #fff; }
+  .btn-dark-pill:hover { color: #fff; background: var(--forest); }
+  .btn-line-pill { border: 1.5px solid var(--ink); color: var(--ink); }
+  .btn-line-pill:hover { color: var(--ink); border-color: var(--forest); background: rgba(15,123,86,0.06); }
+  .status-card { background: var(--card); border-radius: 20px; padding: 40px; box-shadow: 0 4px 22px rgba(20,20,10,0.05); }
+
+  /* ═══════════════════════════════════════════
+     WEDDINGS TO WORLD EVENTS (dark)
+  ═══════════════════════════════════════════ */
+  .occ-sec { background: var(--dark2); padding: 84px 40px; }
+  .occ-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .btn-mint-pill {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 26px;
+    background: var(--mint); color: var(--dark); font-weight: 800; font-size: 0.9rem;
+    padding: 13px 26px; border-radius: 50px; transition: transform .16s, box-shadow .18s;
+  }
+  .btn-mint-pill:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(127,233,189,0.3); color: var(--dark); }
+  .occ-visual { position: relative; height: 340px; }
+  .occ-1 { position: absolute; width: 220px; height: 260px; top: 0; left: 10%; border-radius: 16px; border: 5px solid #fff; background: linear-gradient(155deg,#1c3d64,#0d2038); transform: rotate(-5deg); box-shadow: 0 20px 40px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.8rem; }
+  .occ-2 { position: absolute; width: 180px; height: 220px; top: 8%; right: 6%; border-radius: 16px; border: 5px solid #fff; background: linear-gradient(155deg,#2b6b52,#0f7b56); transform: rotate(4deg); box-shadow: 0 20px 40px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.8rem; }
+  .occ-card {
+    position: absolute; bottom: 4%; left: 30%; background: #fff; border-radius: 14px;
+    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.3);
+  }
+  .occ-script { position: absolute; top: -6%; right: -2%; font-family:'Caveat',cursive; font-weight:700; color: var(--mint); font-size: 1.3rem; text-align: right; line-height: 1.15; }
+
+  /* ═══════════════════════════════════════════
+     TESTIMONIALS
+  ═══════════════════════════════════════════ */
+  .testi-track { display: flex; gap: 20px; margin-top: 40px; overflow-x: auto; scrollbar-width: none; }
+  .testi-track::-webkit-scrollbar { display: none; }
+  .testi-card {
+    flex: 0 0 calc(33.333% - 14px); min-width: 260px;
+    background: var(--cream2); border-radius: 18px; padding: 26px;
+  }
+  .testi-stars { color: var(--amber-dp); font-size: 0.78rem; margin-bottom: 6px; }
+  .testi-quote { font-size: 0.88rem; color: var(--ink2); line-height: 1.6; margin-bottom: 20px; min-height: 76px; }
+  .testi-who { display: flex; align-items: center; gap: 10px; }
+  .testi-avatar {
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 0.78rem; flex-shrink: 0;
+  }
+  .testi-name { font-weight: 800; font-size: 0.86rem; color: var(--ink); }
+  .testi-role { font-size: 0.74rem; color: var(--ink3); }
+
+  /* ═══════════════════════════════════════════
+     FINAL CTA
+  ═══════════════════════════════════════════ */
+  .final-cta {
+    position: relative; overflow: hidden;
+    background: linear-gradient(155deg, #0a1f17 0%, #143a29 45%, #2a5a3f 100%);
+    padding: 100px 40px; text-align: center;
+  }
+  .final-cta::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 120%, rgba(240,180,41,0.16) 0%, transparent 60%);
+  }
+  .final-cta-inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+  .final-cta .eyebrow { justify-content: center; display: block; }
+  .final-cta .h2-title { color: #fff; }
+  .final-cta .h2-title .it { color: var(--mint); }
+  .final-cta p.sec-sub { margin: 14px auto 0; text-align: center; }
+  .btn-cream-pill {
+    display: inline-flex; align-items: center; gap: 9px; margin-top: 30px;
+    background: var(--cream); color: var(--dark); font-weight: 800; font-size: 0.95rem;
+    padding: 16px 32px; border-radius: 50px; box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    transition: transform .18s, box-shadow .2s;
+  }
+  .btn-cream-pill:hover { transform: translateY(-3px); box-shadow: 0 16px 38px rgba(0,0,0,0.36); color: var(--dark); }
+  .final-script {
+    position: absolute; right: 6%; top: 18%; font-family: 'Caveat', cursive; font-weight: 700;
+    color: rgba(255,255,255,0.5); font-size: 1.4rem; line-height: 1.2; text-align: left; z-index: 1;
+  }
 
   /* ═══════════════════════════════════════════
      FOOTER
   ═══════════════════════════════════════════ */
-  .pix-footer {
-    background: var(--ink);
-    padding: 48px;
-    display: flex; align-items: center; justify-content: center;
-    flex-wrap: wrap; gap: 16px;
-    text-align: center;
+  .pix-footer { background: #0a0d0a; padding: 60px 40px 24px; }
+  .footer-top {
+    max-width: 1280px; margin: 0 auto; display: grid;
+    grid-template-columns: 1.3fr 0.8fr 0.8fr 1.1fr; gap: 32px;
+    padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);
   }
-  .footer-brand {
-    font-family: 'Fraunces', serif;
-    font-size: 1.2rem; font-weight: 700;
-    color: #fff; letter-spacing: -0.5px;
+  .footer-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .footer-brand-name { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 700; color: #fff; }
+  .footer-brand-name span { color: var(--mint); }
+  .footer-tag { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-bottom: 20px; max-width: 220px; line-height: 1.5; }
+  .footer-social { display: flex; gap: 10px; }
+  .footer-social a {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7);
+    transition: background .18s, color .18s;
   }
-  .footer-brand span { color: #7dffd0; }
-  .footer-copy {
-    font-size: 0.78rem; color: rgba(255,255,255,0.4);
-    margin-top: 4px;
-  }
-  .footer-links { display: flex; gap: 20px; }
-  .footer-links a {
-    font-size: 0.8rem; font-weight: 600;
-    color: rgba(255,255,255,0.5); text-decoration: none;
-    transition: color .18s;
-  }
-  .footer-links a:hover { color: #7dffd0; }
+  .footer-social a:hover { background: var(--forest); color: #fff; }
+  .footer-col-title { font-size: 0.76rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 16px; }
+  .footer-col a { display: block; font-size: 0.86rem; color: rgba(255,255,255,0.65); margin-bottom: 12px; transition: color .18s; }
+  .footer-col a:hover { color: var(--mint); }
+  .footer-news p { font-size: 0.82rem; color: rgba(255,255,255,0.5); margin-bottom: 14px; line-height: 1.5; }
+  .news-form { display: flex; gap: 0; border-radius: 50px; overflow: hidden; background: rgba(255,255,255,0.07); padding: 4px; }
+  .news-form input { flex: 1; background: transparent; border: none; outline: none; color: #fff; padding: 9px 16px; font-size: 0.84rem; }
+  .news-form input::placeholder { color: rgba(255,255,255,0.4); }
+  .news-form button { background: var(--mint); border: none; width: 38px; height: 38px; border-radius: 50%; color: var(--dark); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .footer-bottom { max-width: 1280px; margin: 20px auto 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .footer-bottom span { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+
+  /* ═══════════════════════════════════════════
+     REVEAL ANIMATION
+  ═══════════════════════════════════════════ */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
 
   /* ═══════════════════════════════════════════
      RESPONSIVE
   ═══════════════════════════════════════════ */
+  @media (max-width: 992px) {
+    .hero-grid, .hiw-grid, .occ-grid { grid-template-columns: 1fr; }
+    .hero-visual, .occ-visual { height: 320px; margin-top: 20px; }
+    .feat-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .nav-links { display: none; }
+  }
   @media (max-width: 768px) {
-    .pix-nav   { padding: 0 20px; }
-    .hero      { padding: 60px 20px 50px; }
-    .section   { padding: 64px 20px; }
-    .auth-section { padding: 60px 20px; }
-    .features-strip { padding: 56px 20px; }
-    .pix-footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
-    .hero-h1   { letter-spacing: -1.5px; }
+    .pix-nav { padding: 0 20px; }
+    .container-px, .section, .events-head, .events-track, .auth-section, .occ-sec, .final-cta, .pix-footer, .stats-band, .hero { padding-left: 20px; padding-right: 20px; }
+    .section { padding-top: 64px; padding-bottom: 64px; }
+    .auth-cards { grid-template-columns: 1fr; }
+    .steps-row { flex-direction: column; gap: 24px; }
+    .step-col::after { display: none; }
+    .stats-band { flex-direction: column; align-items: flex-start; }
+    .stats-list { gap: 26px; }
+    .testi-card { flex: 0 0 85%; }
+    .footer-top { grid-template-columns: 1fr; }
+    .feat-grid { grid-template-columns: 1fr; }
   }
   </style>
 </head>
@@ -446,183 +545,434 @@
   <nav class="pix-nav">
     <a class="pix-brand" href="{{ url_for('home') }}">
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare" class="pix-brand-logo">
-      <span class="pix-brand-name">Pix<span>hare</span></span>
+      <span class="pix-brand-text">
+        <span class="pix-brand-name">Pix<span>hare</span></span>
+        <span class="pix-brand-tag">Capture. Share. Cherish.</span>
+      </span>
     </a>
     <div class="nav-spacer"></div>
     <div class="nav-links">
+      <a class="nav-lnk active" href="{{ url_for('home') }}">Home</a>
+      <a class="nav-lnk" href="#features">Features</a>
+      <a class="nav-lnk" href="#how-it-works">How It Works</a>
+      <a class="nav-lnk" href="#for-photographers">For Photographers</a>
+      <a class="nav-lnk" href="#events">Events</a>
+      <a class="nav-lnk" href="#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
       {% if not session.get('email') %}
-        <a class="nav-lnk" href="{{ url_for('photographer_login') }}">Login</a>
-        <a class="nav-lnk cta" href="{{ url_for('photographer_register') }}">
-          Get Started <i class="bi bi-arrow-right"></i>
-        </a>
+        <a class="btn-nav-outline" href="{{ url_for('photographer_login') }}">Login</a>
+        <a class="btn-nav-solid" href="{{ url_for('photographer_register') }}">Get Started <i class="bi bi-arrow-right"></i></a>
       {% else %}
-        <a class="nav-lnk dash" href="{{ url_for('photographer_dashboard') }}">
-          <i class="bi bi-grid me-1"></i>Dashboard
-        </a>
-        <a class="nav-lnk out" href="{{ url_for('photographer_logout') }}">
-          <i class="bi bi-box-arrow-right me-1"></i>Logout
-        </a>
+        <a class="btn-nav-dash" href="{{ url_for('photographer_dashboard') }}"><i class="bi bi-grid me-1"></i>Dashboard</a>
+        <a class="btn-nav-out" href="{{ url_for('photographer_logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
       {% endif %}
     </div>
   </nav>
 
   <!-- ══ HERO ══ -->
   <section class="hero">
-    <div class="hero-mesh"></div>
-    <div class="hero-deco">
-      <div class="deco-circle"></div>
-      <div class="deco-circle"></div>
-      <div class="deco-circle"></div>
+    <div class="hero-grid">
+      <div>
+        <span class="hero-eyebrow">AI-Powered Event Photo Sharing</span>
+        <h1 class="hero-h1">Every Event<br>Has a Story<br><span class="it">Let's Share It.</span></h1>
+        <p class="hero-sub">Pixhare helps photographers capture, organize, and deliver event memories with the power of AI face recognition — simple, secure, and magical.</p>
+
+        <div class="hero-cta-row">
+          {% if not session.get('email') %}
+            <a href="{{ url_for('photographer_register') }}" class="btn-hero-primary"><i class="bi bi-camera-fill"></i> Get Started <i class="bi bi-arrow-right"></i></a>
+          {% else %}
+            <a href="{{ url_for('photographer_dashboard') }}" class="btn-hero-primary"><i class="bi bi-grid-fill"></i> Go to Dashboard</a>
+          {% endif %}
+          <a href="#how-it-works" class="btn-hero-play"><span class="play-circle"><i class="bi bi-play-fill"></i></span> Watch Video</a>
+        </div>
+
+        <div class="hero-stats">
+          <div><div class="hero-stat-num">50K+</div><div class="hero-stat-lbl">Moments Shared</div></div>
+          <div><div class="hero-stat-num">5K+</div><div class="hero-stat-lbl">Happy Attendees</div></div>
+          <div><div class="hero-stat-num">500+</div><div class="hero-stat-lbl">Events Covered</div></div>
+        </div>
+
+        <div class="hero-trust">
+          <div class="avatar-stack">
+            <div class="avatar-mini" style="background:#0f7b56;">JR</div>
+            <div class="avatar-mini" style="background:#4e3598;">PM</div>
+            <div class="avatar-mini" style="background:#c8600a;">AK</div>
+            <div class="avatar-mini" style="background:#d42b52;">SN</div>
+          </div>
+          <div>
+            <div class="hero-trust-text">Trusted by event photographers</div>
+            <div class="hero-trust-stars">★★★★★ <span style="color:rgba(255,255,255,0.6); font-weight:600;">4.8/5</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hv-script hv-script-1">Good Photos,<br>Happier People</div>
+        <div class="hv-photo hv-1"><i class="bi bi-heart-fill"></i></div>
+        <div class="hv-photo hv-2"><i class="bi bi-people-fill"></i></div>
+        <div class="hv-photo hv-3"><i class="bi bi-music-note-beamed"></i></div>
+        <div class="hv-photo hv-4"><i class="bi bi-camera2"></i></div>
+        <div class="hv-photo hv-5"><i class="bi bi-stars"></i></div>
+
+        <div class="hv-card hv-card-ai">
+          <div class="hv-ic"><i class="bi bi-person-check-fill"></i></div>
+          <div>
+            <div class="hv-card-title">AI Matching</div>
+            <div class="hv-card-sub">Find people in photos instantly</div>
+          </div>
+        </div>
+
+        <div class="hv-card hv-card-qr">
+          <div class="hv-ic"><i class="bi bi-qr-code"></i></div>
+          <div class="hv-card-title">Event Access</div>
+          <div class="hv-card-sub">Scan. View. Download.</div>
+        </div>
+
+        <div class="hv-script hv-script-2">More than<br>Photos</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ EVENTS WE CAPTURE ══ -->
+  <section class="events-sec" id="events">
+    <div class="events-head">
+      <div>
+        <span class="eyebrow on-dark">All Kinds of Moments</span>
+        <h2 class="h2-title" style="color:#fff;">Events We <span class="it" style="color:var(--mint);">Capture</span></h2>
+        <p class="sec-sub" style="color:rgba(255,255,255,0.65);">From grand celebrations to professional gatherings — Pixhare is built for every occasion.</p>
+      </div>
+      <div class="events-head-right">
+        <p>Different events.<br>Same beautiful memories.</p>
+        <div class="carousel-arrows">
+          <div class="car-arrow" id="evPrev"><i class="bi bi-arrow-left"></i></div>
+          <div class="car-arrow" id="evNext"><i class="bi bi-arrow-right"></i></div>
+        </div>
+      </div>
     </div>
 
-    <div class="hero-content">
-      <div class="hero-eyebrow">
-        <div class="eyebrow-dot">✨</div>
-        AI-Powered Event Photography
+    <div class="events-track" id="evTrack">
+      <div class="ev-card" style="background:linear-gradient(160deg,#3a2d4d,#1c1630);"><i class="bi bi-gem ev-card-icon"></i><span class="ev-card-label">Weddings</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#1c3d64,#0d2038);"><i class="bi bi-briefcase-fill ev-card-icon"></i><span class="ev-card-label">Corporate Events</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#2b6b52,#0f7b56);"><i class="bi bi-mortarboard-fill ev-card-icon"></i><span class="ev-card-label">College Events</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#a8621e,#5f3711);"><i class="bi bi-cake2-fill ev-card-icon"></i><span class="ev-card-label">Birthdays</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#274a70,#152a42);"><i class="bi bi-easel2-fill ev-card-icon"></i><span class="ev-card-label">Conferences</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#7a2f8c,#3c1546);"><i class="bi bi-stars ev-card-icon"></i><span class="ev-card-label">Festivals</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#1e6b4f,#0c3826);"><i class="bi bi-trophy-fill ev-card-icon"></i><span class="ev-card-label">Sports Events</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#a8305a,#5e1731);"><i class="bi bi-music-note-beamed ev-card-icon"></i><span class="ev-card-label">Cultural Events</span></div>
+      <div class="ev-card" style="background:linear-gradient(160deg,#3a3a3a,#181818);"><i class="bi bi-three-dots ev-card-icon"></i><span class="ev-card-label">And More</span></div>
+    </div>
+  </section>
+
+  <!-- ══ WHY PIXSHARE (FEATURES) ══ -->
+  <section class="section on-light" id="features">
+    <div class="section-inner reveal">
+      <span class="eyebrow on-light">Why Pixhare?</span>
+      <h2 class="h2-title">Built for Photographers, <span class="it">Loved by Everyone.</span></h2>
+      <p class="sec-sub">Everything you need to manage, share, and deliver event photos — in one place.</p>
+
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-card-top">
+            <div class="feat-icon" style="background:var(--forest-lt,#dff2ea); color:var(--forest);"><i class="bi bi-people-fill"></i></div>
+            <i class="bi bi-arrow-up-right feat-arrow"></i>
+          </div>
+          <div class="feat-title">AI-Powered Face Matching</div>
+          <div class="feat-desc">Find attendees in photos using advanced AI.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-card-top">
+            <div class="feat-icon" style="background:var(--mint-soft); color:var(--forest2);"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+            <i class="bi bi-arrow-up-right feat-arrow"></i>
+          </div>
+          <div class="feat-title">Easy Upload &amp; Organize</div>
+          <div class="feat-desc">Upload, sort, and manage event photos effortlessly.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-card-top">
+            <div class="feat-icon" style="background:var(--rose-lt); color:var(--rose);"><i class="bi bi-share-fill"></i></div>
+            <i class="bi bi-arrow-up-right feat-arrow"></i>
+          </div>
+          <div class="feat-title">Secure Sharing</div>
+          <div class="feat-desc">Share via QR codes or private links.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-card-top">
+            <div class="feat-icon" style="background:var(--amber-lt); color:var(--amber-dp);"><i class="bi bi-bar-chart-fill"></i></div>
+            <i class="bi bi-arrow-up-right feat-arrow"></i>
+          </div>
+          <div class="feat-title">Track &amp; Manage</div>
+          <div class="feat-desc">View downloads, engagement, and event insights.</div>
+        </div>
       </div>
+    </div>
+  </section>
 
-      <h1 class="hero-h1">
-        Every guest gets<br>
-        <span class="accent">their photos.</span><br>
-        <span class="accent2">Automatically.</span>
-      </h1>
-
-      <p class="hero-sub">
-        Pixhare uses DeepFace AI to match event photos to guests and delivers personalised galleries — without anyone lifting a finger.
-      </p>
-
-      <div class="hero-cta-row">
-        {% if not session.get('email') %}
-          <a href="{{ url_for('photographer_register') }}" class="btn-hero-primary">
-            <i class="bi bi-camera-fill"></i> Start for Free
-          </a>
-          <a href="{{ url_for('photographer_login') }}" class="btn-hero-secondary">
-            <i class="bi bi-person"></i> Login
-          </a>
-        {% else %}
-          <a href="{{ url_for('photographer_dashboard') }}" class="btn-hero-primary">
-            <i class="bi bi-grid-fill"></i> Go to Dashboard
-          </a>
-        {% endif %}
-      </div>
-
-      <div class="hero-trust">
-        <div class="trust-item">
-          <div class="trust-icon ti-g">🤖</div>
-          DeepFace AI Matching
-        </div>
-        <div class="trust-divider"></div>
-        <div class="trust-item">
-          <div class="trust-icon ti-p">📧</div>
-          Instant Email Delivery
-        </div>
-        <div class="trust-divider"></div>
-        <div class="trust-item">
-          <div class="trust-icon ti-a">📱</div>
-          QR Code Registration
-        </div>
-        <div class="trust-divider"></div>
-        <div class="trust-item">
-          <div class="trust-icon" style="background:#fdeaed;">🔒</div>
-          Private Galleries
-        </div>
-      </div>
+  <!-- ══ STATS BAND ══ -->
+  <section class="stats-band reveal">
+    <div class="stats-list">
+      <div class="stat-item"><div class="stat-ic"><i class="bi bi-camera2"></i></div><div><div class="stat-num">50K+</div><div class="stat-lbl">Photos Shared</div></div></div>
+      <div class="stat-item"><div class="stat-ic"><i class="bi bi-people-fill"></i></div><div><div class="stat-num">5K+</div><div class="stat-lbl">Happy Attendees</div></div></div>
+      <div class="stat-item"><div class="stat-ic"><i class="bi bi-calendar-event-fill"></i></div><div><div class="stat-num">500+</div><div class="stat-lbl">Events Covered</div></div></div>
+      <div class="stat-item"><div class="stat-ic"><i class="bi bi-star-fill"></i></div><div><div class="stat-num">4.8/5</div><div class="stat-lbl">Photographer Rating</div></div></div>
+    </div>
+    <div class="stats-quote">
+      <i class="bi bi-quote"></i>
+      <p>It's more than a platform. It's a way to keep memories alive forever.</p>
     </div>
   </section>
 
   <!-- ══ HOW IT WORKS ══ -->
-  <section class="section" style="background: var(--bg);">
-    <div class="section-inner">
-      <div class="section-kicker">How it works</div>
-      <h2 class="section-title">Four steps.<br>Zero hassle.</h2>
-      <p class="section-sub">From event creation to personalised gallery delivery — Pixhare handles everything.</p>
+  <section class="section on-light" id="how-it-works" style="background:var(--cream);">
+    <div class="section-inner reveal">
+      <span class="eyebrow on-light">How It Works</span>
+      <h2 class="h2-title">Simple Steps. <span class="it">Powerful Results.</span></h2>
 
-      <div class="steps-grid">
-        <div class="step-card" style="animation-delay:0s">
-          <div class="step-num">01</div>
-          <div class="step-icon">📅</div>
-          <div class="step-title">Create an Event</div>
-          <p class="step-desc">Photographer sets up an event and receives a unique QR code to share with guests on the day.</p>
+      <div class="hiw-grid">
+        <div class="steps-row">
+          <div class="step-col">
+            <div class="step-num-circ">1</div>
+            <div class="step-ic"><i class="bi bi-camera-fill"></i></div>
+            <div class="step-title">Create Event</div>
+            <div class="step-desc">Set up your event in seconds.</div>
+          </div>
+          <div class="step-col">
+            <div class="step-num-circ">2</div>
+            <div class="step-ic"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+            <div class="step-title">Upload Photos</div>
+            <div class="step-desc">Add and organize your event photos.</div>
+          </div>
+          <div class="step-col">
+            <div class="step-num-circ">3</div>
+            <div class="step-ic"><i class="bi bi-person-bounding-box"></i></div>
+            <div class="step-title">AI Matching</div>
+            <div class="step-desc">Our AI finds people in the photos.</div>
+          </div>
+          <div class="step-col">
+            <div class="step-num-circ">4</div>
+            <div class="step-ic"><i class="bi bi-share-fill"></i></div>
+            <div class="step-title">Share with Guests</div>
+            <div class="step-desc">Guests access via QR or secure link.</div>
+          </div>
         </div>
-        <div class="step-card" style="animation-delay:.08s">
-          <div class="step-num">02</div>
-          <div class="step-icon">🤳</div>
-          <div class="step-title">Guests Self-Register</div>
-          <p class="step-desc">Guests scan the QR, enter their name & email, and upload a quick selfie. Done in under 30 seconds.</p>
-        </div>
-        <div class="step-card" style="animation-delay:.16s">
-          <div class="step-num">03</div>
-          <div class="step-icon">🤖</div>
-          <div class="step-title">AI Face Matching</div>
-          <p class="step-desc">DeepFace AI scans every uploaded photo and matches faces to registered guests with high accuracy.</p>
-        </div>
-        <div class="step-card" style="animation-delay:.24s">
-          <div class="step-num">04</div>
-          <div class="step-icon">✉️</div>
-          <div class="step-title">Gallery Delivered</div>
-          <p class="step-desc">Each guest receives a private email with a link to only their photos — beautifully organised and ready to download.</p>
+
+        <div class="phone-wrap">
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="phone-app-brand"><i class="bi bi-camera2"></i> Pixhare</div>
+              <div class="phone-event-name">Sarah &amp; John</div>
+              <div class="phone-event-sub">Wedding · 24 May 2026</div>
+              <div class="phone-grid">
+                <div style="background:linear-gradient(155deg,#2b6b52,#0f7b56);"></div>
+                <div style="background:linear-gradient(155deg,#4e3598,#6b52c8);"></div>
+                <div style="background:linear-gradient(155deg,#c8600a,#8c4306);"></div>
+                <div style="background:linear-gradient(155deg,#1c3d64,#12233d);"></div>
+                <div style="background:linear-gradient(155deg,#a8305a,#6e1836);"></div>
+                <div style="background:linear-gradient(155deg,#7a2f8c,#3c1546);"></div>
+              </div>
+            </div>
+            <div class="phone-toast"><span class="chk"><i class="bi bi-check-lg"></i></span> Your photos are ready</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══ AUTH CARDS (logged-out only) ══ -->
-  {% if not session.get('email') %}
-  <section class="auth-section">
-    <div class="auth-inner">
-      <h2 class="auth-title">Ready to deliver magic?</h2>
-      <p class="auth-sub">Join photographers already using Pixhare to delight their guests.</p>
+  <!-- ══ FOR PHOTOGRAPHERS ══ -->
+  <section class="auth-section" id="for-photographers">
+    <div class="auth-inner reveal">
+      <span class="eyebrow on-light" style="display:block; text-align:center;">For Photographers</span>
+      <h2 class="h2-title on-light" style="text-align:center;">Ready to Deliver <span class="it">Magic?</span></h2>
+      <p class="sec-sub" style="margin:12px auto 0; text-align:center;">Join photographers already using Pixhare to delight their guests.</p>
+
+      {% if not session.get('email') %}
       <div class="auth-cards">
         <div class="auth-card">
-          <div class="auth-card-icon">🔑</div>
+          <div class="auth-card-icon"><i class="bi bi-key-fill"></i></div>
           <div class="auth-card-title">Photographer Login</div>
           <p class="auth-card-desc">Already have an account? Log in to manage your events and galleries.</p>
-          <a href="{{ url_for('photographer_login') }}" class="auth-card-btn btn-white">
-            Login <i class="bi bi-arrow-right"></i>
-          </a>
+          <a href="{{ url_for('photographer_login') }}" class="auth-card-btn btn-line-pill">Login <i class="bi bi-arrow-right"></i></a>
         </div>
         <div class="auth-card">
-          <div class="auth-card-icon">🚀</div>
+          <div class="auth-card-icon"><i class="bi bi-rocket-takeoff-fill"></i></div>
           <div class="auth-card-title">Create an Account</div>
           <p class="auth-card-desc">New to Pixhare? Register free and run your first event in minutes.</p>
-          <a href="{{ url_for('photographer_register') }}" class="auth-card-btn btn-outline-w">
-            Register Free <i class="bi bi-arrow-right"></i>
-          </a>
+          <a href="{{ url_for('photographer_register') }}" class="auth-card-btn btn-dark-pill">Register Free <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      {% else %}
+      <div class="status-card" style="max-width:480px; margin:40px auto 0; text-align:center;">
+        <div class="auth-card-icon" style="margin:0 auto 16px;"><i class="bi bi-grid-fill"></i></div>
+        <div class="auth-card-title">Welcome back!</div>
+        <p class="auth-card-desc">Jump into your dashboard to manage events and galleries.</p>
+        <a href="{{ url_for('photographer_dashboard') }}" class="auth-card-btn btn-dark-pill">Go to Dashboard <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ══ FROM WEDDINGS TO WORLD EVENTS ══ -->
+  <section class="occ-sec">
+    <div class="occ-grid reveal">
+      <div>
+        <span class="eyebrow on-dark">For Every Occasion</span>
+        <h2 class="h2-title" style="color:#fff;">From Weddings<br>to World Events</h2>
+        <p class="sec-sub" style="color:rgba(255,255,255,0.65);">Pixhare adapts to your world. Capture, share, and deliver memories — no matter the event.</p>
+        <a href="#events" class="btn-mint-pill">Explore All Events <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="occ-visual">
+        <div class="occ-script">Events<br>People<br>Memories<br>Together</div>
+        <div class="occ-1"><i class="bi bi-camera-reels-fill"></i></div>
+        <div class="occ-2"><i class="bi bi-heart-fill"></i></div>
+        <div class="occ-card">
+          <div class="hv-ic" style="background:var(--mint-soft); color:var(--forest2);"><i class="bi bi-play-fill"></i></div>
+          <div>
+            <div class="hv-card-title">Memories</div>
+            <div class="hv-card-sub">in Motion</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
-  {% endif %}
+
+  <!-- ══ TESTIMONIALS ══ -->
+  <section class="section on-light" style="background:var(--cream);">
+    <div class="section-inner reveal">
+      <div class="events-head" style="padding:0;">
+        <div>
+          <span class="eyebrow on-light">What Photographers Say</span>
+          <h2 class="h2-title">Trusted by Amazing <span class="it">Creators.</span></h2>
+        </div>
+        <div class="carousel-arrows">
+          <div class="car-arrow" id="tPrev" style="background:var(--cream2); border-color:rgba(0,0,0,0.1); color:var(--ink);"><i class="bi bi-arrow-left"></i></div>
+          <div class="car-arrow" id="tNext" style="background:var(--cream2); border-color:rgba(0,0,0,0.1); color:var(--ink);"><i class="bi bi-arrow-right"></i></div>
+        </div>
+      </div>
+
+      <div class="testi-track" id="testiTrack">
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Pixhare has completely transformed how I deliver event photos. It's fast, secure, and my clients love it!"</p>
+          <div class="testi-who">
+            <div class="testi-avatar" style="background:var(--forest);">AM</div>
+            <div><div class="testi-name">Arjun Mehta</div><div class="testi-role">Event Photographer</div></div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"The AI face matching is a game-changer. My clients can find their photos so easily!"</p>
+          <div class="testi-who">
+            <div class="testi-avatar" style="background:var(--plum);">PN</div>
+            <div><div class="testi-name">Priya Nair</div><div class="testi-role">Wedding Photographer</div></div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Professional, reliable, and incredibly easy to use. A must-have for every event photographer."</p>
+          <div class="testi-who">
+            <div class="testi-avatar" style="background:var(--amber-dp);">KS</div>
+            <div><div class="testi-name">Karan Singh</div><div class="testi-role">Corporate Photographer</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FINAL CTA ══ -->
+  <section class="final-cta">
+    <div class="final-script">Capture<br>Share<br>Grow</div>
+    <div class="final-cta-inner reveal">
+      <span class="eyebrow on-dark">Ready to Get Started?</span>
+      <h2 class="h2-title">Turn Your Photos into<br><span class="it">Lasting Memories.</span></h2>
+      <p class="sec-sub">Join hundreds of photographers who trust Pixhare.</p>
+      {% if not session.get('email') %}
+        <a href="{{ url_for('photographer_register') }}" class="btn-cream-pill">Create Your First Event <i class="bi bi-arrow-right"></i></a>
+      {% else %}
+        <a href="{{ url_for('photographer_dashboard') }}" class="btn-cream-pill">Go to Dashboard <i class="bi bi-arrow-right"></i></a>
+      {% endif %}
+    </div>
+  </section>
 
   <!-- ══ FOOTER ══ -->
-  <footer class="pix-footer">
-    <div>
-      <div class="footer-brand">Pix<span>hare</span></div>
-      <div class="footer-copy">&copy; 2025 Pixhare · AI-Powered Event Photo Sharing</div>
+  <footer class="pix-footer" id="contact">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare" style="width:32px; height:32px; border-radius:8px; object-fit:cover;">
+          <span class="footer-brand-name">Pix<span>hare</span></span>
+        </div>
+        <p class="footer-tag">Capture. Share. Cherish. AI-powered event photo sharing for photographers.</p>
+        <div class="footer-social">
+          <a href="#"><i class="bi bi-facebook"></i></a>
+          <a href="#"><i class="bi bi-instagram"></i></a>
+          <a href="#"><i class="bi bi-youtube"></i></a>
+          <a href="#"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#for-photographers">For Photographers</a>
+        <a href="#events">Events</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Support</div>
+        <a href="mailto:hello@pixhare.app">Help Center</a>
+        <a href="mailto:hello@pixhare.app">Contact Us</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+      <div class="footer-news">
+        <div class="footer-col-title">Subscribe to our newsletter</div>
+        <p>Get the latest updates, features, and photography tips.</p>
+        <form class="news-form" onsubmit="return false;">
+          <input type="email" placeholder="Enter your email" required>
+          <button type="submit"><i class="bi bi-arrow-right"></i></button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Pixhare. All rights reserved.</span>
+      <span>Made with <i class="bi bi-heart-fill" style="color:#d42b52;"></i> for photographers.</span>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
-    /* Stagger step cards on scroll */
+    // reveal-on-scroll
     (function () {
-      var cards = document.querySelectorAll('.step-card, .feat-item, .auth-card');
-      if (!window.IntersectionObserver) return;
+      var els = document.querySelectorAll('.reveal, .feat-card, .step-col, .testi-card, .ev-card');
+      if (!window.IntersectionObserver) { els.forEach(function(el){ el.classList.add('in'); }); return; }
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0) scale(1)';
-          }
+          if (entry.isIntersecting) { entry.target.classList.add('in'); }
         });
-      }, { threshold: 0.15 });
+      }, { threshold: 0.12 });
+      els.forEach(function (el) { el.classList.add('reveal'); io.observe(el); });
+    }());
 
-      cards.forEach(function (el) {
-        el.style.opacity = '0';
-        el.style.transition = 'opacity .55s ease, transform .55s cubic-bezier(0.22,1,0.36,1)';
-        io.observe(el);
-      });
+    // events carousel arrows
+    (function () {
+      var track = document.getElementById('evTrack');
+      var prev = document.getElementById('evPrev');
+      var next = document.getElementById('evNext');
+      if (track && prev && next) {
+        prev.addEventListener('click', function () { track.scrollBy({ left: -320, behavior: 'smooth' }); });
+        next.addEventListener('click', function () { track.scrollBy({ left: 320, behavior: 'smooth' }); });
+      }
+    }());
+
+    // testimonials carousel arrows
+    (function () {
+      var track = document.getElementById('testiTrack');
+      var prev = document.getElementById('tPrev');
+      var next = document.getElementById('tNext');
+      if (track && prev && next) {
+        prev.addEventListener('click', function () { track.scrollBy({ left: -300, behavior: 'smooth' }); });
+        next.addEventListener('click', function () { track.scrollBy({ left: 300, behavior: 'smooth' }); });
+      }
     }());
   </script>
 

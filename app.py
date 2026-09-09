@@ -58,6 +58,15 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB upload limit
 db.init_app(app)
 app.secret_key = app.config['SECRET_KEY']
 
+@app.template_filter('prettydate')
+def prettydate_filter(value):
+    """Format a 'YYYY-MM-DD' event date as '24 May 2025' for display.
+    Falls back to the raw stored value if it isn't in that format."""
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').strftime('%d %b %Y')
+    except (TypeError, ValueError):
+        return value
+
 # Automatically create database tables
 with app.app_context():
     db.create_all()
@@ -1094,9 +1103,12 @@ def photographer_dashboard():
         if qr_bytes:
             qr_data_uri = "data:image/png;base64," + base64.b64encode(qr_bytes).decode('ascii')
 
+    today_str = datetime.utcnow().strftime('%Y-%m-%d')
+
     return render_template('photographer_dashboard.html',
                            events=events, event_stats=event_stats,
-                           photographer=photographer, qr_data_uri=qr_data_uri)
+                           photographer=photographer, qr_data_uri=qr_data_uri,
+                           today=today_str)
 
 
 @app.route('/photographer/create_event', methods=['POST'])

@@ -2,316 +2,376 @@
 {% block content %}
 
 <style>
-  .reg-page {
+  :root {
+    --auth-dark:  #0a1f17;
+    --auth-dark2: #123727;
+    --auth-mint:  #7fe9bd;
+  }
+
+  .auth-page {
     min-height: calc(100vh - 64px);
     background: var(--bg);
     display: flex; align-items: center; justify-content: center;
-    padding: 48px 20px;
+    padding: 40px 20px;
   }
 
-  .reg-wrap {
-    width: 100%; max-width: 460px;
+  .auth-shell {
+    width: 100%; max-width: 1000px;
+    display: grid; grid-template-columns: 0.9fr 1.1fr;
+    background: #fff; border-radius: 26px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(10,31,23,0.16);
   }
 
-  /* ── Top badge ── */
-  .reg-badge {
-    display: inline-flex; align-items: center; gap: 7px;
-    background: var(--forest-lt);
-    border: 1px solid rgba(15,123,86,0.2);
-    border-radius: 50px; padding: 5px 14px 5px 8px;
-    font-size: 0.7rem; font-weight: 800;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--forest); margin-bottom: 16px;
-  }
-  .reg-badge-dot {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: var(--forest);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.65rem; color: #fff;
-  }
-
-  /* ── Card ── */
-  .reg-card {
-    background: #fff;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 22px;
-    overflow: hidden;
-    box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+  /* ── Left brand panel ── */
+  .auth-left {
+    background: radial-gradient(ellipse 60% 50% at 85% 0%, rgba(127,233,189,0.14) 0%, transparent 60%),
+                linear-gradient(165deg, var(--auth-dark) 0%, var(--auth-dark2) 100%);
+    color: #fff; padding: 40px 38px;
+    display: flex; flex-direction: column;
     position: relative;
   }
-  /* gradient top line */
-  .reg-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--forest), var(--plum2), var(--amber));
+  .auth-leaf {
+    position: absolute; top: 0; right: 0; width: 120px; height: 120px;
+    opacity: 0.4; color: var(--auth-mint); pointer-events: none;
+  }
+  .auth-brand { display: flex; align-items: center; gap: 9px; position: relative; z-index: 1; animation: authFadeUp .6s ease both; }
+  .auth-brand img { width: 32px; height: 32px; border-radius: 9px; object-fit: cover; }
+  .auth-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+  .auth-brand-name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.05rem; }
+  .auth-brand-name span { color: var(--auth-mint); }
+  .auth-brand-tag { font-size: 0.62rem; color: rgba(255,255,255,0.55); font-weight: 500; }
+
+  .auth-left-mid { position: relative; z-index: 1; margin-top: 30px; animation: authFadeUp .6s ease .08s both; }
+  .auth-headline {
+    font-family: 'Fraunces', serif; font-weight: 800; letter-spacing: -0.5px;
+    font-size: 1.85rem; line-height: 1.15; margin-bottom: 10px;
+  }
+  .auth-headline .it { font-style: italic; color: var(--auth-mint); }
+  .auth-tagline { font-size: 0.86rem; color: rgba(255,255,255,0.62); line-height: 1.6; max-width: 290px; margin-bottom: 26px; }
+
+  .auth-collage-wrap { margin-bottom: 28px; }
+  .auth-collage { position: relative; height: 116px; width: 230px; }
+  .ac-photo {
+    position: absolute; border-radius: 12px; border: 4px solid #fff;
+    box-shadow: 0 12px 26px rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem;
+    transition: transform .25s ease;
+  }
+  .auth-collage:hover .ac-1 { transform: rotate(-9deg) translateY(-3px); }
+  .auth-collage:hover .ac-2 { transform: rotate(8deg) translateY(-3px); }
+  .ac-1 { width: 106px; height: 116px; top: 0; left: 0; background: linear-gradient(155deg,#c8600a,#8c4306); transform: rotate(-6deg); }
+  .ac-2 { width: 112px; height: 88px; top: 30px; left: 92px; background: linear-gradient(155deg,#2b6b52,#0f7b56); transform: rotate(5deg); }
+  .ac-badge {
+    position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--auth-mint); color: var(--auth-dark); display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid var(--auth-dark2); z-index: 2;
+  }
+  .ac-script {
+    font-family: 'Caveat', cursive; font-weight: 700; color: var(--auth-mint);
+    font-size: 1.2rem; line-height: 1.15; margin-top: 12px; display: inline-block; transform: rotate(-2deg);
   }
 
-  .reg-card-head {
-    padding: 32px 36px 24px;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
-    background: #fafaf8;
+  .auth-checklist { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+  .auth-checklist div { display: flex; align-items: center; gap: 9px; font-size: 0.82rem; color: rgba(255,255,255,0.75); }
+  .auth-checklist i { color: var(--auth-mint); font-size: 0.95rem; flex-shrink: 0; }
+
+  .auth-left-bottom { position: relative; z-index: 1; margin-top: auto; padding-top: 28px; }
+  .auth-quote {
+    font-family: 'Fraunces', serif; font-style: italic; font-size: 0.98rem;
+    color: rgba(255,255,255,0.85); line-height: 1.5; border-left: 2px solid var(--auth-mint);
+    padding-left: 14px; margin-bottom: 16px; min-height: 48px;
+    transition: opacity .25s ease;
   }
-  .reg-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.7rem; font-weight: 700;
-    letter-spacing: -1px; color: var(--ink);
-    margin-bottom: 6px;
+  .auth-dots { display: flex; gap: 6px; }
+  .auth-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);
+    cursor: pointer; transition: all .2s; display: inline-block;
   }
-  .reg-title span { color: var(--forest); }
-  .reg-sub { font-size: 0.85rem; color: var(--ink3); font-weight: 400; }
+  .auth-dots span:hover { background: rgba(255,255,255,0.55); }
+  .auth-dots span.on { background: var(--auth-mint); width: 18px; border-radius: 4px; }
+
+  @keyframes authFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Right form panel ── */
+  .auth-right { padding: 40px 44px; display: flex; flex-direction: column; justify-content: center; }
+  .auth-title {
+    font-family: 'Fraunces', serif; font-weight: 800; letter-spacing: -1px;
+    font-size: 1.55rem; color: var(--ink); line-height: 1.22; margin-bottom: 6px;
+  }
+  .auth-subtitle { font-size: 0.86rem; color: var(--ink3); margin-bottom: 16px; }
 
   /* step indicator */
-  .step-indicator {
-    display: flex; align-items: center; gap: 8px;
-    margin-top: 18px;
-  }
+  .step-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
   .step-dot {
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.72rem; font-weight: 800;
-    transition: all .2s;
+    width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 800; flex-shrink: 0; transition: all .2s;
   }
-  .step-dot.done  { background: var(--forest);    color: #fff; }
-  .step-dot.active{ background: var(--plum);      color: #fff; }
-  .step-dot.idle  { background: rgba(0,0,0,0.07); color: var(--ink3); }
-  .step-line {
-    flex: 1; height: 2px; border-radius: 2px;
-    background: rgba(0,0,0,0.08);
-  }
+  .step-dot.done   { background: var(--forest); color: #fff; }
+  .step-dot.active { background: var(--plum);   color: #fff; }
+  .step-dot.idle   { background: rgba(0,0,0,0.07); color: var(--ink3); }
+  .step-line { flex: 1; height: 2px; border-radius: 2px; background: rgba(0,0,0,0.08); }
   .step-line.done { background: var(--forest); }
-  .step-label {
-    font-size: 0.7rem; font-weight: 700; color: var(--ink3);
-    text-align: center; margin-top: 4px;
-  }
-
-  /* ── Form body ── */
-  .reg-body { padding: 28px 36px 32px; }
+  .step-label { font-size: 0.66rem; font-weight: 700; color: var(--ink3); }
 
   .fl {
-    display: block;
-    font-size: 0.74rem; font-weight: 800;
-    color: var(--ink2); letter-spacing: 0.07em;
-    text-transform: uppercase; margin-bottom: 7px;
+    display: block; font-size: 0.72rem; font-weight: 800; color: var(--ink2);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .fi-wrap { position: relative; margin-bottom: 14px; }
+  .fi-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--ink4); font-size: 0.92rem; pointer-events: none;
   }
   .fi {
-    width: 100%;
-    background: #f5f3ef;
-    border: 1.5px solid rgba(0,0,0,0.1);
-    border-radius: 11px;
-    padding: 12px 16px;
-    color: var(--ink);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.92rem; font-weight: 400;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s, background .2s;
-    margin-bottom: 18px;
+    width: 100%; background: #f5f3ef; border: 1.5px solid rgba(0,0,0,0.09);
+    border-radius: 10px; padding: 11px 42px 11px 40px; color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.9rem;
+    outline: none; transition: border-color .2s, box-shadow .2s, background .2s;
   }
-  .fi:focus {
-    border-color: var(--forest);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(15,123,86,0.1);
-  }
+  .fi:focus { border-color: var(--forest); background: #fff; box-shadow: 0 0 0 3px rgba(15,123,86,0.1); }
   .fi::placeholder { color: var(--ink4); }
+  .fi-eye {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--ink4); font-size: 0.92rem; cursor: pointer; background: none; border: none; padding: 2px;
+  }
+  .fi-eye:hover { color: var(--ink2); }
 
-  /* OTP input special */
   .fi-otp {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.5rem; font-weight: 700;
-    letter-spacing: 0.3em; text-align: center;
-    padding: 16px; background: #f0f7f4;
+    font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700;
+    letter-spacing: 0.3em; text-align: center; padding: 14px; background: #f0f7f4;
     border-color: rgba(15,123,86,0.2);
   }
   .fi-otp:focus { border-color: var(--forest); background: #fff; }
-
-  .otp-hint {
-    text-align: center; font-size: 0.78rem;
-    color: var(--ink3); margin-top: -10px; margin-bottom: 18px;
-    line-height: 1.5;
-  }
+  .otp-hint { text-align: center; font-size: 0.78rem; color: var(--ink3); margin: 10px 0 16px; line-height: 1.5; }
   .otp-hint strong { color: var(--forest); }
 
-  /* submit button */
-  .btn-reg {
-    width: 100%;
-    background: linear-gradient(135deg, var(--forest), var(--forest2));
-    color: #fff;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 800; font-size: 0.92rem;
-    padding: 14px; border: none;
-    border-radius: 11px; cursor: pointer;
+  .auth-terms { display: flex; align-items: flex-start; gap: 8px; font-size: 0.78rem; color: var(--ink2); margin: 2px 0 18px; line-height: 1.5; }
+  .auth-terms input { accent-color: var(--forest); width: 15px; height: 15px; margin-top: 2px; flex-shrink: 0; }
+  .auth-terms a { color: var(--forest); font-weight: 700; }
+
+  .field-err { color: var(--rose); font-size: 0.76rem; font-weight: 600; margin: -10px 0 12px; display: none; }
+
+  .btn-auth {
+    width: 100%; background: linear-gradient(135deg, var(--forest), var(--forest2)); color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 0.92rem;
+    padding: 13px; border: none; border-radius: 11px; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: transform .15s, box-shadow .2s;
-    box-shadow: 0 4px 18px rgba(15,123,86,0.25);
-    margin-top: 4px;
+    transition: transform .15s, box-shadow .2s; box-shadow: 0 4px 18px rgba(15,123,86,0.25);
   }
-  .btn-reg:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(15,123,86,0.32); }
-  .btn-reg:active { transform: translateY(0); }
-  .btn-reg.otp-btn {
-    background: linear-gradient(135deg, var(--plum), var(--plum2));
-    box-shadow: 0 4px 18px rgba(78,53,152,0.25);
-  }
-  .btn-reg.otp-btn:hover { box-shadow: 0 8px 26px rgba(78,53,152,0.32); }
+  .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(15,123,86,0.32); }
+  .btn-auth.otp-btn { background: linear-gradient(135deg, var(--plum), var(--plum2)); box-shadow: 0 4px 18px rgba(78,53,152,0.25); }
+  .btn-auth.otp-btn:hover { box-shadow: 0 8px 26px rgba(78,53,152,0.32); }
 
-  /* ── Flash ── */
-  .reg-flash {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 16px; border-radius: 10px;
-    font-size: 0.84rem; font-weight: 600;
-    margin-bottom: 20px;
+  .auth-flash {
+    display: flex; align-items: center; gap: 10px; padding: 11px 15px; border-radius: 10px;
+    font-size: 0.82rem; font-weight: 600; margin-bottom: 16px;
   }
-  .reg-flash.info    { background: #eeebfb; border: 1px solid rgba(78,53,152,0.2);  color: var(--plum); }
-  .reg-flash.success { background: #dff2ea; border: 1px solid rgba(15,123,86,0.2);  color: var(--forest); }
-  .reg-flash.danger  { background: #fdeaed; border: 1px solid rgba(212,43,82,0.2);  color: var(--rose); }
+  .auth-flash.danger  { background: #fdeaed; border: 1px solid rgba(212,43,82,0.2);  color: var(--rose); }
+  .auth-flash.success { background: #dff2ea; border: 1px solid rgba(15,123,86,0.2);  color: var(--forest); }
+  .auth-flash.info    { background: var(--plum-lt); border: 1px solid rgba(78,53,152,0.2); color: var(--plum); }
 
-  /* ── Footer ── */
-  .reg-foot {
-    padding: 16px 36px 20px;
-    border-top: 1px solid rgba(0,0,0,0.06);
-    background: #fafaf8;
-    text-align: center;
+  .auth-foot { text-align: center; font-size: 0.85rem; color: var(--ink3); margin-top: 14px; }
+  .auth-foot a { color: var(--forest); font-weight: 800; }
+
+  @media (max-width: 860px) {
+    .auth-shell { grid-template-columns: 1fr; max-width: 480px; }
+    .auth-left { display: none; }
+    .auth-right { padding: 36px 28px; }
   }
-  .reg-foot p { font-size: 0.82rem; color: var(--ink3); margin: 0 0 6px; }
-  .btn-login-link {
-    display: inline-flex; align-items: center; gap: 6px;
-    text-decoration: none;
-    background: var(--plum-lt); border: 1px solid rgba(78,53,152,0.2);
-    color: var(--plum); border-radius: 50px;
-    padding: 8px 20px; font-size: 0.82rem; font-weight: 800;
-    transition: background .18s, transform .15s;
-  }
-  .btn-login-link:hover { background: #e0d8f8; transform: translateY(-1px); text-decoration: none; color: var(--plum); }
 </style>
 
-<!-- Load Fraunces + JetBrains Mono if not already in base -->
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;0,900;1,700&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-<div class="reg-page">
-  <div class="reg-wrap">
+<div class="auth-page">
+  <div class="auth-shell">
 
-    <!-- Top badge -->
-    <div class="reg-badge">
-      <div class="reg-badge-dot">📸</div>
-      Pixhare · Photographer
+    <!-- Left brand panel -->
+    <div class="auth-left">
+      <svg class="auth-leaf" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M70 5C40 15 15 45 25 85C55 80 85 55 85 20C85 15 78 3 70 5Z" fill="currentColor" opacity="0.5"/>
+        <path d="M92 20C72 26 55 46 60 74C80 70 98 54 98 32C98 28 96 19 92 20Z" fill="currentColor" opacity="0.35"/>
+      </svg>
+
+      <div class="auth-brand">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare">
+        <div class="auth-brand-text">
+          <span class="auth-brand-name">Pix<span>hare</span></span>
+          <span class="auth-brand-tag">Capture. Share. Cherish.</span>
+        </div>
+      </div>
+
+      <div class="auth-left-mid">
+        <div class="auth-headline">Join<br><span class="it">Pixhare</span></div>
+        <p class="auth-tagline">Create your photographer account and start sharing memories.</p>
+
+        <div class="auth-collage-wrap">
+          <div class="auth-collage">
+            <div class="ac-photo ac-1"><i class="bi bi-camera2"></i></div>
+            <div class="ac-photo ac-2"><i class="bi bi-stars"></i><span class="ac-badge"><i class="bi bi-check-lg"></i></span></div>
+          </div>
+          <span class="ac-script">Capture · Share · Grow</span>
+        </div>
+
+        <div class="auth-checklist">
+          <div><i class="bi bi-check-circle-fill"></i> Set up your studio profile in minutes</div>
+          <div><i class="bi bi-check-circle-fill"></i> Upload &amp; auto-organize event photos</div>
+          <div><i class="bi bi-check-circle-fill"></i> Deliver galleries guests will love</div>
+        </div>
+      </div>
+
+      <div class="auth-left-bottom">
+        <p class="auth-quote" id="authQuote">"Be part of a community that values real moments."</p>
+        <div class="auth-dots" id="authDots">
+          <span class="on" onclick="pixSetQuote(0)"></span>
+          <span onclick="pixSetQuote(1)"></span>
+          <span onclick="pixSetQuote(2)"></span>
+        </div>
+      </div>
     </div>
 
-    <div class="reg-card">
+    <!-- Right form panel -->
+    <div class="auth-right">
+      <div class="auth-title">
+        {% if not show_otp %}Create Account<br>for Photographers{% else %}Verify Your<br>Email{% endif %}
+      </div>
+      <p class="auth-subtitle">
+        {% if not show_otp %}Set up your account and start creating amazing events.{% else %}We sent a 6-digit OTP to your email. Enter it below.{% endif %}
+      </p>
 
-      <!-- Card header -->
-      <div class="reg-card-head">
-        <div class="reg-title">
-          {% if not show_otp %}
-            Create your <span>account</span>
-          {% else %}
-            Verify your <span>email</span>
-          {% endif %}
-        </div>
-        <div class="reg-sub">
-          {% if not show_otp %}
-            Enter your details to get started with Pixhare.
-          {% else %}
-            We sent a 6-digit OTP to your email. Enter it below.
-          {% endif %}
-        </div>
-
-        <!-- Step indicator -->
-        <div>
-          <div class="step-indicator">
-            <div class="step-dot {% if show_otp %}done{% else %}active{% endif %}">1</div>
-            <div class="step-line {% if show_otp %}done{% endif %}"></div>
-            <div class="step-dot {% if show_otp %}active{% else %}idle{% endif %}">2</div>
-          </div>
-          <div style="display:flex; justify-content:space-between; margin-top:5px;">
-            <span class="step-label">Your Details</span>
-            <span class="step-label">Verify OTP</span>
-          </div>
-        </div>
+      <div class="step-indicator">
+        <div class="step-dot {% if show_otp %}done{% else %}active{% endif %}">1</div>
+        <div class="step-line {% if show_otp %}done{% endif %}"></div>
+        <div class="step-dot {% if show_otp %}active{% else %}idle{% endif %}">2</div>
+        <span class="step-label">{% if not show_otp %}Your Details{% else %}Verify OTP{% endif %}</span>
       </div>
 
-      <!-- Form body -->
-      <div class="reg-body">
+      <!-- Flash -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="auth-flash {{ category }}">
+            {% if category == 'success' %}✅
+            {% elif category == 'danger' %}❌
+            {% else %}ℹ️{% endif %}
+            {{ message }}
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-        <!-- Flash messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-            <div class="reg-flash {{ category }}">
-              {% if category == 'success' %}✅
-              {% elif category == 'danger' %}❌
-              {% else %}ℹ️{% endif %}
-              {{ message }}
-            </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+      <form method="POST" id="regForm" onsubmit="return pixValidateRegister(event)">
+        {% if not show_otp %}
+          <label class="fl" for="reg_name">Full Name</label>
+          <div class="fi-wrap">
+            <i class="bi bi-person fi-icon"></i>
+            <input type="text" class="fi" id="reg_name" name="name" required placeholder="Arjun Mehta">
+          </div>
 
-        <form method="POST">
-          {% if not show_otp %}
-            <!-- Step 1: Name + Studio + Email + Password -->
-            <label class="fl" for="reg_name">Your Full Name</label>
-            <div class="fi-wrap">
-              <i class="bi bi-person fi-icon"></i>
-              <input type="text" class="fi" id="reg_name" name="name"
-                     required placeholder="e.g., Rishi Kumar">
-            </div>
+          <label class="fl" for="email">Email Address</label>
+          <div class="fi-wrap">
+            <i class="bi bi-envelope fi-icon"></i>
+            <input type="email" class="fi" id="email" name="email" required placeholder="photographer@example.com">
+          </div>
 
-            <label class="fl" for="studio_name">Studio Name</label>
-            <div class="fi-wrap">
-              <i class="bi bi-camera2 fi-icon"></i>
-              <input type="text" class="fi" id="studio_name" name="studio_name"
-                     required placeholder="e.g., Rishi Clicks Studio">
-            </div>
+          <label class="fl" for="studio_name">Studio / Business Name</label>
+          <div class="fi-wrap">
+            <i class="bi bi-camera2 fi-icon"></i>
+            <input type="text" class="fi" id="studio_name" name="studio_name" required placeholder="Mehta Photography">
+          </div>
 
-            <label class="fl" for="email">Email Address</label>
-            <div class="fi-wrap">
-              <i class="bi bi-envelope fi-icon"></i>
-              <input type="email" class="fi" id="email" name="email"
-                     required placeholder="you@example.com">
-            </div>
+          <label class="fl" for="password">Password</label>
+          <div class="fi-wrap">
+            <i class="bi bi-lock fi-icon"></i>
+            <input type="password" class="fi" id="password" name="password" required minlength="6" placeholder="Create a strong password">
+            <button type="button" class="fi-eye" onclick="pixToggleEye('password', this)"><i class="bi bi-eye"></i></button>
+          </div>
 
-            <label class="fl" for="password">Password</label>
-            <div class="fi-wrap">
-              <i class="bi bi-lock fi-icon"></i>
-              <input type="password" class="fi" id="password" name="password"
-                     required placeholder="Create a strong password">
-            </div>
+          <label class="fl" for="confirm_password">Confirm Password</label>
+          <div class="fi-wrap">
+            <i class="bi bi-lock-fill fi-icon"></i>
+            <input type="password" class="fi" id="confirm_password" required minlength="6" placeholder="Re-enter your password">
+            <button type="button" class="fi-eye" onclick="pixToggleEye('confirm_password', this)"><i class="bi bi-eye"></i></button>
+          </div>
+          <div class="field-err" id="pwErr">Passwords don't match.</div>
 
-            <button type="submit" class="btn-reg">
-              <i class="bi bi-envelope-fill"></i> Send OTP
-            </button>
+          <label class="auth-terms">
+            <input type="checkbox" required>
+            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+          </label>
 
-          {% else %}
-            <!-- Step 2: OTP -->
-            <input type="hidden" name="email"    value="{{ email }}">
-            <input type="hidden" name="password" value="{{ password }}">
+          <button type="submit" class="btn-auth"><i class="bi bi-envelope-fill"></i> Create Account</button>
 
-            <label class="fl" for="otp">One-Time Password</label>
-            <input type="text" class="fi fi-otp" id="otp" name="otp"
-                   required placeholder="· · · · · ·"
-                   maxlength="6" autocomplete="one-time-code">
+        {% else %}
+          <input type="hidden" name="email" value="{{ email }}">
+          <input type="hidden" name="password" value="{{ password }}">
 
-            <p class="otp-hint">
-              OTP sent to <strong>{{ email }}</strong><br>
-              Valid for 5 minutes. Check your spam if not received.
-            </p>
+          <label class="fl" for="otp">One-Time Password</label>
+          <input type="text" class="fi fi-otp" id="otp" name="otp" required placeholder="· · · · · ·" maxlength="6" autocomplete="one-time-code">
 
-            <button type="submit" class="btn-reg otp-btn">
-              <i class="bi bi-shield-check-fill"></i> Verify & Register
-            </button>
-          {% endif %}
-        </form>
+          <p class="otp-hint">OTP sent to <strong>{{ email }}</strong><br>Valid for 5 minutes. Check your spam if not received.</p>
 
-      </div><!-- /reg-body -->
+          <button type="submit" class="btn-auth otp-btn"><i class="bi bi-shield-check-fill"></i> Verify &amp; Register</button>
+        {% endif %}
+      </form>
 
-      <!-- Footer -->
-      <div class="reg-foot">
-        <p>Already have an account?</p>
-        <a href="{{ url_for('photographer_login') }}" class="btn-login-link">
-          <i class="bi bi-person-fill"></i> Login to Pixhare
-        </a>
-      </div>
+      <p class="auth-foot">Already have an account? <a href="{{ url_for('photographer_login') }}">Login</a></p>
+    </div>
 
-    </div><!-- /reg-card -->
   </div>
 </div>
+
+<script>
+  function pixToggleEye(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text'; icon.classList.remove('bi-eye'); icon.classList.add('bi-eye-slash');
+    } else {
+      input.type = 'password'; icon.classList.remove('bi-eye-slash'); icon.classList.add('bi-eye');
+    }
+  }
+
+  // ── Quote carousel ──
+  var pixQuotes = [
+    "Be part of a community that values real moments.",
+    "From your camera to their hearts — in one click.",
+    "Every event deserves to be remembered beautifully."
+  ];
+  var pixQuoteIdx = 0, pixQuoteTimer;
+
+  function pixSetQuote(i) {
+    pixQuoteIdx = i;
+    var el = document.getElementById('authQuote');
+    var dots = document.querySelectorAll('#authDots span');
+    el.style.opacity = 0;
+    setTimeout(function () {
+      el.textContent = '"' + pixQuotes[i] + '"';
+      el.style.opacity = 1;
+    }, 200);
+    dots.forEach(function (d, idx) { d.classList.toggle('on', idx === i); });
+    clearInterval(pixQuoteTimer);
+    pixQuoteTimer = setInterval(pixNextQuote, 6000);
+  }
+  function pixNextQuote() { pixSetQuote((pixQuoteIdx + 1) % pixQuotes.length); }
+  pixQuoteTimer = setInterval(pixNextQuote, 6000);
+
+  function pixValidateRegister(e) {
+    var pw = document.getElementById('password');
+    var cpw = document.getElementById('confirm_password');
+    if (!cpw) return true; // OTP step has no confirm field
+    var err = document.getElementById('pwErr');
+    if (pw.value !== cpw.value) {
+      err.style.display = 'block';
+      cpw.focus();
+      e.preventDefault();
+      return false;
+    }
+    err.style.display = 'none';
+    return true;
+  }
+</script>
 
 {% endblock %}

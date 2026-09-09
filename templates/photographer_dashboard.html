@@ -1,1052 +1,656 @@
 {% extends 'base.html' %}
-
+{% block hide_chrome %}yes{% endblock %}
 {% block content %}
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;0,900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
-/* ═══════════════════════════════════
-   PAGE VARS (inherits base tokens)
-═══════════════════════════════════ */
-.d-page {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 48px 32px 100px;
+:root {
+  --dsh-dark:   #0a1f17;
+  --dsh-dark2:  #0e2a1f;
+  --dsh-panel:  #123727;
+  --dsh-panel2: #16412e;
+  --dsh-line:   rgba(240,180,41,0.28);
+  --dsh-mint:   #7fe9bd;
+  --dsh-forest: #16a374;
+  --dsh-amber:  #f0b429;
+  --dsh-rose:   #e0567a;
+  --dsh-ink3:   rgba(255,255,255,0.55);
+  --dsh-ink4:   rgba(255,255,255,0.35);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--dsh-dark) !important; }
+
+.dsh-shell {
+  display: flex; height: 100vh; background: var(--dsh-dark);
+  font-family: 'Plus Jakarta Sans', sans-serif; color: #fff; overflow: hidden;
 }
 
 /* ═══════════════════════════════════
-   FLASH MESSAGES
+   SIDEBAR
 ═══════════════════════════════════ */
-.fl-stack { margin-bottom: 28px; }
-.fl-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 18px; border-radius: 11px;
-  font-size: 0.86rem; font-weight: 600;
-  margin-bottom: 8px;
-  max-height: 80px; overflow: hidden;
-  transition: opacity .6s ease, transform .6s ease,
-              max-height .5s ease, margin .4s ease, padding .4s ease;
+.dsh-side {
+  width: 264px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--dsh-dark2) 0%, var(--dsh-dark) 100%);
+  border-right: 1px solid var(--dsh-line);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
 }
-.fl-item.hide {
-  opacity: 0; transform: translateY(-8px);
-  max-height: 0; margin-bottom: 0; padding: 0;
+.dsh-brand { display: flex; align-items: center; gap: 10px; padding: 24px 22px 18px; }
+.dsh-brand img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
+.dsh-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.dsh-brand-name { font-family: 'Fraunces', serif; font-weight: 800; font-size: 1.1rem; }
+.dsh-brand-name span { color: var(--dsh-mint); }
+.dsh-brand-tag { font-size: 0.62rem; color: var(--dsh-ink3); font-weight: 500; }
+
+.dsh-nav { flex: 1; overflow-y: auto; padding: 10px 14px; }
+.dsh-nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+  border-radius: 11px; margin-bottom: 3px; cursor: pointer;
+  font-size: 0.87rem; font-weight: 600; color: rgba(255,255,255,0.72);
+  border: 1px solid transparent; transition: background .16s, border-color .16s, color .16s;
 }
-.fl-bar { width: 3px; height: 26px; border-radius: 3px; flex-shrink: 0; }
-.fl-success { background: #edfaf5; border: 1px solid #9de7c4; color: #0f7b56; }
-.fl-danger  { background: #fdeaed; border: 1px solid #f0b3bf; color: #dc2653; }
-.fl-info    { background: #eeebfb; border: 1px solid #c5b8f0; color: #5240a8; }
-.fl-warning { background: #fef3e2; border: 1px solid #f5cc88; color: #d97706; }
-.fl-success .fl-bar { background: #0f7b56; }
-.fl-danger  .fl-bar { background: #dc2653; }
-.fl-info    .fl-bar { background: #5240a8; }
-.fl-warning .fl-bar { background: #d97706; }
+.dsh-nav-item i.ico { font-size: 1rem; width: 18px; text-align: center; color: var(--dsh-amber); }
+.dsh-nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; text-decoration: none; }
+.dsh-nav-item.active {
+  background: rgba(15,123,86,0.18); border-color: rgba(127,233,189,0.35);
+  color: #fff; font-weight: 800;
+}
+.dsh-nav-item.active i.ico { color: var(--dsh-mint); }
+.dsh-nav-item.soon { opacity: 0.55; cursor: default; }
+.dsh-nav-item .chev { margin-left: auto; font-size: 0.75rem; transition: transform .18s; color: var(--dsh-ink4); }
+.dsh-nav-item .soon-tag {
+  margin-left: auto; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.08); color: var(--dsh-ink3); padding: 2px 7px; border-radius: 50px;
+}
+
+.dsh-side-footer { padding: 14px; border-top: 1px solid var(--dsh-line); position: relative; }
+.dsh-side-scenic {
+  position: absolute; left: 0; right: 0; bottom: 100%; height: 190px;
+  overflow: hidden; pointer-events: none;
+}
+.dsh-side-scenic svg { display: block; width: 100%; height: 100%; }
+.dsh-side-scenic::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 60%, var(--dsh-dark2) 100%);
+}
+.dsh-profile-card {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--dsh-line);
+  border-radius: 13px; position: relative;
+}
+.dsh-avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--dsh-forest), var(--dsh-mint));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem; color: var(--dsh-dark);
+}
+.dsh-profile-name { font-size: 0.85rem; font-weight: 800; color: #fff; }
+.dsh-profile-role { font-size: 0.7rem; color: var(--dsh-ink3); }
+.dsh-logout-btn {
+  margin-left: auto; width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(224,86,122,0.12); border: 1px solid rgba(224,86,122,0.3); color: var(--dsh-rose);
+  display: flex; align-items: center; justify-content: center; transition: background .16s;
+}
+.dsh-logout-btn:hover { background: rgba(224,86,122,0.22); color: var(--dsh-rose); }
 
 /* ═══════════════════════════════════
-   HERO BANNER
+   MAIN
 ═══════════════════════════════════ */
-.hero-banner {
-  background: linear-gradient(135deg, #0f7b56 0%, #5240a8 60%, #13a372 100%);
-  border-radius: 20px;
-  padding: 44px 48px;
-  margin-bottom: 40px;
-  position: relative;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 24px;
-}
-/* decorative circles */
-.hero-banner::before {
-  content: '';
-  position: absolute; top: -60px; right: -60px;
-  width: 240px; height: 240px; border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-}
-.hero-banner::after {
-  content: '';
-  position: absolute; bottom: -80px; left: 30%;
-  width: 300px; height: 300px; border-radius: 50%;
-  background: rgba(255,255,255,0.04);
-}
-.hero-text { position: relative; z-index: 1; }
-.hero-kicker {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 50px; padding: 5px 14px;
-  font-size: 0.7rem; font-weight: 800;
-  letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(255,255,255,0.9); margin-bottom: 12px;
-}
-.kicker-pulse {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #7dffd0;
-  box-shadow: 0 0 8px #7dffd0;
-  animation: pulse 2.2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.dsh-main { flex: 1; min-width: 0; height: 100vh; padding: 26px 40px; display: flex; flex-direction: column; overflow: hidden; }
 
-.hero-title {
-  font-size: clamp(1.9rem, 3.5vw, 2.7rem);
-  font-weight: 900; letter-spacing: -1.5px;
-  line-height: 1.08; color: #fff;
-  margin-bottom: 10px;
-}
-.hero-title em { font-style: normal; color: #7dffd0; }
-.hero-sub {
-  font-size: 0.9rem; color: rgba(255,255,255,0.7);
-  font-weight: 400; line-height: 1.6; max-width: 400px;
-}
-.hero-stats {
-  display: flex; flex-direction: column; align-items: flex-end;
-  gap: 10px; position: relative; z-index: 1;
-}
-.hero-stat-box {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  backdrop-filter: blur(12px);
-  border-radius: 14px; padding: 16px 24px;
-  text-align: center; min-width: 110px;
-}
-.hero-stat-num {
-  font-size: 2.2rem; font-weight: 900;
-  letter-spacing: -2px; color: #fff; line-height: 1;
-}
-.hero-stat-lbl {
-  font-size: 0.68rem; font-weight: 700;
-  color: rgba(255,255,255,0.65);
-  text-transform: uppercase; letter-spacing: 0.12em; margin-top: 2px;
-}
-.hero-brand-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 50px; padding: 7px 16px;
-  font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.85);
-  text-decoration: none;
-  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
-}
-.hero-brand-chip:hover { text-decoration: none; }
+.dsh-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 22px; flex-wrap: wrap; flex-shrink: 0; }
+.dsh-welcome-lbl { font-size: 0.85rem; color: var(--dsh-ink3); margin-bottom: 4px; }
+.dsh-welcome-name { font-family: 'Fraunces', serif; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+.dsh-crown { width: 24px; height: 24px; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(240,180,41,0.45)); }
+.dsh-welcome-sub { font-size: 0.86rem; color: var(--dsh-ink3); }
 
-/* View QR — primary action, filled amber so it pops against the hero
-   gradient. This is the one guests-facing / most-used action. */
-.hero-qr-view {
-  background: linear-gradient(135deg, #d97706, #e8920a);
-  border: none; color: #fff;
-  box-shadow: 0 4px 16px rgba(217,119,6,0.35);
+.dsh-top-actions { display: flex; align-items: center; gap: 14px; }
+.dsh-icon-btn {
+  width: 42px; height: 42px; border-radius: 12px; background: var(--dsh-panel);
+  border: 1px solid var(--dsh-line); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; cursor: pointer; position: relative; transition: background .16s;
 }
-.hero-qr-view:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(217,119,6,0.45);
-  color: #fff;
+.dsh-icon-btn:hover { background: var(--dsh-panel2); }
+.dsh-badge {
+  position: absolute; top: -4px; right: -4px; background: var(--dsh-amber); color: var(--dsh-dark);
+  font-size: 0.6rem; font-weight: 800; min-width: 16px; height: 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--dsh-dark2);
+}
+.btn-create-event {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, var(--dsh-amber), #d99a1a); color: var(--dsh-dark);
+  font-weight: 800; font-size: 0.87rem; padding: 12px 22px; border-radius: 12px; border: none;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(240,180,41,0.25); transition: transform .16s, box-shadow .2s;
+}
+.btn-create-event:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(240,180,41,0.32); }
+
+/* stat cards */
+.dsh-stats-panel {
+  background: var(--dsh-panel); border: 1px solid var(--dsh-line); border-radius: 18px;
+  display: flex; margin-bottom: 20px; flex-shrink: 0; overflow: hidden;
+}
+.dsh-stat-cell { flex: 1; display: flex; align-items: center; gap: 14px; padding: 20px 24px; position: relative; min-width: 0; }
+.dsh-stat-cell:not(:last-child)::after {
+  content: ''; position: absolute; right: 0; top: 18%; bottom: 18%; width: 1px; background: var(--dsh-line);
+}
+.dsh-stat-ic {
+  width: 46px; height: 46px; border-radius: 12px; background: rgba(127,233,189,0.12);
+  color: var(--dsh-mint); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+}
+.dsh-stat-lbl { font-size: 0.78rem; color: var(--dsh-ink3); font-weight: 600; margin-bottom: 3px; }
+.dsh-stat-num { font-family: 'Fraunces', serif; font-size: 1.55rem; font-weight: 800; color: #fff; line-height: 1; }
+.dsh-stat-sub { font-size: 0.7rem; color: var(--dsh-mint); font-weight: 700; margin-top: 4px; }
+
+/* events panel */
+.dsh-panel-card {
+  background:
+    radial-gradient(circle at 12% 88%, rgba(127,233,189,0.09) 0%, transparent 42%),
+    radial-gradient(circle at 88% 92%, rgba(240,180,41,0.08) 0%, transparent 46%),
+    radial-gradient(circle at 55% 78%, rgba(82,64,168,0.09) 0%, transparent 50%),
+    var(--dsh-panel);
+  border: 1px solid var(--dsh-line); border-radius: 18px; overflow: hidden;
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+}
+.dsh-panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 20px 26px; border-bottom: 1px solid var(--dsh-line); flex-shrink: 0;
+  background: var(--dsh-panel); position: relative; z-index: 2;
+}
+.dsh-panel-title { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 800; color: var(--dsh-amber); }
+.dsh-panel-controls { display: flex; gap: 10px; }
+.dsh-search {
+  display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.22);
+  border: 1px solid var(--dsh-line); border-radius: 10px; padding: 9px 14px; min-width: 220px;
+}
+.dsh-search input { background: none; border: none; outline: none; color: #fff; font-size: 0.85rem; width: 100%; }
+.dsh-search input::placeholder { color: var(--dsh-ink4); }
+.dsh-search i { color: var(--dsh-ink3); }
+.dsh-select {
+  background: rgba(0,0,0,0.22); border: 1px solid var(--dsh-line); border-radius: 10px;
+  padding: 9px 14px; color: #fff; font-size: 0.85rem; font-weight: 600; outline: none; cursor: pointer;
+}
+.dsh-select option { background: var(--dsh-panel); color: #fff; }
+
+.dsh-table-wrap { overflow-x: auto; overflow-y: auto; flex: 1; min-height: 0; position: relative; }
+.dsh-table-watermark {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 230px; height: 230px; opacity: 0.055; pointer-events: none; z-index: 0; color: var(--dsh-mint);
+}
+table.dsh-table { width: 100%; border-collapse: collapse; min-width: 780px; position: relative; z-index: 1; }
+.dsh-table thead th {
+  text-align: left; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--dsh-mint); padding: 12px 26px; border-bottom: 1px solid var(--dsh-line); white-space: nowrap;
+  position: sticky; top: 0; background: var(--dsh-panel); z-index: 1;
+}
+.dsh-table tbody td { padding: 16px 26px; border-bottom: 1px solid var(--dsh-line); vertical-align: middle; background: var(--dsh-panel); }
+.dsh-table tbody tr:last-child td { border-bottom: none; }
+.dsh-table tbody tr { transition: background .15s; }
+.dsh-table tbody tr:hover td { background: #163a29; }
+.dsh-table tbody tr.dsh-hidden-row { display: none; }
+
+.dsh-ev-cell { display: flex; align-items: center; gap: 12px; }
+.dsh-ev-thumb {
+  width: 46px; height: 46px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.05rem;
+}
+.dsh-ev-thumb.grad-0 { background: linear-gradient(155deg,#0f7b56,#13a372); }
+.dsh-ev-thumb.grad-1 { background: linear-gradient(155deg,#5240a8,#6b58cc); }
+.dsh-ev-thumb.grad-2 { background: linear-gradient(155deg,#c8600a,#e0920a); }
+.dsh-ev-thumb.grad-3 { background: linear-gradient(155deg,#274a70,#3a6ea5); }
+.dsh-ev-name { font-weight: 800; font-size: 0.9rem; color: #fff; }
+.dsh-ev-sub { font-size: 0.72rem; color: var(--dsh-ink3); }
+
+.dsh-cell-primary { font-size: 0.86rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+.dsh-cell-primary i { color: var(--dsh-mint); font-size: 0.82rem; }
+.dsh-cell-sub { font-size: 0.72rem; color: var(--dsh-ink3); margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+
+.dsh-count-num { font-weight: 800; font-size: 0.92rem; color: #fff; }
+.dsh-count-lbl { font-size: 0.68rem; color: var(--dsh-ink3); }
+
+.dsh-status { display: inline-block; font-size: 0.72rem; font-weight: 800; padding: 5px 13px; border-radius: 50px; border: 1px solid; }
+.dsh-status.active    { background: rgba(127,233,189,0.12); border-color: rgba(127,233,189,0.4); color: var(--dsh-mint); }
+.dsh-status.completed { background: rgba(127,180,233,0.12); border-color: rgba(127,180,233,0.4); color: #7fb4e9; }
+.dsh-status.draft     { background: rgba(240,180,41,0.12); border-color: rgba(240,180,41,0.4); color: var(--dsh-amber); }
+
+.dsh-actions-row { display: flex; gap: 7px; }
+.dsh-act-btn {
+  width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--dsh-line); color: rgba(255,255,255,0.75);
+  font-size: 0.85rem; cursor: pointer; transition: background .16s, color .16s, border-color .16s;
+}
+.dsh-act-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.dsh-act-btn.danger { color: var(--dsh-rose); border-color: rgba(224,86,122,0.3); }
+.dsh-act-btn.danger:hover { background: rgba(224,86,122,0.15); }
+form.dsh-inline { display: inline; }
+
+.dsh-viewall-wrap { text-align: center; padding: 18px; border-top: 1px solid var(--dsh-line); flex-shrink: 0; background: var(--dsh-panel); position: relative; z-index: 2; }
+.btn-viewall {
+  display: inline-flex; align-items: center; gap: 8px; background: none;
+  border: 1.5px solid var(--dsh-amber); color: var(--dsh-amber); font-weight: 800; font-size: 0.85rem;
+  padding: 11px 24px; border-radius: 50px; cursor: pointer; transition: background .16s;
+}
+.btn-viewall:hover { background: rgba(240,180,41,0.1); }
+
+.dsh-empty { text-align: center; padding: 40px 24px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.dsh-empty-ring {
+  width: 64px; height: 64px; border-radius: 18px; background: rgba(127,233,189,0.1);
+  border: 1px solid rgba(127,233,189,0.3); display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; color: var(--dsh-mint); margin: 0 auto 16px;
+}
+.dsh-empty h3 { font-weight: 800; margin-bottom: 6px; }
+.dsh-empty p { font-size: 0.85rem; color: var(--dsh-ink3); }
+
+/* flash */
+.dsh-flash-stack { margin-bottom: 22px; }
+.dsh-flash {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 11px;
+  font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;
+  transition: opacity .5s, transform .5s, max-height .4s, margin .4s, padding .4s; max-height: 60px; overflow: hidden;
+}
+.dsh-flash.hide { opacity: 0; transform: translateY(-8px); max-height: 0; margin: 0; padding: 0; }
+.dsh-flash.success { background: rgba(127,233,189,0.1); border: 1px solid rgba(127,233,189,0.35); color: var(--dsh-mint); }
+.dsh-flash.danger  { background: rgba(224,86,122,0.1); border: 1px solid rgba(224,86,122,0.35); color: var(--dsh-rose); }
+.dsh-flash.info    { background: rgba(127,180,233,0.1); border: 1px solid rgba(127,180,233,0.35); color: #7fb4e9; }
+.dsh-flash.warning { background: rgba(240,180,41,0.1); border: 1px solid rgba(240,180,41,0.35); color: var(--dsh-amber); }
+
+/* ── Create Event Modal ── */
+.dsh-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;
+}
+.dsh-modal-overlay.open { display: flex; }
+.dsh-modal-box {
+  background: var(--dsh-panel); border: 1px solid var(--dsh-line); border-radius: 20px;
+  padding: 28px; max-width: 420px; width: 100%; position: relative; box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  max-height: 90vh; overflow-y: auto;
+}
+.dsh-modal-close {
+  position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.07); border: none; color: #fff; cursor: pointer;
+}
+.dsh-modal-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+.dsh-modal-sub { font-size: 0.82rem; color: var(--dsh-ink3); margin-bottom: 20px; }
+.dsh-f-label { display: block; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dsh-ink3); margin-bottom: 6px; }
+.dsh-f-input {
+  width: 100%; background: rgba(0,0,0,0.25); border: 1.5px solid var(--dsh-line); border-radius: 10px;
+  padding: 11px 14px; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.88rem;
+  outline: none; margin-bottom: 14px; transition: border-color .18s;
+}
+.dsh-f-input:focus { border-color: var(--dsh-mint); }
+.btn-dsh-submit {
+  width: 100%; background: linear-gradient(135deg, var(--dsh-forest), var(--dsh-mint)); color: var(--dsh-dark);
+  font-weight: 800; font-size: 0.9rem; padding: 13px; border: none; border-radius: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .15s;
+}
+.btn-dsh-submit:hover { transform: translateY(-2px); }
+
+/* ── QR modal (kept, restyled dark) ── */
+.qr-modal-overlay { display: none; position: fixed; inset: 0; z-index: 3100; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; }
+.qr-modal-overlay.open { display: flex; }
+.qr-modal-box { background: var(--dsh-panel); border: 1px solid var(--dsh-line); border-radius: 22px; padding: 26px 22px 22px; text-align: center; max-width: 360px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+.qr-modal-close { position: absolute; top: 14px; right: 16px; background: rgba(255,255,255,0.08); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: #fff; }
+.qr-poster-wrap { border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+canvas#posterCanvas { display: block; width: 100%; height: auto; }
+.btn-dl-qr {
+  display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center;
+  background: linear-gradient(135deg, var(--dsh-forest), var(--dsh-mint)); color: var(--dsh-dark); text-decoration: none;
+  font-weight: 800; font-size: 0.9rem; padding: 13px; border-radius: 11px; border: none; cursor: pointer;
 }
 
-/* Download QR — secondary action, quieter glass style so it doesn't
-   compete visually with View QR, but is still clearly a separate,
-   deliberate control (not just decorative). */
-.hero-qr-download {
-  background: rgba(255,255,255,0.08);
-  border: 1.5px dashed rgba(255,255,255,0.35);
-  color: rgba(255,255,255,0.8);
-}
-.hero-qr-download:hover {
-  background: rgba(255,255,255,0.16);
-  border-color: rgba(255,255,255,0.55);
-  color: #fff;
-}
-
-/* ═══════════════════════════════════
-   TWO-COLUMN LAYOUT
-═══════════════════════════════════ */
-.layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 24px;
-  align-items: start;
+@media (max-width: 1080px) {
+  .dsh-stats-panel { flex-wrap: wrap; }
+  .dsh-stat-cell { flex: 1 1 50%; }
+  .dsh-stat-cell:nth-child(2)::after { display: none; }
 }
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-}
-
-/* ═══════════════════════════════════
-   SIDEBAR — CREATE EVENT
-═══════════════════════════════════ */
-.sidebar-card {
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-  position: sticky; top: 84px;
-}
-.sc-head {
-  padding: 18px 22px;
-  background: linear-gradient(135deg, #0f7b56, #5240a8);
-  display: flex; align-items: center; gap: 10px;
-}
-.sc-head-icon {
-  width: 32px; height: 32px; border-radius: 9px;
-  background: rgba(255,255,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.95rem;
-}
-.sc-head-label {
-  font-size: 0.75rem; font-weight: 800;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: rgba(255,255,255,0.9);
-}
-.sc-body { padding: 22px; }
-
-.f-label {
-  display: block;
-  font-size: 0.72rem; font-weight: 800;
-  color: #434956; letter-spacing: 0.08em;
-  text-transform: uppercase; margin-bottom: 7px;
-}
-.f-input {
-  width: 100%;
-  background: #f0f2f5;
-  border: 1.5px solid rgba(0,0,0,0.1);
-  border-radius: 10px;
-  padding: 11px 14px;
-  color: #16181d;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.9rem; font-weight: 400;
-  outline: none;
-  transition: border-color .2s, box-shadow .2s, background .2s;
-}
-.f-input:focus {
-  border-color: #0f7b56;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(15,123,86,0.1);
-}
-.f-input::placeholder { color: #c8cdd6; }
-input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.5; }
-.f-group { margin-bottom: 16px; }
-
-.btn-create {
-  width: 100%;
-  background: linear-gradient(135deg, #0f7b56 0%, #13a372 100%);
-  color: #fff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800; font-size: 0.9rem;
-  padding: 13px; border: none;
-  border-radius: 10px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: transform .15s, box-shadow .2s;
-  box-shadow: 0 4px 18px rgba(15,123,86,0.25);
-  margin-top: 4px;
-}
-.btn-create:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(15,123,86,0.32); }
-.btn-create:active { transform: translateY(0); }
-
-/* sidebar tips */
-.sc-tips {
-  border-top: 1px solid rgba(0,0,0,0.06);
-  padding: 16px 22px;
-  background: #fafafa;
-}
-.tip-row {
-  display: flex; align-items: flex-start; gap: 10px;
-  font-size: 0.78rem; color: #8a9099;
-  margin-bottom: 8px; line-height: 1.45;
-}
-.tip-row:last-child { margin-bottom: 0; }
-.tip-icon {
-  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.7rem;
-}
-.tip-g { background: #e0f5ed; }
-.tip-p { background: #eeebfb; }
-.tip-a { background: #fef3e2; }
-
-/* ═══════════════════════════════════
-   MAIN — EVENTS
-═══════════════════════════════════ */
-.main-col {}
-
-.sec-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
-}
-.sec-title {
-  font-size: 0.95rem; font-weight: 800;
-  display: flex; align-items: center; gap: 9px; color: #16181d;
-}
-.sec-badge {
-  font-size: 0.68rem; font-weight: 800;
-  background: linear-gradient(135deg, #0f7b56, #13a372);
-  color: #fff; padding: 2px 10px; border-radius: 50px;
-}
-.sec-hint { font-size: 0.76rem; color: #c8cdd6; font-weight: 500; }
-
-/* ═══════════════════════════════════
-   EVENT CARDS GRID
-═══════════════════════════════════ */
-.ev-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 14px;
-}
-
-.ev-card {
-  background: #fff;
-  border: 1.5px solid rgba(0,0,0,0.07);
-  border-radius: 16px;
-  padding: 22px 18px 17px;
-  cursor: pointer; position: relative; overflow: hidden;
-  animation: riseIn .45s cubic-bezier(0.22,1,0.36,1) both;
-  transition: border-color .22s, transform .22s, box-shadow .22s;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-}
-@keyframes riseIn {
-  from { opacity: 0; transform: translateY(18px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* top stripe — cycles colour */
-.ev-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-}
-.ev-card:nth-child(3n+1)::before { background: linear-gradient(90deg, #0f7b56, #13a372); }
-.ev-card:nth-child(3n+2)::before { background: linear-gradient(90deg, #5240a8, #6b58cc); }
-.ev-card:nth-child(3n+3)::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
-
-/* bottom glow blob */
-.ev-card::after {
-  content: ''; position: absolute; bottom: -28px; right: -28px;
-  width: 80px; height: 80px; border-radius: 50%;
-  opacity: 0; transition: opacity .3s;
-}
-.ev-card:nth-child(3n+1)::after { background: radial-gradient(circle, rgba(15,123,86,0.1), transparent 70%); }
-.ev-card:nth-child(3n+2)::after { background: radial-gradient(circle, rgba(82,64,168,0.1), transparent 70%); }
-.ev-card:nth-child(3n+3)::after { background: radial-gradient(circle, rgba(217,119,6,0.1), transparent 70%); }
-
-.ev-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 40px rgba(0,0,0,0.1);
-}
-.ev-card:hover::after { opacity: 1; }
-.ev-card:nth-child(3n+1):hover { border-color: rgba(15,123,86,0.35); }
-.ev-card:nth-child(3n+2):hover { border-color: rgba(82,64,168,0.35); }
-.ev-card:nth-child(3n+3):hover { border-color: rgba(217,119,6,0.35); }
-
-.ev-card.active { transform: translateY(-4px); }
-.ev-card.active::after { opacity: 1; }
-.ev-card:nth-child(3n+1).active { border-color: #0f7b56; box-shadow: 0 8px 32px rgba(15,123,86,0.14); }
-.ev-card:nth-child(3n+2).active { border-color: #5240a8; box-shadow: 0 8px 32px rgba(82,64,168,0.14); }
-.ev-card:nth-child(3n+3).active { border-color: #d97706; box-shadow: 0 8px 32px rgba(217,119,6,0.14); }
-
-.ev-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem; margin-bottom: 13px;
-  transition: transform .2s;
-}
-.ev-card:nth-child(3n+1) .ev-icon { background: #e0f5ed; border: 1.5px solid rgba(15,123,86,0.2); }
-.ev-card:nth-child(3n+2) .ev-icon { background: #eeebfb; border: 1.5px solid rgba(82,64,168,0.2); }
-.ev-card:nth-child(3n+3) .ev-icon { background: #fef3e2; border: 1.5px solid rgba(217,119,6,0.2); }
-.ev-card:hover .ev-icon { transform: scale(1.1) rotate(-6deg); }
-
-.ev-name {
-  font-size: 0.96rem; font-weight: 800;
-  letter-spacing: -0.3px; margin-bottom: 5px;
-  word-break: break-word; color: #16181d;
-}
-.ev-date {
-  font-size: 0.71rem; color: #8a9099;
-  font-family: 'JetBrains Mono', monospace;
-  display: flex; align-items: center; gap: 4px;
-}
-.ev-foot {
-  margin-top: 13px; padding-top: 11px;
-  border-top: 1px solid rgba(0,0,0,0.05);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.ev-tag {
-  font-size: 0.64rem; font-weight: 700;
-  letter-spacing: 0.06em; border-radius: 50px; padding: 3px 9px;
-}
-.ev-card:nth-child(3n+1) .ev-tag { background: #e0f5ed; color: #0f7b56; border: 1px solid rgba(15,123,86,0.2); }
-.ev-card:nth-child(3n+2) .ev-tag { background: #eeebfb; color: #5240a8; border: 1px solid rgba(82,64,168,0.2); }
-.ev-card:nth-child(3n+3) .ev-tag { background: #fef3e2; color: #d97706; border: 1px solid rgba(217,119,6,0.2); }
-.ev-arrow { font-size: 0.8rem; color: #c8cdd6; transition: transform .2s, color .2s; }
-.ev-card:hover .ev-arrow,
-.ev-card.active .ev-arrow { transform: translateX(4px); color: #0f7b56; }
-
-/* ═══════════════════════════════════
-   DETAIL PANEL
-═══════════════════════════════════ */
-.ev-detail {
-  display: none;
-  margin-top: 12px; margin-bottom: 4px;
-  background: #fff;
-  border: 1.5px solid rgba(0,0,0,0.09);
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.09);
-  animation: dropIn .28s cubic-bezier(0.22,1,0.36,1) both;
-  position: relative;
-}
-.ev-detail::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, #0f7b56, #5240a8, #d97706);
-}
-@keyframes dropIn {
-  from { opacity: 0; transform: translateY(-10px) scaleY(0.96); transform-origin: top; }
-  to   { opacity: 1; transform: translateY(0) scaleY(1); }
-}
-.ev-detail.open { display: block; }
-
-.det-top {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 22px;
-  background: #fafafa;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  flex-wrap: wrap; gap: 10px;
-}
-.det-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.det-icon {
-  width: 32px; height: 32px; border-radius: 9px;
-  background: #e0f5ed; border: 1.5px solid rgba(15,123,86,0.2);
-  display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
-}
-.det-name { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; color: #16181d; }
-.det-date {
-  font-size: 0.68rem; font-weight: 500;
-  background: #f0f2f5; border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 50px; padding: 4px 11px; color: #8a9099;
-  font-family: 'JetBrains Mono', monospace;
-}
-.btn-cls {
-  display: flex; align-items: center; gap: 6px;
-  background: #fdeaed; border: 1px solid rgba(220,38,83,0.18);
-  color: #dc2653; border-radius: 8px;
-  padding: 6px 13px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.77rem; font-weight: 700; cursor: pointer;
-  transition: background .18s;
-}
-.btn-cls:hover { background: #fbd5de; }
-
-.det-actions {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  padding: 18px 22px; background: #fff; align-items: center;
-}
-.sep { width: 1px; height: 26px; background: rgba(0,0,0,0.07); margin: 0 2px; }
-
-.ab {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 18px; border-radius: 10px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.82rem; font-weight: 700;
-  text-decoration: none; border: 1.5px solid transparent;
-  cursor: pointer; white-space: nowrap;
-  transition: transform .14s, box-shadow .18s, filter .14s;
-}
-.ab:hover { transform: translateY(-2px); text-decoration: none; }
-.ab:active { transform: translateY(0); }
-
-.ab-qr     { background: #f0f2f5; border-color: rgba(0,0,0,0.1); color: #434956; }
-.ab-upload { background: #eeebfb; border-color: rgba(82,64,168,0.22); color: #5240a8; }
-.ab-upload:hover { background: #e4e0f8; }
-.ab-view   { background: #e6f0fd; border-color: rgba(37,99,235,0.2);  color: #2563eb; }
-.ab-view:hover { background: #dce8fc; }
-.ab-send   { background: linear-gradient(135deg,#0f7b56,#13a372); border-color: transparent; color: #fff; font-weight: 800; box-shadow: 0 4px 16px rgba(15,123,86,0.22); }
-.ab-send:hover { box-shadow: 0 6px 22px rgba(15,123,86,0.3); filter: brightness(1.06); }
-.ab-del    { background: #fdeaed; border-color: rgba(220,38,83,0.18); color: #dc2653; margin-left: auto; }
-.ab-del:hover { background: #fbd5de; }
-
-/* ── Event stats strip ── */
-.det-stats {
-  display: flex; gap: 10px; flex-wrap: wrap;
-  padding: 12px 22px;
-  border-top: 1px solid rgba(0,0,0,0.06);
-  background: #fafafa;
-}
-.det-stat {
-  display: flex; align-items: center; gap: 7px;
-  background: #fff; border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 50px; padding: 6px 14px;
-  font-size: 0.78rem; font-weight: 600; color: #434956;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
-}
-.det-stat i { font-size: 0.85rem; }
-.det-stat .stat-num { font-weight: 800; color: #16181d; }
-.det-stat.guests i { color: #5240a8; }
-.det-stat.photos i { color: #0f7b56; }
-
-/* ── QR Modal ── */
-.qr-modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 3000;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
-  align-items: center; justify-content: center;
-  animation: lbIn .2s ease both;
-}
-.qr-modal-overlay.open { display: flex; }
-@keyframes lbIn { from{opacity:0} to{opacity:1} }
-
-.qr-modal-box {
-  background: #fff;
-  border-radius: 22px;
-  padding: 36px 32px 28px;
-  text-align: center;
-  box-shadow: 0 20px 80px rgba(0,0,0,0.25);
-  max-width: 320px; width: 90%;
-  position: relative;
-  animation: popIn .25s cubic-bezier(0.22,1,0.36,1) both;
-}
-@keyframes popIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
-
-.qr-modal-close {
-  position: absolute; top: 14px; right: 16px;
-  background: #f0f2f5; border: none; border-radius: 50%;
-  width: 32px; height: 32px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.85rem; color: #434956;
-  transition: background .18s;
-}
-.qr-modal-close:hover { background: #fdeaed; color: #dc2653; }
-
-.qr-modal-title {
-  font-family: 'Fraunces', serif;
-  font-size: 1.1rem; font-weight: 700;
-  color: #16181d; margin-bottom: 4px; letter-spacing: -0.4px;
-}
-.qr-modal-sub {
-  font-size: 0.78rem; color: #8a9099; margin-bottom: 20px;
-}
-.qr-modal-img {
-  width: 100%; border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.08);
-  margin-bottom: 20px;
-}
-.btn-dl-qr {
-  display: inline-flex; align-items: center; gap: 8px;
-  width: 100%; justify-content: center;
-  background: linear-gradient(135deg, #0f7b56, #13a372);
-  color: #fff; text-decoration: none;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800; font-size: 0.9rem;
-  padding: 13px; border-radius: 11px;
-  box-shadow: 0 4px 16px rgba(15,123,86,0.25);
-  transition: transform .15s, box-shadow .2s;
-}
-.btn-dl-qr:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,123,86,0.32); color:#fff; text-decoration:none; }
-
-/* ═══════════════════════════════════
-   EMPTY STATE
-═══════════════════════════════════ */
-.empty {
-  text-align: center; padding: 72px 24px;
-  background: #fff;
-  border: 2px dashed rgba(0,0,0,0.1);
-  border-radius: 18px;
-}
-.empty-ring {
-  width: 72px; height: 72px; border-radius: 20px;
-  background: #e0f5ed; border: 1.5px solid rgba(15,123,86,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; margin: 0 auto 18px;
-}
-.empty h3 { font-size: 1.05rem; font-weight: 800; color: #16181d; margin-bottom: 7px; }
-.empty p  { font-size: 0.86rem; color: #8a9099; }
-
-/* ═══════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════ */
-@media (max-width: 640px) {
-  .d-page      { padding: 24px 16px 80px; }
-  .ev-grid     { grid-template-columns: repeat(2, 1fr); }
-  .det-actions { padding: 14px; flex-direction: column; }
-  .ab          { width: 100%; justify-content: center; }
-  .ab-del      { margin-left: 0; }
-  .sep         { display: none; }
-  .hero-banner { padding: 28px 22px; }
-  .hero-title  { font-size: 1.7rem; }
+  html, body { overflow: auto; }
+  .dsh-shell { height: auto; overflow: visible; }
+  .dsh-side { position: fixed; z-index: 2000; transform: translateX(-100%); transition: transform .25s; }
+  .dsh-side.open { transform: translateX(0); }
+  .dsh-main { height: auto; overflow: visible; padding: 22px 18px 50px; }
+  .dsh-table-wrap { max-height: 60vh; }
 }
 </style>
 
-<div class="d-page">
+<div class="dsh-shell">
 
-  <!-- Flash (dashboard-level, auto-dismiss) -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="fl-stack">
-      {% for category, message in messages %}
-      <div class="fl-item fl-{{ category }}">
-        <span class="fl-bar"></span>
-        {% if category == 'success' %}✅
-        {% elif category == 'danger' %}❌
-        {% elif category == 'info' %}ℹ️
-        {% else %}⚠️{% endif %}
-        {{ message }}
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="dsh-side">
+    <div class="dsh-brand">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pixhare">
+      <div class="dsh-brand-text">
+        <span class="dsh-brand-name">Pix<span>hare</span></span>
+        <span class="dsh-brand-tag">Capture. Share. Cherish.</span>
       </div>
-      {% endfor %}
     </div>
-    {% endif %}
-  {% endwith %}
 
-  <!-- Hero Banner -->
-  <div class="hero-banner">
-    <div class="hero-text">
-      <div class="hero-kicker"><span class="kicker-pulse"></span> Photographer Studio</div>
-      <h1 class="hero-title">Capture. Organise.<br><em>Deliver Magic.</em></h1>
-      <p class="hero-sub">AI-powered face matching. Personalised galleries. Delivered instantly.</p>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat-box">
-        <div class="hero-stat-num">{{ events | length }}</div>
-        <div class="hero-stat-lbl">Event{{ 's' if events | length != 1 else '' }}</div>
-      </div>
-      {% if photographer and qr_data_uri %}
-      <button class="hero-brand-chip hero-qr-view" style="cursor:pointer;"
-              data-qr-src="{{ qr_data_uri }}"
-              data-qr-name="{{ photographer.studio_name }}"
-              onclick="openQrModal(this)">
-        <i class="bi bi-qr-code-scan"></i> View QR
-      </button>
-      <a class="hero-brand-chip hero-qr-download"
-         href="{{ photographer.qr_url }}" download="pixhare_checkin_qr.png"
-         title="Download the raw QR image">
-        <i class="bi bi-download"></i> Download QR
+    <nav class="dsh-nav">
+      <a class="dsh-nav-item active" href="{{ url_for('photographer_dashboard') }}">
+        <i class="bi bi-grid-fill ico"></i> Dashboard
       </a>
-      {% endif %}
-    </div>
-  </div>
+      <a class="dsh-nav-item" href="#my-events-panel">
+        <i class="bi bi-calendar-event ico"></i> My Events
+      </a>
+      <a class="dsh-nav-item" href="javascript:void(0)" onclick="openCreateModal()">
+        <i class="bi bi-plus-circle ico"></i> Create Event
+      </a>
+      <a class="dsh-nav-item soon" href="javascript:void(0)" title="Coming soon">
+        <i class="bi bi-person ico"></i> Profile <span class="soon-tag">Soon</span>
+      </a>
+      <a class="dsh-nav-item soon" href="javascript:void(0)" title="Coming soon">
+        <i class="bi bi-gear ico"></i> Settings <span class="soon-tag">Soon</span>
+      </a>
+      <a class="dsh-nav-item" href="mailto:hello@pixhare.app">
+        <i class="bi bi-question-circle ico"></i> Help &amp; Support
+      </a>
+    </nav>
 
-  <!-- Two-column layout -->
-  <div class="layout">
+    <div class="dsh-side-footer">
+      <div class="dsh-side-scenic">
+        <svg viewBox="0 0 280 190" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#0a1f17"/>
+              <stop offset="45%" stop-color="#13321f"/>
+              <stop offset="78%" stop-color="#5a4620"/>
+              <stop offset="100%" stop-color="#e0a63a"/>
+            </linearGradient>
+            <radialGradient id="sunGlow" cx="50%" cy="100%" r="75%">
+              <stop offset="0%"  stop-color="#f5c15a" stop-opacity="0.85"/>
+              <stop offset="55%" stop-color="#e0a63a" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#e0a63a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
 
-    <!-- LEFT: Create Event sidebar -->
-    <div>
-      <div class="sidebar-card">
-        <div class="sc-head">
-          <div class="sc-head-icon">✦</div>
-          <span class="sc-head-label">New Event</span>
+          <rect x="0" y="0" width="280" height="190" fill="url(#skyGrad)"/>
+          <circle cx="150" cy="150" r="120" fill="url(#sunGlow)"/>
+          <circle cx="150" cy="120" r="13" fill="#f7d98a" opacity="0.9"/>
+
+          <!-- stars -->
+          <circle cx="34" cy="26" r="1.2" fill="#ffffff" opacity="0.5"/>
+          <circle cx="70" cy="14" r="1"   fill="#ffffff" opacity="0.4"/>
+          <circle cx="230" cy="22" r="1.3" fill="#ffffff" opacity="0.5"/>
+          <circle cx="252" cy="44" r="1"   fill="#ffffff" opacity="0.35"/>
+
+          <!-- back mountain range -->
+          <path d="M0,130 L28,100 L52,118 L78,88 L108,112 L138,84 L168,116 L198,92 L228,120 L252,98 L280,122 L280,190 L0,190 Z"
+                fill="#1f4a34" opacity="0.55"/>
+          <!-- mid mountain range -->
+          <path d="M0,150 L34,122 L64,144 L96,110 L126,140 L156,116 L188,146 L216,120 L248,148 L280,128 L280,190 L0,190 Z"
+                fill="#153a28" opacity="0.8"/>
+          <!-- front ridge (photographer stands here) -->
+          <path d="M0,172 L40,156 L90,168 L140,150 L190,166 L230,154 L280,170 L280,190 L0,190 Z"
+                fill="#0c231a"/>
+
+          <!-- photographer silhouette with tripod, standing on the front ridge -->
+          <g fill="#050f0a">
+            <!-- tripod legs -->
+            <path d="M186,163 L170,186 L174,187 L188,167 Z"/>
+            <path d="M186,163 L186,187 L190,187 L189,163 Z"/>
+            <path d="M186,163 L202,185 L198,187 L184,167 Z"/>
+            <!-- camera on tripod -->
+            <rect x="179" y="156" width="15" height="10" rx="2"/>
+            <circle cx="175" cy="161" r="4"/>
+            <!-- person: legs -->
+            <path d="M163,178 L159,188 L164,188 L167,179 Z"/>
+            <path d="M167,178 L168,188 L173,188 L170,179 Z"/>
+            <!-- person: body leaning toward camera -->
+            <path d="M162,178 C160,168 162,158 170,153 C175,150 178,152 179,156 L170,160 C165,163 163,170 166,178 Z"/>
+            <!-- person: head -->
+            <circle cx="172" cy="149" r="4.2"/>
+            <!-- person: arm reaching to camera -->
+            <path d="M176,155 L184,159 L182,162 L175,159 Z"/>
+          </g>
+        </svg>
+      </div>
+      <div class="dsh-profile-card">
+        <div class="dsh-avatar">{{ (photographer.name or 'P')[0] | upper }}</div>
+        <div>
+          <div class="dsh-profile-name">{{ photographer.name }}</div>
+          <div class="dsh-profile-role">Photographer</div>
         </div>
-        <div class="sc-body">
-          <form method="POST" action="{{ url_for('create_event') }}">
-            <div class="f-group">
-              <label class="f-label">Event Name</label>
-              <input type="text" name="event_name" class="f-input"
-                     placeholder="e.g., Wedding2025" required>
-            </div>
-            <div class="f-group">
-              <label class="f-label">Event Date</label>
-              <input type="date" name="event_date" class="f-input" required>
-            </div>
-            <div class="f-group">
-              <label class="f-label">Venue</label>
-              <input type="text" name="venue" class="f-input"
-                     placeholder="e.g., Taj Palace, Delhi">
-            </div>
-            <div class="f-group">
-              <label class="f-label">Time</label>
-              <input type="time" name="event_time" class="f-input">
-            </div>
-            <button type="submit" class="btn-create">
-              <i class="bi bi-plus-lg"></i> Create Event
-            </button>
-          </form>
-        </div>
-        <div class="sc-tips">
-          <div class="tip-row">
-            <div class="tip-icon tip-g">📸</div>
-            <span>Upload event photos to start AI face matching.</span>
-          </div>
-          <div class="tip-row">
-            <div class="tip-icon tip-p">🔗</div>
-            <span>Share the QR code so guests can self-register.</span>
-          </div>
-          <div class="tip-row">
-            <div class="tip-icon tip-a">✉️</div>
-            <span>Hit Send Gallery to email each guest their photos.</span>
-          </div>
-        </div>
+        <a class="dsh-logout-btn" href="{{ url_for('photographer_logout') }}" title="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
       </div>
     </div>
+  </aside>
 
-    <!-- RIGHT: Events grid -->
-    <div class="main-col">
-      <div class="sec-row">
-        <div class="sec-title">
-          <i class="bi bi-grid-3x3-gap-fill" style="color:#0f7b56"></i>
-          My Events
-          <span class="sec-badge">{{ events | length }}</span>
-        </div>
-        <span class="sec-hint">Click a card to manage</span>
-      </div>
+  <!-- ══ MAIN ══ -->
+  <main class="dsh-main">
 
-      {% if events %}
-      <div class="ev-grid" id="evGrid">
-        {% for event in events %}
-        <div class="ev-card"
-             id="card-{{ loop.index }}"
-             data-index="{{ loop.index }}"
-             data-delay="{{ loop.index0 }}">
-          <div class="ev-icon">📸</div>
-          <div class="ev-name">{{ event.name }}</div>
-          <div class="ev-date"><i class="bi bi-calendar3"></i>&nbsp;{{ event.date }}</div>
-          <div class="ev-foot">
-            <span class="ev-tag">Active</span>
-            <i class="bi bi-arrow-right ev-arrow"></i>
-          </div>
+    <!-- Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="dsh-flash-stack">
+        {% for category, message in messages %}
+        <div class="dsh-flash {{ category }}">
+          {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+          {{ message }}
         </div>
         {% endfor %}
       </div>
+      {% endif %}
+    {% endwith %}
 
-      {% for event in events %}
-      <div class="ev-detail" id="detail-{{ loop.index }}">
-        <div class="det-top">
-          <div class="det-left">
-            <div class="det-icon">🎯</div>
-            <span class="det-name">{{ event.name }}</span>
-            <span class="det-date">{{ event.date }}</span>
-          </div>
-          <button class="btn-cls" data-index="{{ loop.index }}">
-            <i class="bi bi-x-lg"></i> Close
-          </button>
+    <!-- Topbar -->
+    <div class="dsh-topbar">
+      <div>
+        <div class="dsh-welcome-lbl">Welcome back,</div>
+        <div class="dsh-welcome-name">
+          {{ photographer.name }}
+          <svg class="dsh-crown" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 8L7 11L12 4L17 11L21 8L19.5 18H4.5L3 8Z" fill="url(#crownGrad)" stroke="#a86c0d" stroke-width="0.6" stroke-linejoin="round"/>
+            <rect x="4.5" y="18" width="15" height="2.2" rx="0.6" fill="url(#crownGrad)" stroke="#a86c0d" stroke-width="0.4"/>
+            <circle cx="7" cy="10.2" r="1.15" fill="#fff6df"/>
+            <circle cx="12" cy="7.2" r="1.3" fill="#fff6df"/>
+            <circle cx="17" cy="10.2" r="1.15" fill="#fff6df"/>
+            <defs>
+              <linearGradient id="crownGrad" x1="3" y1="4" x2="21" y2="20" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#fbe08a"/>
+                <stop offset="50%" stop-color="#f0b429"/>
+                <stop offset="100%" stop-color="#c8871a"/>
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
-        <div class="det-actions">
-          <a href="{{ url_for('upload_photos', event_name=event.name) }}" class="ab ab-upload">
-            <i class="bi bi-cloud-arrow-up-fill"></i> Upload Photos
-          </a>
-          <a href="{{ url_for('view_event_photos', event_name=event.name) }}" class="ab ab-view">
-            <i class="bi bi-images"></i> View Photos
-          </a>
-          <div class="sep"></div>
-          <form method="POST" action="{{ url_for('send_gallery', event_name=event.name) }}"
-                data-confirm="Start AI face matching and send galleries for {{ event.name }}?"
-                style="display:inline;">
-            <button type="submit" class="ab ab-send">
-              <i class="bi bi-send-fill"></i> Send Gallery
-            </button>
-          </form>
-          <form method="POST" action="{{ url_for('delete_event', event_name=event.name) }}"
-                data-confirm="Permanently delete {{ event.name }} and all its data?"
-                style="display:inline;">
-            <button type="submit" class="ab ab-del">
-              <i class="bi bi-trash3-fill"></i> Delete
-            </button>
-          </form>
-        </div>
-
-        <!-- Stats strip -->
-        {% if event_stats and event.name in event_stats %}
-        <div class="det-stats">
-          <div class="det-stat guests">
-            <i class="bi bi-people-fill"></i>
-            <span class="stat-num">{{ event_stats[event.name].guests }}</span>
-            Guest{{ 's' if event_stats[event.name].guests != 1 else '' }} Registered
-          </div>
-          <div class="det-stat photos">
-            <i class="bi bi-images"></i>
-            <span class="stat-num">{{ event_stats[event.name].photos }}</span>
-            Photo{{ 's' if event_stats[event.name].photos != 1 else '' }} Uploaded
-          </div>
-        </div>
-        {% endif %}
-
+        <div class="dsh-welcome-sub">Here's what's happening with your events today.</div>
       </div>
-      {% endfor %}
+      <div class="dsh-top-actions">
+        {% if photographer and qr_data_uri %}
+        <button class="dsh-icon-btn" title="View your check-in QR" onclick="openQrModal(this)"
+                data-qr-src="{{ qr_data_uri }}" data-qr-name="{{ photographer.studio_name }}">
+          <i class="bi bi-qr-code"></i>
+        </button>
+        {% endif %}
+        <button class="dsh-icon-btn" title="Notifications" onclick="alert('No new notifications yet.')">
+          <i class="bi bi-bell"></i>
+        </button>
+        <button class="btn-create-event" onclick="openCreateModal()">
+          <i class="bi bi-plus-lg"></i> Create Event
+        </button>
+      </div>
+    </div>
 
-      {% else %}
-      <div class="empty">
-        <div class="empty-ring">📷</div>
-        <h3>No events yet</h3>
-        <p>Create your first event on the left to get started. 🚀</p>
+    <!-- Stat cards (all figures are real, computed from your events) -->
+    <div class="dsh-stats-panel">
+      <div class="dsh-stat-cell">
+        <div class="dsh-stat-ic"><i class="bi bi-calendar-event-fill"></i></div>
+        <div>
+          <div class="dsh-stat-lbl">Total Events</div>
+          <div class="dsh-stat-num">{{ events | length }}</div>
+          {% set ns = namespace(this_month=0) %}
+          {% for e in events %}
+            {% if e.date and e.date[:7] == today[:7] %}{% set ns.this_month = ns.this_month + 1 %}{% endif %}
+          {% endfor %}
+          {% if ns.this_month > 0 %}<div class="dsh-stat-sub">+{{ ns.this_month }} this month</div>{% endif %}
+        </div>
+      </div>
+      <div class="dsh-stat-cell">
+        <div class="dsh-stat-ic"><i class="bi bi-images"></i></div>
+        <div>
+          <div class="dsh-stat-lbl">Photos Uploaded</div>
+          <div class="dsh-stat-num">{{ events | sum(attribute='photo_count') }}</div>
+        </div>
+      </div>
+      <div class="dsh-stat-cell">
+        <div class="dsh-stat-ic"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <div class="dsh-stat-lbl">Guests Registered</div>
+          <div class="dsh-stat-num">{{ event_stats.values() | sum(attribute='guests') }}</div>
+        </div>
+      </div>
+      <div class="dsh-stat-cell">
+        <div class="dsh-stat-ic"><i class="bi bi-lightning-charge-fill"></i></div>
+        <div>
+          <div class="dsh-stat-lbl">Active Events</div>
+          <div class="dsh-stat-num">{{ events | selectattr('date', 'ge', today) | list | length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Events panel -->
+    <div class="dsh-panel-card" id="my-events-panel">
+      <div class="dsh-panel-head">
+        <div class="dsh-panel-title">My Events</div>
+        <div class="dsh-panel-controls">
+          <div class="dsh-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="evSearch" placeholder="Search events...">
+          </div>
+          <select class="dsh-select" id="evFilter">
+            <option value="all">All Events</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+      </div>
+
+      {% if events %}
+      <div class="dsh-table-wrap">
+        <svg class="dsh-table-watermark" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="28" y="66" width="144" height="98" rx="16" stroke="currentColor" stroke-width="4"/>
+          <rect x="76" y="46" width="48" height="22" rx="6" stroke="currentColor" stroke-width="4"/>
+          <circle cx="100" cy="116" r="36" stroke="currentColor" stroke-width="4"/>
+          <circle cx="100" cy="116" r="16" stroke="currentColor" stroke-width="3"/>
+          <circle cx="146" cy="86" r="5" fill="var(--dsh-amber)"/>
+        </svg>
+        <table class="dsh-table">
+          <thead>
+            <tr>
+              <th>Event</th><th>Date</th><th>Photos</th><th>Guests</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="evTableBody">
+            {% for event in events %}
+            {% set is_upcoming = event.date >= today %}
+            {% set status = 'completed' if not is_upcoming else ('active' if (event.photo_count or 0) > 0 else 'draft') %}
+            <tr data-status="{{ status }}" data-name="{{ event.name | lower }}{{ (' ' ~ event.venue) | lower if event.venue else '' }}">
+              <td>
+                <div class="dsh-ev-cell">
+                  <div class="dsh-ev-thumb grad-{{ loop.index0 % 4 }}">
+                    <i class="bi bi-camera2"></i>
+                  </div>
+                  <div>
+                    <div class="dsh-ev-name">{{ event.name }}</div>
+                    {% if event.event_time %}<div class="dsh-ev-sub"><i class="bi bi-clock"></i> {{ event.event_time }}</div>{% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="dsh-cell-primary"><i class="bi bi-calendar3"></i> {{ event.date | prettydate }}</div>
+                {% if event.venue %}<div class="dsh-cell-sub"><i class="bi bi-geo-alt"></i> {{ event.venue }}</div>{% endif %}
+              </td>
+              <td>
+                <div class="dsh-count-num">{{ event.photo_count or 0 }}</div>
+                <div class="dsh-count-lbl">Photos</div>
+              </td>
+              <td>
+                <div class="dsh-count-num">{{ event_stats[event.name].guests if event.name in event_stats else 0 }}</div>
+                <div class="dsh-count-lbl">Registered</div>
+              </td>
+              <td>
+                {% if status == 'active' %}<span class="dsh-status active">Active</span>
+                {% elif status == 'completed' %}<span class="dsh-status completed">Completed</span>
+                {% else %}<span class="dsh-status draft">Draft</span>{% endif %}
+              </td>
+              <td>
+                <div class="dsh-actions-row">
+                  <a href="{{ url_for('view_event_photos', event_name=event.name) }}" class="dsh-act-btn" title="View photos"><i class="bi bi-eye"></i></a>
+                  <a href="{{ url_for('upload_photos', event_name=event.name) }}" class="dsh-act-btn" title="Upload photos"><i class="bi bi-cloud-arrow-up"></i></a>
+                  <form class="dsh-inline" method="POST" action="{{ url_for('send_gallery', event_name=event.name) }}" data-confirm="Start AI face matching and send galleries for {{ event.name }}?">
+                    <button type="submit" class="dsh-act-btn" title="Send galleries"><i class="bi bi-send"></i></button>
+                  </form>
+                  <form class="dsh-inline" method="POST" action="{{ url_for('delete_event', event_name=event.name) }}" data-confirm="Permanently delete {{ event.name }} and all its data?">
+                    <button type="submit" class="dsh-act-btn danger" title="Delete event"><i class="bi bi-trash3"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if events | length > 5 %}
+      <div class="dsh-viewall-wrap">
+        <button class="btn-viewall" id="viewAllBtn" onclick="pixViewAll()">View All Events <i class="bi bi-chevron-right"></i></button>
       </div>
       {% endif %}
-    </div><!-- /main-col -->
 
-  </div><!-- /layout -->
-</div><!-- /d-page -->
+      {% else %}
+      <div class="dsh-empty">
+        <div class="dsh-empty-ring"><i class="bi bi-camera2"></i></div>
+        <h3>No events yet</h3>
+        <p>Create your first event to get started. 🚀</p>
+      </div>
+      {% endif %}
+    </div>
 
-<!-- ── QR Poster Modal ── -->
-<style>
-.qr-modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 3000;
-  background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-  align-items: center; justify-content: center;
-  animation: lbIn .2s ease both;
-  padding: 20px;
-}
-.qr-modal-overlay.open { display: flex; }
-@keyframes lbIn { from{opacity:0} to{opacity:1} }
+  </main>
+</div>
 
-.qr-modal-box {
-  background: #fff; border-radius: 22px;
-  padding: 28px 24px 24px;
-  text-align: center;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
-  max-width: 360px; width: 100%;
-  position: relative;
-  animation: popIn .25s cubic-bezier(0.22,1,0.36,1) both;
-}
-@keyframes popIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+<!-- ══ CREATE EVENT MODAL ══ -->
+<div class="dsh-modal-overlay" id="createModal" onclick="if(event.target===this) closeCreateModal()">
+  <div class="dsh-modal-box">
+    <button class="dsh-modal-close" onclick="closeCreateModal()"><i class="bi bi-x-lg"></i></button>
+    <div class="dsh-modal-title">Create New Event</div>
+    <div class="dsh-modal-sub">Set up your event in seconds.</div>
+    <form method="POST" action="{{ url_for('create_event') }}">
+      <label class="dsh-f-label">Event Name</label>
+      <input type="text" name="event_name" class="dsh-f-input" placeholder="e.g., Sarah &amp; John Wedding" required>
+      <label class="dsh-f-label">Event Date</label>
+      <input type="date" name="event_date" class="dsh-f-input" required>
+      <label class="dsh-f-label">Venue</label>
+      <input type="text" name="venue" class="dsh-f-input" placeholder="e.g., Taj Palace, Chennai">
+      <label class="dsh-f-label">Time</label>
+      <input type="time" name="event_time" class="dsh-f-input">
+      <button type="submit" class="btn-dsh-submit"><i class="bi bi-plus-lg"></i> Create Event</button>
+    </form>
+  </div>
+</div>
 
-.qr-modal-close {
-  position: absolute; top: 14px; right: 16px;
-  background: #f0f2f5; border: none; border-radius: 50%;
-  width: 32px; height: 32px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.85rem; color: #434956; transition: background .18s;
-}
-.qr-modal-close:hover { background: #fdeaed; color: #dc2653; }
-
-.qr-poster-wrap {
-  border-radius: 14px; overflow: hidden;
-  margin-bottom: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-}
-canvas#posterCanvas { display: block; width: 100%; height: auto; }
-
-.btn-dl-qr {
-  display: inline-flex; align-items: center; gap: 8px;
-  width: 100%; justify-content: center;
-  background: linear-gradient(135deg, #0f7b56, #13a372);
-  color: #fff; text-decoration: none;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800; font-size: 0.9rem;
-  padding: 13px; border-radius: 11px;
-  box-shadow: 0 4px 16px rgba(15,123,86,0.25);
-  transition: transform .15s, box-shadow .2s; border: none; cursor: pointer;
-}
-.btn-dl-qr:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,123,86,0.32); color:#fff; text-decoration:none; }
-</style>
-
+<!-- ══ QR POSTER MODAL (unchanged functionality, restyled dark) ══ -->
 <div class="qr-modal-overlay" id="qrModal" onclick="closeQrModal(event)">
   <div class="qr-modal-box">
-    <button class="qr-modal-close" onclick="document.getElementById('qrModal').classList.remove('open')">
-      <i class="bi bi-x-lg"></i>
-    </button>
-    <div class="qr-poster-wrap">
-      <canvas id="posterCanvas" width="600" height="780"></canvas>
-    </div>
-    <button class="btn-dl-qr" id="posterDlBtn">
-      <i class="bi bi-download"></i> Download Poster
-    </button>
+    <button class="qr-modal-close" onclick="document.getElementById('qrModal').classList.remove('open')"><i class="bi bi-x-lg"></i></button>
+    <div class="qr-poster-wrap"><canvas id="posterCanvas" width="600" height="780"></canvas></div>
+    <button class="btn-dl-qr" id="posterDlBtn"><i class="bi bi-download"></i> Download Poster</button>
   </div>
 </div>
 
 <script>
 (function () {
-  var active = null;
-
-  /* ══════════════════════════════════════
-     QR POSTER GENERATOR
-  ══════════════════════════════════════ */
-  window.openQrModal = function (btn) {
-    var src       = btn.getAttribute('data-qr-src');
-    var eventName = btn.getAttribute('data-qr-name');
-    document.getElementById('qrModal').classList.add('open');
-    renderPoster(src, eventName);
-  };
-
-  window.closeQrModal = function (e) {
-    if (e.target === document.getElementById('qrModal')) {
-      document.getElementById('qrModal').classList.remove('open');
-    }
-  };
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { document.getElementById('qrModal').classList.remove('open'); }
-  });
-
-  function renderPoster(qrSrc, studioName) {
-    var canvas = document.getElementById('posterCanvas');
-    var ctx    = canvas.getContext('2d');
-    var W = 600, H = 780;
-    canvas.width = W; canvas.height = H;
-
-    /* ── Background gradient ── */
-    var bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0,   '#0d1117');
-    bg.addColorStop(0.5, '#131d2e');
-    bg.addColorStop(1,   '#0a1a14');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    /* ── Decorative circles ── */
-    function circle(x, y, r, color) {
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-    }
-    circle(W - 60,  50,  120, 'rgba(15,123,86,0.08)');
-    circle(60,      H - 80, 100, 'rgba(82,64,168,0.1)');
-    circle(W / 2,   H - 40, 200, 'rgba(15,123,86,0.05)');
-
-    /* ── Top accent line ── */
-    var line = ctx.createLinearGradient(0, 0, W, 0);
-    line.addColorStop(0,   '#0f7b56');
-    line.addColorStop(0.5, '#5240a8');
-    line.addColorStop(1,   '#d97706');
-    ctx.fillStyle = line;
-    ctx.fillRect(0, 0, W, 5);
-
-    ctx.textAlign = 'center';
-
-    /* ── Real logo image + wordmark (same-origin static asset — never
-       hits the CORS problem the QR itself used to have) ── */
-    var logoImg = new Image();
-    logoImg.onload = function () {
-      var logoSize = 56;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(W/2, 58, logoSize/2, 0, Math.PI*2);
-      ctx.clip();
-      ctx.drawImage(logoImg, W/2 - logoSize/2, 58 - logoSize/2, logoSize, logoSize);
-      ctx.restore();
-
-      drawRestOfPoster();
-    };
-    logoImg.onerror = drawRestOfPoster;   // don't block the whole poster on a missing logo
-    logoImg.src = '{{ url_for("static", filename="images/logo.png") }}';
-
-    function drawRestOfPoster() {
-      /* ── "Pixhare" wordmark ── */
-      ctx.font = 'bold 34px serif';
-      ctx.shadowColor = 'rgba(15,123,86,0.4)';
-      ctx.shadowBlur  = 16;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('Pix', W/2 - 34, 108);
-      ctx.fillStyle = '#13a372';
-      ctx.fillText('hare', W/2 + 22, 108);
-      ctx.shadowBlur = 0;
-
-      /* ── Explanation / tagline ── */
-      ctx.font = '300 16px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fillText('AI-Powered Event Photo Sharing — scan, snap, get your photos', W/2, 132);
-
-      /* ── Divider ── */
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(60, 152); ctx.lineTo(W-60, 152); ctx.stroke();
-
-      /* ── Studio name section ── */
-      ctx.font = '500 15px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.fillText('CHECK IN WITH', W/2, 184);
-
-      ctx.font = 'bold 36px serif';
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = 'rgba(19,163,114,0.3)';
-      ctx.shadowBlur  = 16;
-      var name = (studioName || 'Pixhare Studio');
-      if (name.length > 22) { name = name.substring(0, 20) + '…'; }
-      ctx.fillText(name, W/2, 226);
-      ctx.shadowBlur = 0;
-
-      /* ── QR white card background ── */
-      var qrSize   = 250;
-      var qrX      = (W - qrSize) / 2;
-      var qrY      = 258;
-      var cardPad  = 18;
-      roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 20, '#ffffff');
-
-      /* ── Draw QR (base64 data URI — no cross-origin fetch, so this
-         never fails the way the old public-URL version could) ── */
-      var qrImg = new Image();
-      qrImg.onload = function () {
-        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-        /* ── "Scan to register" label ── */
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillStyle = '#13a372';
-        ctx.fillText('📷  Scan to Check In', W/2, 578);
-
-        ctx.font = '400 15px sans-serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText('Get your personalised photo gallery after the event', W/2, 606);
-
-        /* ── Bottom divider ── */
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(60, 632); ctx.lineTo(W-60, 632); ctx.stroke();
-
-        /* ── Steps row ── */
-        var steps = ['📸 Take Selfie', '🤖 AI Matches You', '✉️ Get Your Photos'];
-        var stepX = [120, 300, 480];
-        steps.forEach(function (s, i) {
-          ctx.font = '500 13px sans-serif';
-          ctx.fillStyle = 'rgba(255,255,255,0.55)';
-          ctx.fillText(s, stepX[i], 668);
-        });
-
-        /* ── Footer ── */
-        ctx.font = '400 12px sans-serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.fillText('pixhare.ai', W/2, 745);
-
-        /* ── Wire up download ── */
-        var dlBtn = document.getElementById('posterDlBtn');
-        dlBtn.onclick = function () {
-          var link = document.createElement('a');
-          link.download = (studioName || 'pixhare') + '_checkin_poster.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        };
-      };
-      qrImg.onerror = function () {
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillStyle = '#f87171';
-        ctx.fillText('QR image could not load', W/2, 390);
-      };
-      qrImg.src = qrSrc;
-    }
-  }
-
-  /* helper: rounded rectangle fill */
-  function roundRect(ctx, x, y, w, h, r, fill) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-    ctx.fillStyle = fill;
-    ctx.fill();
-  }
-
   /* ── Flash auto-hide ── */
-  var flashItems = document.querySelectorAll('.fl-item');
-  if (flashItems.length > 0) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  flashItems.forEach(function (el) {
+  document.querySelectorAll('.dsh-flash').forEach(function (el) {
     setTimeout(function () {
       el.classList.add('hide');
-      setTimeout(function () { el.remove(); }, 650);
+      setTimeout(function () { el.remove(); }, 550);
     }, 5000);
-  });
-
-  /* ── Cards: stagger + click ── */
-  document.querySelectorAll('.ev-card[data-index]').forEach(function (card) {
-    var d = parseFloat(card.getAttribute('data-delay') || 0) * 0.07;
-    card.style.animationDelay = d + 's';
-    card.addEventListener('click', function () { toggle(card.getAttribute('data-index')); });
-  });
-
-  /* ── Close buttons ── */
-  document.querySelectorAll('.btn-cls[data-index]').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var idx = btn.getAttribute('data-index');
-      document.getElementById('detail-' + idx).classList.remove('open');
-      document.getElementById('card-'   + idx).classList.remove('active');
-      if (active === idx) { active = null; }
-    });
   });
 
   /* ── Confirm dialogs ── */
@@ -1056,30 +660,150 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
     });
   });
 
-}());
+  /* ── Search + status filter ── */
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#evTableBody tr'));
+  var searchInput = document.getElementById('evSearch');
+  var filterSelect = document.getElementById('evFilter');
 
-/* ── Toggle detail panel ── */
-var active = null;
-function toggle(idx) {
-  if (active !== null && active !== idx) {
-    document.getElementById('detail-' + active).classList.remove('open');
-    document.getElementById('card-'   + active).classList.remove('active');
+  function applyFilters() {
+    var q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    var status = filterSelect ? filterSelect.value : 'all';
+    rows.forEach(function (row) {
+      var matchesText = !q || row.getAttribute('data-name').indexOf(q) !== -1;
+      var matchesStatus = status === 'all' || row.getAttribute('data-status') === status;
+      row.style.display = (matchesText && matchesStatus) ? '' : 'none';
+    });
   }
-  var card   = document.getElementById('card-'   + idx);
-  var detail = document.getElementById('detail-' + idx);
-  if (active === idx) {
-    detail.classList.remove('open');
-    card.classList.remove('active');
-    active = null;
-  } else {
-    card.classList.add('active');
-    detail.classList.add('open');
-    active = idx;
-    setTimeout(function () {
-      detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 60);
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  if (filterSelect) filterSelect.addEventListener('change', applyFilters);
+
+  /* ── View All (client-side row cap) ── */
+  rows.forEach(function (row, i) { if (i >= 5) row.classList.add('dsh-hidden-row'); });
+  window.pixViewAll = function () {
+    rows.forEach(function (row) { row.classList.remove('dsh-hidden-row'); });
+    var btn = document.getElementById('viewAllBtn');
+    if (btn) btn.style.display = 'none';
+  };
+
+  /* ── Create Event modal ── */
+  window.openCreateModal = function () { document.getElementById('createModal').classList.add('open'); };
+  window.closeCreateModal = function () { document.getElementById('createModal').classList.remove('open'); };
+
+  /* ── QR modal + poster generator (same logic as before) ── */
+  window.openQrModal = function (btn) {
+    var src = btn.getAttribute('data-qr-src');
+    var eventName = btn.getAttribute('data-qr-name');
+    document.getElementById('qrModal').classList.add('open');
+    renderPoster(src, eventName);
+  };
+  window.closeQrModal = function (e) {
+    if (e.target === document.getElementById('qrModal')) { document.getElementById('qrModal').classList.remove('open'); }
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.getElementById('qrModal').classList.remove('open');
+      closeCreateModal();
+    }
+  });
+
+  function renderPoster(qrSrc, studioName) {
+    var canvas = document.getElementById('posterCanvas');
+    var ctx = canvas.getContext('2d');
+    var W = 600, H = 780;
+    canvas.width = W; canvas.height = H;
+
+    var bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#0d1117'); bg.addColorStop(0.5, '#131d2e'); bg.addColorStop(1, '#0a1a14');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    function circle(x, y, r, color) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); }
+    circle(W - 60, 50, 120, 'rgba(15,123,86,0.08)');
+    circle(60, H - 80, 100, 'rgba(82,64,168,0.1)');
+    circle(W / 2, H - 40, 200, 'rgba(15,123,86,0.05)');
+
+    var line = ctx.createLinearGradient(0, 0, W, 0);
+    line.addColorStop(0, '#0f7b56'); line.addColorStop(0.5, '#5240a8'); line.addColorStop(1, '#d97706');
+    ctx.fillStyle = line; ctx.fillRect(0, 0, W, 5);
+    ctx.textAlign = 'center';
+
+    var logoImg = new Image();
+    logoImg.onload = function () {
+      var logoSize = 56;
+      ctx.save(); ctx.beginPath(); ctx.arc(W/2, 58, logoSize/2, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(logoImg, W/2 - logoSize/2, 58 - logoSize/2, logoSize, logoSize);
+      ctx.restore();
+      drawRestOfPoster();
+    };
+    logoImg.onerror = drawRestOfPoster;
+    logoImg.src = '{{ url_for("static", filename="images/logo.png") }}';
+
+    function drawRestOfPoster() {
+      ctx.font = 'bold 34px serif'; ctx.shadowColor = 'rgba(15,123,86,0.4)'; ctx.shadowBlur = 16;
+      ctx.fillStyle = '#ffffff'; ctx.fillText('Pix', W/2 - 34, 108);
+      ctx.fillStyle = '#13a372'; ctx.fillText('hare', W/2 + 22, 108);
+      ctx.shadowBlur = 0;
+
+      ctx.font = '300 16px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText('AI-Powered Event Photo Sharing — scan, snap, get your photos', W/2, 132);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(60, 152); ctx.lineTo(W-60, 152); ctx.stroke();
+
+      ctx.font = '500 15px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText('CHECK IN WITH', W/2, 184);
+
+      ctx.font = 'bold 36px serif'; ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(19,163,114,0.3)'; ctx.shadowBlur = 16;
+      var name = (studioName || 'Pixhare Studio');
+      if (name.length > 22) { name = name.substring(0, 20) + '…'; }
+      ctx.fillText(name, W/2, 226);
+      ctx.shadowBlur = 0;
+
+      var qrSize = 250, qrX = (W - qrSize) / 2, qrY = 258, cardPad = 18;
+      roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 20, '#ffffff');
+
+      var qrImg = new Image();
+      qrImg.onload = function () {
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+        ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#13a372';
+        ctx.fillText('📷  Scan to Check In', W/2, 578);
+        ctx.font = '400 15px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillText('Get your personalised photo gallery after the event', W/2, 606);
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(60, 632); ctx.lineTo(W-60, 632); ctx.stroke();
+        var steps = ['📸 Take Selfie', '🤖 AI Matches You', '✉️ Get Your Photos'];
+        var stepX = [120, 300, 480];
+        steps.forEach(function (s, i) {
+          ctx.font = '500 13px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.fillText(s, stepX[i], 668);
+        });
+        ctx.font = '400 12px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillText('pixhare.ai', W/2, 745);
+
+        var dlBtn = document.getElementById('posterDlBtn');
+        dlBtn.onclick = function () {
+          var link = document.createElement('a');
+          link.download = (studioName || 'pixhare') + '_checkin_poster.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+      };
+      qrImg.onerror = function () {
+        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#f87171';
+        ctx.fillText('QR image could not load', W/2, 390);
+      };
+      qrImg.src = qrSrc;
+    }
   }
-}
+
+  function roundRect(ctx, x, y, w, h, r, fill) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  }
+}());
 </script>
 
 {% endblock %}

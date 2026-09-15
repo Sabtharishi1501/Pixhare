@@ -33,7 +33,8 @@ body { background: var(--dsh-dark) !important; }
 ═══════════════════════════════════ */
 .dsh-side {
   width: 264px; flex-shrink: 0;
-  background: linear-gradient(180deg, var(--dsh-dark2) 0%, var(--dsh-dark) 100%);
+  background: linear-gradient(180deg, rgba(10,20,16,0.55) 0%, rgba(10,20,16,0.35) 45%, rgba(10,20,16,0.72) 100%),
+              url('{{ url_for("static", filename="images/dashboard-sidebar-bg.jpg") }}') center top / cover no-repeat;
   border-right: 1px solid var(--dsh-line);
   display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;
@@ -66,19 +67,10 @@ body { background: var(--dsh-dark) !important; }
   background: rgba(255,255,255,0.08); color: var(--dsh-ink3); padding: 2px 7px; border-radius: 50px;
 }
 
-.dsh-side-footer { padding: 14px; border-top: 1px solid var(--dsh-line); position: relative; }
-.dsh-side-scenic {
-  position: absolute; left: 0; right: 0; bottom: 100%; height: 190px;
-  overflow: hidden; pointer-events: none;
-}
-.dsh-side-scenic svg { display: block; width: 100%; height: 100%; }
-.dsh-side-scenic::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 60%, var(--dsh-dark2) 100%);
-}
+.dsh-side-footer { padding: 14px; border-top: 1px solid var(--dsh-line); }
 .dsh-profile-card {
   display: flex; align-items: center; gap: 10px; padding: 10px;
-  background: rgba(255,255,255,0.05); border: 1px solid var(--dsh-line);
+  background: rgba(8,16,13,0.6); backdrop-filter: blur(6px); border: 1px solid var(--dsh-line);
   border-radius: 13px; position: relative;
 }
 .dsh-avatar {
@@ -313,6 +305,123 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
   .dsh-main { height: auto; overflow: visible; padding: 22px 18px 50px; }
   .dsh-table-wrap { max-height: 60vh; }
 }
+
+/* ═══════════════════════════════════
+   ANIMATIONS & LIFE
+═══════════════════════════════════ */
+@keyframes dshFadeUp   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dshFadeLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes dshPop      { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes dshGlow     { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+@keyframes dshBlobDrift {
+  0%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
+  50% { transform: translate(6px,-8px) scale(1.06); opacity: 0.85; }
+}
+@keyframes dshLivePulse {
+  0% { box-shadow: 0 0 0 0 rgba(127,233,189,0.55); }
+  70% { box-shadow: 0 0 0 6px rgba(127,233,189,0); }
+  100% { box-shadow: 0 0 0 0 rgba(127,233,189,0); }
+}
+@keyframes dshSparkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(20deg); }
+}
+@keyframes dshShimmer { 0% { transform: translateX(-140%) skewX(-12deg); } 100% { transform: translateX(220%) skewX(-12deg); } }
+@keyframes dshRowIn   { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* entrance stagger */
+.dsh-brand { animation: dshFadeLeft .5s ease both; }
+.dsh-nav > * { animation: dshFadeLeft .45s ease both; }
+.dsh-nav > *:nth-child(1) { animation-delay: .05s; }
+.dsh-nav > *:nth-child(2) { animation-delay: .10s; }
+.dsh-nav > *:nth-child(3) { animation-delay: .15s; }
+.dsh-nav > *:nth-child(4) { animation-delay: .20s; }
+.dsh-nav > *:nth-child(5) { animation-delay: .25s; }
+.dsh-nav > *:nth-child(6) { animation-delay: .30s; }
+.dsh-profile-card { animation: dshPop .5s ease .35s both; }
+.dsh-welcome-lbl, .dsh-welcome-name, .dsh-welcome-sub { animation: dshFadeUp .5s ease both; }
+.dsh-welcome-name { animation-delay: .06s; }
+.dsh-welcome-sub  { animation-delay: .12s; }
+.dsh-top-actions > * { animation: dshPop .45s ease both; }
+.dsh-top-actions > *:nth-child(1) { animation-delay: .1s; }
+.dsh-top-actions > *:nth-child(2) { animation-delay: .16s; }
+.dsh-top-actions > *:nth-child(3) { animation-delay: .22s; }
+.dsh-stats-panel { animation: dshFadeUp .55s ease .18s both; }
+.dsh-panel-card { animation: dshFadeUp .55s ease .3s both; }
+.dsh-table tbody tr { animation: dshRowIn .4s ease both; }
+.dsh-table tbody tr:nth-child(1) { animation-delay: .34s; }
+.dsh-table tbody tr:nth-child(2) { animation-delay: .38s; }
+.dsh-table tbody tr:nth-child(3) { animation-delay: .42s; }
+.dsh-table tbody tr:nth-child(4) { animation-delay: .46s; }
+.dsh-table tbody tr:nth-child(5) { animation-delay: .50s; }
+.dsh-table tbody tr.dsh-just-revealed { animation: dshRowIn .4s ease both; }
+
+/* bokeh drift behind the events table */
+.dsh-table-watermark { animation: dshGlow 7s ease-in-out infinite; }
+
+/* crown sparkle */
+.dsh-crown-wrap { position: relative; display: inline-flex; }
+.dsh-sparkle { position: absolute; top: -6px; right: -9px; width: 11px; height: 11px; animation: dshSparkle 2.6s ease-in-out infinite; }
+.dsh-sparkle.d2 { top: 14px; right: -13px; width: 7px; height: 7px; animation-delay: 1.1s; }
+
+/* live "active" status pulse dot */
+.dsh-status.active { display: inline-flex; align-items: center; gap: 6px; }
+.dsh-status.active::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--dsh-mint);
+  animation: dshLivePulse 1.8s ease-out infinite;
+}
+
+/* create-event button shimmer sweep */
+.btn-create-event { position: relative; overflow: hidden; }
+.btn-create-event::after {
+  content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: dshShimmer 4.5s ease-in-out infinite; animation-delay: 1.5s;
+}
+
+/* hover micro-interactions */
+.dsh-nav-item i.ico { transition: transform .22s ease; }
+.dsh-nav-item:hover i.ico { transform: scale(1.15) rotate(-4deg); }
+.dsh-stat-cell { transition: transform .2s ease, background .2s ease; }
+.dsh-stat-cell:hover { transform: translateY(-3px); background: rgba(255,255,255,0.02); }
+.dsh-stat-ic { transition: transform .3s ease; }
+.dsh-stat-cell:hover .dsh-stat-ic { transform: scale(1.1) rotate(-6deg); }
+.dsh-table tbody tr { transition: transform .18s ease; }
+.dsh-table tbody tr:hover { transform: translateY(-1px); }
+.dsh-act-btn { transition: transform .16s ease, background .16s, color .16s, border-color .16s; }
+.dsh-act-btn:hover { transform: translateY(-2px) scale(1.06); }
+.dsh-act-btn:active { transform: translateY(0) scale(0.96); }
+.dsh-ev-thumb { transition: transform .25s ease; }
+.dsh-table tbody tr:hover .dsh-ev-thumb { transform: scale(1.06) rotate(-2deg); }
+.dsh-search { transition: box-shadow .2s ease, border-color .2s ease; }
+.dsh-search:focus-within { border-color: var(--dsh-mint); box-shadow: 0 0 0 3px rgba(127,233,189,0.12); }
+.dsh-select { transition: box-shadow .2s ease, border-color .2s ease; }
+.dsh-select:focus { border-color: var(--dsh-mint); box-shadow: 0 0 0 3px rgba(127,233,189,0.12); }
+.dsh-icon-btn { transition: transform .2s ease, background .16s ease; }
+.dsh-icon-btn:hover { transform: translateY(-2px) scale(1.05); }
+.btn-create-event:hover { transform: translateY(-2px) scale(1.02); }
+.btn-viewall { transition: transform .18s ease, background .16s; }
+.btn-viewall:hover { transform: translateY(-2px); }
+
+/* modal pop-in */
+.dsh-modal-box, .qr-modal-box {
+  transform: scale(0.92) translateY(8px); opacity: 0;
+  transition: transform .28s cubic-bezier(.2,.9,.3,1.3), opacity .22s ease;
+}
+.dsh-modal-overlay.open .dsh-modal-box, .qr-modal-overlay.open .qr-modal-box { transform: scale(1) translateY(0); opacity: 1; }
+
+/* flash entrance */
+.dsh-flash { animation: dshFadeUp .35s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dsh-brand, .dsh-nav > *, .dsh-profile-card, .dsh-welcome-lbl, .dsh-welcome-name, .dsh-welcome-sub,
+  .dsh-top-actions > *, .dsh-stats-panel, .dsh-panel-card, .dsh-table tbody tr, .dsh-flash {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
+  .dsh-table-watermark, .dsh-sparkle, .btn-create-event::after {
+    animation: none !important;
+  }
+}
 </style>
 
 <div class="dsh-shell">
@@ -349,63 +458,6 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
     </nav>
 
     <div class="dsh-side-footer">
-      <div class="dsh-side-scenic">
-        <svg viewBox="0 0 280 190" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#0a1f17"/>
-              <stop offset="45%" stop-color="#13321f"/>
-              <stop offset="78%" stop-color="#5a4620"/>
-              <stop offset="100%" stop-color="#e0a63a"/>
-            </linearGradient>
-            <radialGradient id="sunGlow" cx="50%" cy="100%" r="75%">
-              <stop offset="0%"  stop-color="#f5c15a" stop-opacity="0.85"/>
-              <stop offset="55%" stop-color="#e0a63a" stop-opacity="0.25"/>
-              <stop offset="100%" stop-color="#e0a63a" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-
-          <rect x="0" y="0" width="280" height="190" fill="url(#skyGrad)"/>
-          <circle cx="150" cy="150" r="120" fill="url(#sunGlow)"/>
-          <circle cx="150" cy="120" r="13" fill="#f7d98a" opacity="0.9"/>
-
-          <!-- stars -->
-          <circle cx="34" cy="26" r="1.2" fill="#ffffff" opacity="0.5"/>
-          <circle cx="70" cy="14" r="1"   fill="#ffffff" opacity="0.4"/>
-          <circle cx="230" cy="22" r="1.3" fill="#ffffff" opacity="0.5"/>
-          <circle cx="252" cy="44" r="1"   fill="#ffffff" opacity="0.35"/>
-
-          <!-- back mountain range -->
-          <path d="M0,130 L28,100 L52,118 L78,88 L108,112 L138,84 L168,116 L198,92 L228,120 L252,98 L280,122 L280,190 L0,190 Z"
-                fill="#1f4a34" opacity="0.55"/>
-          <!-- mid mountain range -->
-          <path d="M0,150 L34,122 L64,144 L96,110 L126,140 L156,116 L188,146 L216,120 L248,148 L280,128 L280,190 L0,190 Z"
-                fill="#153a28" opacity="0.8"/>
-          <!-- front ridge (photographer stands here) -->
-          <path d="M0,172 L40,156 L90,168 L140,150 L190,166 L230,154 L280,170 L280,190 L0,190 Z"
-                fill="#0c231a"/>
-
-          <!-- photographer silhouette with tripod, standing on the front ridge -->
-          <g fill="#050f0a">
-            <!-- tripod legs -->
-            <path d="M186,163 L170,186 L174,187 L188,167 Z"/>
-            <path d="M186,163 L186,187 L190,187 L189,163 Z"/>
-            <path d="M186,163 L202,185 L198,187 L184,167 Z"/>
-            <!-- camera on tripod -->
-            <rect x="179" y="156" width="15" height="10" rx="2"/>
-            <circle cx="175" cy="161" r="4"/>
-            <!-- person: legs -->
-            <path d="M163,178 L159,188 L164,188 L167,179 Z"/>
-            <path d="M167,178 L168,188 L173,188 L170,179 Z"/>
-            <!-- person: body leaning toward camera -->
-            <path d="M162,178 C160,168 162,158 170,153 C175,150 178,152 179,156 L170,160 C165,163 163,170 166,178 Z"/>
-            <!-- person: head -->
-            <circle cx="172" cy="149" r="4.2"/>
-            <!-- person: arm reaching to camera -->
-            <path d="M176,155 L184,159 L182,162 L175,159 Z"/>
-          </g>
-        </svg>
-      </div>
       <div class="dsh-profile-card">
         <div class="dsh-avatar">{{ (photographer.name or 'P')[0] | upper }}</div>
         <div>
@@ -442,20 +494,28 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
         <div class="dsh-welcome-lbl">Welcome back,</div>
         <div class="dsh-welcome-name">
           {{ photographer.name }}
-          <svg class="dsh-crown" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 8L7 11L12 4L17 11L21 8L19.5 18H4.5L3 8Z" fill="url(#crownGrad)" stroke="#a86c0d" stroke-width="0.6" stroke-linejoin="round"/>
-            <rect x="4.5" y="18" width="15" height="2.2" rx="0.6" fill="url(#crownGrad)" stroke="#a86c0d" stroke-width="0.4"/>
-            <circle cx="7" cy="10.2" r="1.15" fill="#fff6df"/>
-            <circle cx="12" cy="7.2" r="1.3" fill="#fff6df"/>
-            <circle cx="17" cy="10.2" r="1.15" fill="#fff6df"/>
-            <defs>
-              <linearGradient id="crownGrad" x1="3" y1="4" x2="21" y2="20" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#fbe08a"/>
-                <stop offset="50%" stop-color="#f0b429"/>
-                <stop offset="100%" stop-color="#c8871a"/>
-              </linearGradient>
-            </defs>
-          </svg>
+          <span class="dsh-crown-wrap">
+            <svg class="dsh-crown" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 8L7 11L12 4L17 11L21 8L19.5 18H4.5L3 8Z" fill="url(#crownGrad)" stroke="#a86c0d" stroke-width="0.6" stroke-linejoin="round"/>
+              <rect x="4.5" y="18" width="15" height="2.2" rx="0.6" fill="url(#crownGrad)" stroke="#a86c0d" stroke-width="0.4"/>
+              <circle cx="7" cy="10.2" r="1.15" fill="#fff6df"/>
+              <circle cx="12" cy="7.2" r="1.3" fill="#fff6df"/>
+              <circle cx="17" cy="10.2" r="1.15" fill="#fff6df"/>
+              <defs>
+                <linearGradient id="crownGrad" x1="3" y1="4" x2="21" y2="20" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#fbe08a"/>
+                  <stop offset="50%" stop-color="#f0b429"/>
+                  <stop offset="100%" stop-color="#c8871a"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <svg class="dsh-sparkle" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 0L11.8 8.2L20 10L11.8 11.8L10 20L8.2 11.8L0 10L8.2 8.2Z" fill="#fbe08a"/>
+            </svg>
+            <svg class="dsh-sparkle d2" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 0L11.8 8.2L20 10L11.8 11.8L10 20L8.2 11.8L0 10L8.2 8.2Z" fill="#fff6df"/>
+            </svg>
+          </span>
         </div>
         <div class="dsh-welcome-sub">Here's what's happening with your events today.</div>
       </div>
@@ -481,7 +541,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
         <div class="dsh-stat-ic"><i class="bi bi-calendar-event-fill"></i></div>
         <div>
           <div class="dsh-stat-lbl">Total Events</div>
-          <div class="dsh-stat-num">{{ events | length }}</div>
+          <div class="dsh-stat-num"><span class="dsh-count" data-count="{{ events | length }}">0</span></div>
           {% set ns = namespace(this_month=0) %}
           {% for e in events %}
             {% if e.date and e.date[:7] == today[:7] %}{% set ns.this_month = ns.this_month + 1 %}{% endif %}
@@ -493,21 +553,21 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
         <div class="dsh-stat-ic"><i class="bi bi-images"></i></div>
         <div>
           <div class="dsh-stat-lbl">Photos Uploaded</div>
-          <div class="dsh-stat-num">{{ events | sum(attribute='photo_count') }}</div>
+          <div class="dsh-stat-num"><span class="dsh-count" data-count="{{ events | sum(attribute='photo_count') }}">0</span></div>
         </div>
       </div>
       <div class="dsh-stat-cell">
         <div class="dsh-stat-ic"><i class="bi bi-people-fill"></i></div>
         <div>
           <div class="dsh-stat-lbl">Guests Registered</div>
-          <div class="dsh-stat-num">{{ event_stats.values() | sum(attribute='guests') }}</div>
+          <div class="dsh-stat-num"><span class="dsh-count" data-count="{{ event_stats.values() | sum(attribute='guests') }}">0</span></div>
         </div>
       </div>
       <div class="dsh-stat-cell">
         <div class="dsh-stat-ic"><i class="bi bi-lightning-charge-fill"></i></div>
         <div>
           <div class="dsh-stat-lbl">Active Events</div>
-          <div class="dsh-stat-num">{{ events | selectattr('date', 'ge', today) | list | length }}</div>
+          <div class="dsh-stat-num"><span class="dsh-count" data-count="{{ events | selectattr('date', 'ge', today) | list | length }}">0</span></div>
         </div>
       </div>
     </div>
@@ -645,6 +705,23 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
 
 <script>
 (function () {
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Count-up stat numbers ── */
+  document.querySelectorAll('.dsh-count').forEach(function (el) {
+    var target = parseInt(el.getAttribute('data-count'), 10) || 0;
+    if (reduceMotion || target === 0) { el.textContent = target; return; }
+    var start = null, duration = 900;
+    function step(ts) {
+      if (!start) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      el.textContent = Math.round(eased * target);
+      if (progress < 1) { requestAnimationFrame(step); } else { el.textContent = target; }
+    }
+    requestAnimationFrame(step);
+  });
+
   /* ── Flash auto-hide ── */
   document.querySelectorAll('.dsh-flash').forEach(function (el) {
     setTimeout(function () {
@@ -680,7 +757,17 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
   /* ── View All (client-side row cap) ── */
   rows.forEach(function (row, i) { if (i >= 5) row.classList.add('dsh-hidden-row'); });
   window.pixViewAll = function () {
-    rows.forEach(function (row) { row.classList.remove('dsh-hidden-row'); });
+    rows.forEach(function (row, i) {
+      if (row.classList.contains('dsh-hidden-row')) {
+        row.classList.remove('dsh-hidden-row');
+        if (!reduceMotion) {
+          row.style.animationDelay = (i * 0.04) + 's';
+          row.classList.remove('dsh-just-revealed');
+          void row.offsetWidth; // restart animation
+          row.classList.add('dsh-just-revealed');
+        }
+      }
+    });
     var btn = document.getElementById('viewAllBtn');
     if (btn) btn.style.display = 'none';
   };

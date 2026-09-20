@@ -8,9 +8,9 @@
 :root {
   --dsh-dark:   #0a1f17;
   --dsh-dark2:  #0e2a1f;
-  --dsh-panel:  #123727;
-  --dsh-panel2: #16412e;
-  --dsh-line:   rgba(240,180,41,0.28);
+  --dsh-panel:  #12161a;
+  --dsh-panel2: #1a2024;
+  --dsh-line:   rgba(255,255,255,0.09);
   --dsh-mint:   #7fe9bd;
   --dsh-forest: #16a374;
   --dsh-amber:  #f0b429;
@@ -149,7 +149,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: 
   padding: 18px 24px; border-bottom: 1px solid var(--dsh-line); flex-shrink: 0;
   background: var(--dsh-panel); position: relative; z-index: 2;
 }
-.dsh-panel-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800; color: var(--dsh-amber); }
+.dsh-panel-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800; color: #fff; }
 .dsh-panel-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dsh-filter-pills { display: flex; gap: 4px; background: rgba(0,0,0,0.2); border: 1px solid var(--dsh-line); border-radius: 10px; padding: 4px; }
 .dsh-filter-pill { border: none; background: none; color: var(--dsh-ink3); font-size: 0.76rem; font-weight: 700; padding: 7px 12px; border-radius: 8px; cursor: pointer; transition: background .16s, color .16s; }
@@ -173,7 +173,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: 
 .dsh-event-card { background: rgba(0,0,0,0.2); border: 1px solid var(--dsh-line); border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, box-shadow .2s ease; }
 .dsh-event-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,0.3); }
 .dsh-event-card.dsh-hidden-card { display: none; }
-.dsh-event-thumb { position: relative; height: 58px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: rgba(255,255,255,0.85); flex-shrink: 0; }
+.dsh-event-thumb { position: relative; height: 78px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: rgba(255,255,255,0.85); flex-shrink: 0; }
 .dsh-event-thumb.grad-0 { background: linear-gradient(155deg,#0f7b56,#13a372); }
 .dsh-event-thumb.grad-1 { background: linear-gradient(155deg,#5240a8,#6b58cc); }
 .dsh-event-thumb.grad-2 { background: linear-gradient(155deg,#c8600a,#e0920a); }
@@ -191,11 +191,11 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: 
 .dsh-ev-menu-item { width: 100%; display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--dsh-rose); font-size: 0.81rem; font-weight: 700; padding: 8px 9px; border-radius: 7px; cursor: pointer; text-align: left; }
 .dsh-ev-menu-item:hover { background: rgba(224,86,122,0.14); }
 
-.dsh-event-body { padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.dsh-event-body { padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
 .dsh-event-name { font-weight: 800; font-size: 0.78rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dsh-event-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 0.62rem; color: var(--dsh-ink3); }
-.dsh-event-meta span { display: flex; align-items: center; gap: 5px; }
-.dsh-event-meta i { color: var(--dsh-mint); font-size: 0.75rem; }
+.dsh-event-meta { display: flex; flex-direction: column; gap: 3px; font-size: 0.68rem; color: var(--dsh-ink3); }
+.dsh-event-meta span { display: flex; align-items: center; gap: 6px; }
+.dsh-event-meta i { color: var(--dsh-ink3); font-size: 0.7rem; width: 12px; text-align: center; }
 
 .dsh-card-actions { display: flex; flex-direction: column; gap: 7px; margin-top: auto; }
 .dsh-card-btn {
@@ -561,8 +561,8 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
               <div class="dsh-event-name">{{ event.name }}</div>
               <div class="dsh-event-meta">
                 <span><i class="bi bi-calendar3"></i> {{ event.date | prettydate }}</span>
-                <span><i class="bi bi-images"></i> {{ event.photo_count or 0 }}</span>
-                <span><i class="bi bi-people"></i> {{ event_stats[event.name].guests if event.name in event_stats else 0 }}</span>
+                <span><i class="bi bi-images"></i> {{ event.photo_count or 0 }} Photos</span>
+                <span><i class="bi bi-people"></i> {{ event_stats[event.name].guests if event.name in event_stats else 0 }} Guests</span>
               </div>
               <div class="dsh-card-actions">
                 <a href="{{ url_for('view_event_photos', event_name=event.name) }}" class="dsh-card-btn primary"><i class="bi bi-images"></i> View Gallery</a>

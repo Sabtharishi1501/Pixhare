@@ -20,11 +20,11 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; overflow: hidden; }
-body { background: var(--dsh-dark) !important; }
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--dsh-dark) !important; }
+.ps-page { background: var(--dsh-dark) !important; min-height: 0 !important; height: 100%; margin: 0 !important; padding: 0 !important; }
 
 .dsh-shell {
-  display: flex; height: 100vh; background: var(--dsh-dark);
+  display: flex; height: 100%; background: var(--dsh-dark);
   font-family: 'Plus Jakarta Sans', sans-serif; color: #fff; overflow: hidden;
 }
 
@@ -33,8 +33,8 @@ body { background: var(--dsh-dark) !important; }
 ═══════════════════════════════════ */
 .dsh-side {
   width: 264px; flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(10,20,16,0.55) 0%, rgba(10,20,16,0.35) 45%, rgba(10,20,16,0.72) 100%),
-              url('{{ url_for("static", filename="images/dashboard-sidebar-bg.jpg") }}') center top / cover no-repeat;
+  background: linear-gradient(180deg, rgba(10,20,16,0.2) 0%, rgba(10,20,16,0.08) 45%, rgba(10,20,16,0.3) 100%),
+              url('{{ url_for("static", filename="images/dashboard-sidebar-bg.jpg") }}') center bottom / cover no-repeat;
   border-right: 1px solid var(--dsh-line);
   display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;
@@ -90,20 +90,14 @@ body { background: var(--dsh-dark) !important; }
 /* ═══════════════════════════════════
    MAIN
 ═══════════════════════════════════ */
-.dsh-main { flex: 1; min-width: 0; height: 100vh; padding: 22px 34px; display: flex; flex-direction: column; overflow: hidden; }
+.dsh-main {
+  flex: 1; min-width: 0; height: 100vh; padding: 22px 34px; display: flex; flex-direction: column; overflow: hidden;
+  background: linear-gradient(180deg, rgba(6,14,11,0.4) 0%, rgba(6,14,11,0.65) 100%),
+              url('{{ url_for("static", filename="images/photo_dash.png") }}') center / cover no-repeat;
+}
 
 /* topbar: search + bell + avatar */
 .dsh-topbar2 { display: flex; align-items: center; gap: 16px; flex-shrink: 0; margin-bottom: 20px; }
-.dsh-search-global {
-  flex: 1; max-width: 480px; margin: 0 auto; display: flex; align-items: center; gap: 10px;
-  background: rgba(0,0,0,0.22); border: 1px solid var(--dsh-line); border-radius: 12px; padding: 10px 16px;
-  transition: box-shadow .2s ease, border-color .2s ease;
-}
-.dsh-search-global:focus-within { border-color: var(--dsh-mint); box-shadow: 0 0 0 3px rgba(127,233,189,0.12); }
-.dsh-search-global i { color: var(--dsh-ink3); }
-.dsh-search-global input { flex: 1; background: none; border: none; outline: none; color: #fff; font-size: 0.87rem; }
-.dsh-search-global input::placeholder { color: var(--dsh-ink4); }
-.dsh-kbd { font-size: 0.66rem; font-weight: 700; color: var(--dsh-ink3); background: rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 6px; border: 1px solid var(--dsh-line); white-space: nowrap; }
 .dsh-topbar-icons { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .dsh-icon-btn {
   width: 42px; height: 42px; border-radius: 12px; background: var(--dsh-panel);
@@ -125,7 +119,7 @@ body { background: var(--dsh-dark) !important; }
 .dsh-greeting-quote { font-family: 'Caveat', cursive; font-weight: 700; font-size: 1.3rem; color: var(--dsh-amber); text-align: right; line-height: 1.2; transform: rotate(-2deg); }
 
 /* quick action cards */
-.dsh-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; flex-shrink: 0; }
+.dsh-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; flex-shrink: 0; }
 .dsh-quick-card {
   display: flex; align-items: center; gap: 14px; background: var(--dsh-panel); border: 1px solid var(--dsh-line);
   border-radius: 16px; padding: 16px 18px; cursor: pointer; text-align: left; width: 100%;
@@ -136,6 +130,7 @@ body { background: var(--dsh-dark) !important; }
 .qc-green .dsh-quick-ic  { background: rgba(127,233,189,0.14); color: var(--dsh-mint); }
 .qc-blue .dsh-quick-ic   { background: rgba(127,180,233,0.16); color: #7fb4e9; }
 .qc-purple .dsh-quick-ic { background: rgba(167,139,250,0.16); color: #a78bfa; }
+.qc-amber .dsh-quick-ic  { background: rgba(240,180,41,0.16); color: var(--dsh-amber); }
 .dsh-quick-title { font-weight: 800; font-size: 0.92rem; color: #fff; margin-bottom: 2px; }
 .dsh-quick-sub { font-size: 0.74rem; color: var(--dsh-ink3); }
 .dsh-quick-arrow { margin-left: auto; color: var(--dsh-ink4); font-size: 1.1rem; flex-shrink: 0; }
@@ -173,62 +168,62 @@ body { background: var(--dsh-dark) !important; }
 .dsh-view-btn.active { background: var(--dsh-forest); color: #fff; }
 
 /* ── grid view ── */
-.dsh-cards-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 24px; position: relative; }
-.dsh-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.dsh-event-card { background: rgba(0,0,0,0.2); border: 1px solid var(--dsh-line); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, box-shadow .2s ease; }
+.dsh-cards-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 22px; position: relative; }
+.dsh-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.dsh-event-card { background: rgba(0,0,0,0.2); border: 1px solid var(--dsh-line); border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, box-shadow .2s ease; }
 .dsh-event-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,0.3); }
 .dsh-event-card.dsh-hidden-card { display: none; }
-.dsh-event-thumb { position: relative; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; color: rgba(255,255,255,0.85); flex-shrink: 0; }
+.dsh-event-thumb { position: relative; height: 58px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: rgba(255,255,255,0.85); flex-shrink: 0; }
 .dsh-event-thumb.grad-0 { background: linear-gradient(155deg,#0f7b56,#13a372); }
 .dsh-event-thumb.grad-1 { background: linear-gradient(155deg,#5240a8,#6b58cc); }
 .dsh-event-thumb.grad-2 { background: linear-gradient(155deg,#c8600a,#e0920a); }
 .dsh-event-thumb.grad-3 { background: linear-gradient(155deg,#274a70,#3a6ea5); }
-.dsh-ev-badge2 { position: absolute; top: 9px; left: 9px; font-size: 0.63rem; font-weight: 800; padding: 4px 10px; border-radius: 50px; border: 1px solid; backdrop-filter: blur(4px); display: inline-flex; align-items: center; gap: 5px; }
+.dsh-ev-badge2 { position: absolute; top: 6px; left: 6px; font-size: 0.58rem; font-weight: 800; padding: 3px 8px; border-radius: 50px; border: 1px solid; backdrop-filter: blur(4px); display: inline-flex; align-items: center; gap: 4px; }
 .dsh-ev-badge2.active    { background: rgba(127,233,189,0.18); border-color: rgba(127,233,189,0.5); color: var(--dsh-mint); }
 .dsh-ev-badge2.completed { background: rgba(127,180,233,0.18); border-color: rgba(127,180,233,0.5); color: #bcdcff; }
 .dsh-ev-badge2.draft     { background: rgba(240,180,41,0.2);  border-color: rgba(240,180,41,0.5);  color: var(--dsh-amber); }
 .dsh-ev-badge2.active::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--dsh-mint); animation: dshLivePulse 1.8s ease-out infinite; }
 
-.dsh-ev-menu-btn { position: absolute; top: 7px; right: 7px; width: 26px; height: 26px; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.18); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.dsh-ev-menu-btn { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 7px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.18); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.75rem; }
 .dsh-ev-menu-btn:hover { background: rgba(0,0,0,0.6); }
-.dsh-ev-menu { position: absolute; top: 37px; right: 7px; background: var(--dsh-panel2); border: 1px solid var(--dsh-line); border-radius: 10px; padding: 5px; display: none; z-index: 6; min-width: 150px; box-shadow: 0 12px 26px rgba(0,0,0,0.4); }
+.dsh-ev-menu { position: absolute; top: 30px; right: 5px; background: var(--dsh-panel2); border: 1px solid var(--dsh-line); border-radius: 10px; padding: 5px; display: none; z-index: 6; min-width: 150px; box-shadow: 0 12px 26px rgba(0,0,0,0.4); }
 .dsh-ev-menu.open { display: block; }
 .dsh-ev-menu-item { width: 100%; display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--dsh-rose); font-size: 0.81rem; font-weight: 700; padding: 8px 9px; border-radius: 7px; cursor: pointer; text-align: left; }
 .dsh-ev-menu-item:hover { background: rgba(224,86,122,0.14); }
 
-.dsh-event-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-.dsh-event-name { font-weight: 800; font-size: 0.93rem; color: #fff; }
-.dsh-event-meta { display: flex; flex-wrap: wrap; gap: 7px 14px; font-size: 0.72rem; color: var(--dsh-ink3); }
+.dsh-event-body { padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.dsh-event-name { font-weight: 800; font-size: 0.78rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsh-event-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 0.62rem; color: var(--dsh-ink3); }
 .dsh-event-meta span { display: flex; align-items: center; gap: 5px; }
 .dsh-event-meta i { color: var(--dsh-mint); font-size: 0.75rem; }
 
 .dsh-card-actions { display: flex; flex-direction: column; gap: 7px; margin-top: auto; }
 .dsh-card-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.78rem; font-weight: 800;
-  padding: 8px; border-radius: 9px; cursor: pointer; border: 1px solid transparent;
-  transition: transform .15s ease, background .16s ease; width: 100%; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.68rem; font-weight: 800;
+  padding: 6px; border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+  transition: transform .15s ease, background .16s ease; width: 100%; font-family: inherit; white-space: nowrap;
 }
 .dsh-card-btn.primary { background: linear-gradient(135deg, var(--dsh-forest), var(--dsh-mint)); color: var(--dsh-dark); }
 .dsh-card-btn.outline { background: rgba(255,255,255,0.05); border-color: var(--dsh-line); color: #fff; }
 .dsh-card-btn:hover { transform: translateY(-2px); }
 .dsh-card-btn:active { transform: translateY(0) scale(0.97); }
-.dsh-card-row2 { display: flex; gap: 7px; }
+.dsh-card-row2 { display: flex; gap: 5px; }
 .dsh-card-row2 > * { flex: 1; min-width: 0; }
 form.dsh-card-form { display: contents; }
 
 .dsh-create-card {
-  border: 1.5px dashed var(--dsh-line); border-radius: 15px; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center; padding: 26px 18px; cursor: pointer; gap: 6px;
-  transition: background .18s ease, border-color .18s ease; min-height: 220px; background: none; width: 100%; font-family: inherit; color: inherit;
+  border: 1.5px dashed var(--dsh-line); border-radius: 14px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; padding: 16px 12px; cursor: pointer; gap: 5px;
+  transition: background .18s ease, border-color .18s ease; min-height: auto; background: none; width: 100%; font-family: inherit; color: inherit;
 }
 .dsh-create-card:hover { background: rgba(255,255,255,0.03); border-color: var(--dsh-mint); }
-.dsh-create-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(127,233,189,0.12); color: var(--dsh-mint); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-bottom: 2px; }
-.dsh-create-title { font-weight: 800; color: #fff; font-size: 0.92rem; }
-.dsh-create-sub { font-size: 0.74rem; color: var(--dsh-ink3); max-width: 210px; }
+.dsh-create-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(127,233,189,0.12); color: var(--dsh-mint); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; margin-bottom: 1px; }
+.dsh-create-title { font-weight: 800; color: #fff; font-size: 0.78rem; }
+.dsh-create-sub { font-size: 0.65rem; color: var(--dsh-ink3); max-width: 170px; line-height: 1.3; }
 .btn-create-mini {
-  display: inline-flex; align-items: center; gap: 7px; margin-top: 6px;
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;
   background: linear-gradient(135deg, var(--dsh-amber), #d99a1a); color: var(--dsh-dark);
-  font-weight: 800; font-size: 0.78rem; padding: 8px 16px; border-radius: 50px; border: none; cursor: pointer;
+  font-weight: 800; font-size: 0.68rem; padding: 6px 13px; border-radius: 50px; border: none; cursor: pointer;
 }
 
 /* ── list view (reuses table styling) ── */
@@ -321,8 +316,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
 }
 
 @media (max-width: 1080px) {
-  .dsh-quick-grid { grid-template-columns: 1fr; }
-  .dsh-search-global { max-width: none; }
+  .dsh-quick-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 900px) {
   html, body { overflow: auto; }
@@ -366,12 +360,13 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
 .dsh-quick-card:nth-child(3) { animation-delay: .22s; }
 .dsh-panel-card { animation: dshFadeUp .55s ease .28s both; }
 .dsh-event-card, .dsh-table tbody tr { animation: dshFadeUp .4s ease both; }
-.dsh-event-card:nth-child(1), .dsh-table tbody tr:nth-child(1) { animation-delay: .32s; }
-.dsh-event-card:nth-child(2), .dsh-table tbody tr:nth-child(2) { animation-delay: .36s; }
-.dsh-event-card:nth-child(3), .dsh-table tbody tr:nth-child(3) { animation-delay: .40s; }
-.dsh-event-card:nth-child(4), .dsh-table tbody tr:nth-child(4) { animation-delay: .44s; }
-.dsh-event-card:nth-child(5), .dsh-table tbody tr:nth-child(5) { animation-delay: .48s; }
-.dsh-event-card:nth-child(6) { animation-delay: .52s; }
+.dsh-create-card { animation: dshPop .4s ease .28s both; }
+.dsh-event-card:nth-child(2), .dsh-table tbody tr:nth-child(1) { animation-delay: .32s; }
+.dsh-event-card:nth-child(3), .dsh-table tbody tr:nth-child(2) { animation-delay: .36s; }
+.dsh-event-card:nth-child(4), .dsh-table tbody tr:nth-child(3) { animation-delay: .40s; }
+.dsh-event-card:nth-child(5), .dsh-table tbody tr:nth-child(4) { animation-delay: .44s; }
+.dsh-event-card:nth-child(6), .dsh-table tbody tr:nth-child(5) { animation-delay: .48s; }
+.dsh-event-card:nth-child(7) { animation-delay: .52s; }
 
 .btn-create-event, .btn-create-mini { position: relative; overflow: hidden; }
 .btn-create-event::after, .btn-create-mini::after {
@@ -382,7 +377,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   .dsh-brand, .dsh-nav > *, .dsh-profile-card, .dsh-greeting-hi, .dsh-greeting-name, .dsh-greeting-sub,
-  .dsh-quick-card, .dsh-panel-card, .dsh-event-card, .dsh-table tbody tr, .dsh-flash {
+  .dsh-quick-card, .dsh-panel-card, .dsh-event-card, .dsh-create-card, .dsh-table tbody tr, .dsh-flash {
     animation: none !important; opacity: 1 !important; transform: none !important;
   }
   .dsh-table-watermark, .dsh-ev-badge2.active::before, .btn-create-event::after, .btn-create-mini::after {
@@ -455,13 +450,8 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
       {% endif %}
     {% endwith %}
 
-    <!-- Topbar: global search + bell + avatar -->
+    <!-- Topbar: bell + avatar -->
     <div class="dsh-topbar2">
-      <div class="dsh-search-global">
-        <i class="bi bi-search"></i>
-        <input type="text" id="globalSearch" placeholder="Search events...">
-        <span class="dsh-kbd">Ctrl K</span>
-      </div>
       <div class="dsh-topbar-icons">
         <button class="dsh-icon-btn" title="Notifications" onclick="alert('No new notifications yet.')">
           <i class="bi bi-bell"></i>
@@ -499,11 +489,19 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
         <i class="bi bi-arrow-right dsh-quick-arrow"></i>
       </button>
       {% if photographer and qr_data_uri %}
-      <button class="dsh-quick-card qc-purple" onclick="openQrModal(this)" data-qr-src="{{ qr_data_uri }}" data-qr-name="{{ photographer.studio_name }}">
+      <button class="dsh-quick-card qc-purple" onclick="openQrModal(this, false)" data-qr-src="{{ qr_data_uri }}" data-qr-name="{{ photographer.studio_name }}">
         <div class="dsh-quick-ic"><i class="bi bi-qr-code"></i></div>
         <div>
-          <div class="dsh-quick-title">Share Event</div>
-          <div class="dsh-quick-sub">Share via QR or link</div>
+          <div class="dsh-quick-title">View QR</div>
+          <div class="dsh-quick-sub">Preview your check-in poster</div>
+        </div>
+        <i class="bi bi-arrow-right dsh-quick-arrow"></i>
+      </button>
+      <button class="dsh-quick-card qc-amber" onclick="openQrModal(this, true)" data-qr-src="{{ qr_data_uri }}" data-qr-name="{{ photographer.studio_name }}">
+        <div class="dsh-quick-ic"><i class="bi bi-download"></i></div>
+        <div>
+          <div class="dsh-quick-title">Download QR</div>
+          <div class="dsh-quick-sub">Save your poster as an image</div>
         </div>
         <i class="bi bi-arrow-right dsh-quick-arrow"></i>
       </button>
@@ -536,7 +534,15 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
 
       <!-- GRID VIEW -->
       <div class="dsh-cards-scroll" id="gridView">
+        {% set type_icons = {'wedding':'bi-gem','corporate':'bi-briefcase-fill','birthday':'bi-cake2-fill','conference':'bi-mic-fill','festival':'bi-stars','sports':'bi-trophy-fill','college':'bi-mortarboard-fill','cultural':'bi-music-note-beamed','portrait':'bi-person-badge'} %}
         <div class="dsh-cards-grid">
+          <button class="dsh-create-card" onclick="openCreateModal()">
+            <div class="dsh-create-icon"><i class="bi bi-plus-lg"></i></div>
+            <div class="dsh-create-title">Create New Event</div>
+            <div class="dsh-create-sub">Organize, share and deliver memories effortlessly.</div>
+            <span class="btn-create-mini"><i class="bi bi-plus-lg"></i> Create Event</span>
+          </button>
+
           {% for event in events %}
           {% set is_upcoming = event.date >= today %}
           {% set status = 'completed' if not is_upcoming else ('active' if (event.photo_count or 0) > 0 else 'draft') %}
@@ -549,14 +555,14 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
                   <button type="submit" class="dsh-ev-menu-item"><i class="bi bi-trash3"></i> Delete Event</button>
                 </form>
               </div>
-              <i class="bi bi-camera2"></i>
+              <i class="bi {{ type_icons.get(event.event_type, 'bi-camera2') }}"></i>
             </div>
             <div class="dsh-event-body">
               <div class="dsh-event-name">{{ event.name }}</div>
               <div class="dsh-event-meta">
                 <span><i class="bi bi-calendar3"></i> {{ event.date | prettydate }}</span>
-                <span><i class="bi bi-images"></i> {{ event.photo_count or 0 }} Photos</span>
-                <span><i class="bi bi-people"></i> {{ event_stats[event.name].guests if event.name in event_stats else 0 }} Guests</span>
+                <span><i class="bi bi-images"></i> {{ event.photo_count or 0 }}</span>
+                <span><i class="bi bi-people"></i> {{ event_stats[event.name].guests if event.name in event_stats else 0 }}</span>
               </div>
               <div class="dsh-card-actions">
                 <a href="{{ url_for('view_event_photos', event_name=event.name) }}" class="dsh-card-btn primary"><i class="bi bi-images"></i> View Gallery</a>
@@ -570,13 +576,6 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
             </div>
           </div>
           {% endfor %}
-
-          <button class="dsh-create-card" onclick="openCreateModal()">
-            <div class="dsh-create-icon"><i class="bi bi-plus-lg"></i></div>
-            <div class="dsh-create-title">Create New Event</div>
-            <div class="dsh-create-sub">Organize, share and deliver memories effortlessly.</div>
-            <span class="btn-create-mini"><i class="bi bi-plus-lg"></i> Create Event</span>
-          </button>
         </div>
       </div>
 
@@ -600,7 +599,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
             <tr data-status="{{ status }}" data-name="{{ event.name | lower }}{{ (' ' ~ event.venue) | lower if event.venue else '' }}">
               <td>
                 <div class="dsh-ev-cell">
-                  <div class="dsh-ev-thumb-sm grad-{{ loop.index0 % 4 }}"><i class="bi bi-camera2"></i></div>
+                  <div class="dsh-ev-thumb-sm grad-{{ loop.index0 % 4 }}"><i class="bi {{ type_icons.get(event.event_type, 'bi-camera2') }}"></i></div>
                   <div>
                     <div class="dsh-ev-name-sm">{{ event.name }}</div>
                     {% if event.event_time %}<div class="dsh-ev-sub-sm"><i class="bi bi-clock"></i> {{ event.event_time }}</div>{% endif %}
@@ -657,6 +656,20 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
     <form method="POST" action="{{ url_for('create_event') }}">
       <label class="dsh-f-label">Event Name</label>
       <input type="text" name="event_name" class="dsh-f-input" placeholder="e.g., Sarah &amp; John Wedding" required>
+      <label class="dsh-f-label">Event Type</label>
+      <select name="event_type" class="dsh-f-input" required>
+        <option value="" disabled selected>Select event type</option>
+        <option value="wedding">💍 Wedding</option>
+        <option value="corporate">💼 Corporate Event</option>
+        <option value="birthday">🎂 Birthday</option>
+        <option value="conference">🎤 Conference</option>
+        <option value="festival">🎉 Festival</option>
+        <option value="sports">🏆 Sports Event</option>
+        <option value="college">🎓 College Event</option>
+        <option value="cultural">🎭 Cultural Event</option>
+        <option value="portrait">📷 Portrait Shoot</option>
+        <option value="other">✨ Other</option>
+      </select>
       <label class="dsh-f-label">Event Date</label>
       <input type="date" name="event_date" class="dsh-f-input" required>
       <label class="dsh-f-label">Venue</label>
@@ -726,7 +739,6 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
   /* ── Search + status filter (drives both grid cards and list rows) ── */
   var cards = Array.prototype.slice.call(document.querySelectorAll('.dsh-event-card'));
   var rows  = Array.prototype.slice.call(document.querySelectorAll('.dsh-table tbody tr'));
-  var globalSearch = document.getElementById('globalSearch');
   var panelSearch  = document.getElementById('panelSearch');
   var currentStatus = 'all';
 
@@ -740,14 +752,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
       });
     });
   }
-  function syncSearch(source, other) {
-    source.addEventListener('input', function () {
-      if (other) other.value = source.value;
-      applyFilters();
-    });
-  }
-  if (globalSearch) syncSearch(globalSearch, panelSearch);
-  if (panelSearch) syncSearch(panelSearch, globalSearch);
+  if (panelSearch) panelSearch.addEventListener('input', applyFilters);
 
   document.querySelectorAll('.dsh-filter-pill').forEach(function (pill) {
     pill.addEventListener('click', function () {
@@ -756,14 +761,6 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
       currentStatus = pill.getAttribute('data-filter');
       applyFilters();
     });
-  });
-
-  /* Ctrl+K focuses the global search */
-  document.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-      e.preventDefault();
-      if (globalSearch) globalSearch.focus();
-    }
   });
 
   /* ── Grid / List view toggle (persisted) ── */
@@ -815,11 +812,11 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
   };
 
   /* ── QR modal + poster generator ── */
-  window.openQrModal = function (btn) {
+  window.openQrModal = function (btn, autoDownload) {
     var src = btn.getAttribute('data-qr-src');
     var eventName = btn.getAttribute('data-qr-name');
     document.getElementById('qrModal').classList.add('open');
-    renderPoster(src, eventName);
+    renderPoster(src, eventName, !!autoDownload);
   };
   window.closeQrModal = function (e) {
     if (e.target === document.getElementById('qrModal')) { document.getElementById('qrModal').classList.remove('open'); }
@@ -832,7 +829,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
     }
   });
 
-  function renderPoster(qrSrc, studioName) {
+  function renderPoster(qrSrc, studioName, autoDownload) {
     var canvas = document.getElementById('posterCanvas');
     var ctx = canvas.getContext('2d');
     var W = 600, H = 780;
@@ -913,6 +910,7 @@ canvas#posterCanvas { display: block; width: 100%; height: auto; }
           link.href = canvas.toDataURL('image/png');
           link.click();
         };
+        if (autoDownload) { dlBtn.click(); }
       };
       qrImg.onerror = function () {
         ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#f87171';

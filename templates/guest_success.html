@@ -10,13 +10,16 @@
 
   <style>
     :root {
-      --bg:        #f0f2f5;
+      --dark:      #0a1f17;
+      --dark2:     #0e2a1f;
+      --mint:      #7fe9bd;
       --forest:    #0f7b56;
       --forest2:   #13a372;
       --forest-lt: #e0f5ed;
-      --plum:      #5240a8;
-      --plum2:     #6b58cc;
+      --blue:      #7fb4e9;
+      --blue-lt:   #eaf3fd;
       --amber:     #d97706;
+      --amber-lt:  #fef3e2;
       --ink:       #16181d;
       --ink2:      #434956;
       --ink3:      #8a9099;
@@ -26,7 +29,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      background: var(--bg);
+      background: var(--dark);
       font-family: 'Plus Jakarta Sans', sans-serif;
       color: var(--ink);
       min-height: 100vh;
@@ -34,33 +37,29 @@
 
     /* ── Mini top bar ── */
     .mini-bar {
-      height: 52px;
-      background: #fff;
-      border-bottom: 1px solid rgba(0,0,0,0.07);
+      height: 56px;
+      background: rgba(10,31,23,0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 1px 12px rgba(0,0,0,0.05);
     }
-    .mini-brand {
-      display: flex; align-items: center; gap: 9px;
-      text-decoration: none;
-    }
-    .mini-brand-icon {
-      width: 30px; height: 30px; border-radius: 9px;
-      object-fit: cover;
-      box-shadow: 0 2px 8px rgba(15,123,86,0.28);
-    }
+    .mini-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .mini-brand-icon { width: 30px; height: 30px; border-radius: 9px; object-fit: cover; }
     .mini-brand-name {
-      font-family: 'Fraunces', serif;
-      font-size: 1.1rem; font-weight: 700;
-      letter-spacing: -0.5px; color: var(--ink);
+      font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 700;
+      letter-spacing: -0.5px; color: #fff;
     }
-    .mini-brand-name span { color: var(--forest); }
+    .mini-brand-name span { color: var(--mint); }
 
     /* ── Page ── */
     .success-page {
       display: flex; align-items: center; justify-content: center;
       padding: 40px 20px 60px;
-      min-height: calc(100vh - 52px);
+      min-height: calc(100vh - 56px);
+      background:
+        radial-gradient(ellipse 60% 45% at 85% 10%, rgba(127,233,189,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 8% 92%, rgba(217,119,6,0.10) 0%, transparent 55%),
+        linear-gradient(165deg, var(--dark) 0%, var(--dark2) 55%, var(--dark) 100%);
     }
 
     .success-wrap { width: 100%; max-width: 460px; text-align: center; }
@@ -68,16 +67,15 @@
     /* ── Card ── */
     .success-card {
       background: #fff;
-      border: 1px solid rgba(0,0,0,0.08);
       border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
       position: relative;
     }
     .success-card::before {
       content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--forest), var(--forest2), var(--plum));
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--forest), var(--mint), var(--amber));
     }
 
     /* ── Body ── */
@@ -108,7 +106,7 @@
       margin-bottom: 8px;
       animation: fadeUp .5s .15s ease both;
     }
-    .success-title span { color: var(--forest); }
+    .success-title span { font-style: italic; color: var(--forest2); }
 
     .success-sub {
       font-size: 0.9rem; color: var(--ink3);
@@ -139,8 +137,8 @@
       font-size: 0.95rem; flex-shrink: 0;
     }
     .si-g { background: var(--forest-lt); }
-    .si-p { background: #eeebfb; }
-    .si-a { background: #fef3e2; }
+    .si-p { background: var(--blue-lt); }
+    .si-a { background: var(--amber-lt); }
 
     /* countdown bar */
     .countdown-wrap {
@@ -157,7 +155,7 @@
     }
     .countdown-bar {
       height: 5px; border-radius: 50px;
-      background: linear-gradient(90deg, var(--forest), var(--forest2));
+      background: linear-gradient(90deg, var(--forest), var(--mint));
       width: 100%;
       animation: shrink 10s linear forwards;
     }

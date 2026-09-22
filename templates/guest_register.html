@@ -6,22 +6,22 @@
   <title>Guest Registration — Pixhare</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg:        #f0f2f5;
-      --card:      #ffffff;
+      --dark:      #0a1f17;
+      --dark2:     #0e2a1f;
+      --mint:      #7fe9bd;
       --forest:    #0f7b56;
       --forest2:   #13a372;
       --forest-lt: #e0f5ed;
-      --plum:      #5240a8;
-      --plum2:     #6b58cc;
-      --plum-lt:   #eeebfb;
       --amber:     #d97706;
       --amber-lt:  #fef3e2;
       --rose:      #dc2653;
       --rose-lt:   #fdeaed;
+      --bg:        #faf7ef;
+      --card:      #ffffff;
       --ink:       #16181d;
       --ink2:      #434956;
       --ink3:      #8a9099;
@@ -31,7 +31,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      background: var(--bg);
+      background: var(--dark);
       font-family: 'Plus Jakarta Sans', sans-serif;
       color: var(--ink);
       min-height: 100vh;
@@ -39,72 +39,68 @@
 
     /* ── Mini top bar ── */
     .mini-bar {
-      height: 52px;
-      background: #fff;
-      border-bottom: 1px solid rgba(0,0,0,0.07);
+      height: 56px;
+      background: rgba(10,31,23,0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 1px 12px rgba(0,0,0,0.05);
     }
-    .mini-brand {
-      display: flex; align-items: center; gap: 9px;
-      text-decoration: none;
-    }
-    .mini-brand-icon {
-      width: 30px; height: 30px; border-radius: 9px;
-      object-fit: cover;
-      box-shadow: 0 2px 8px rgba(15,123,86,0.28);
-    }
+    .mini-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .mini-brand-icon { width: 30px; height: 30px; border-radius: 9px; object-fit: cover; }
     .mini-brand-name {
-      font-family: 'Fraunces', serif;
-      font-size: 1.1rem; font-weight: 700;
-      letter-spacing: -0.5px; color: var(--ink);
+      font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 700;
+      letter-spacing: -0.5px; color: #fff;
     }
-    .mini-brand-name span { color: var(--forest); }
+    .mini-brand-name span { color: var(--mint); }
 
     /* ── Page ── */
     .guest-page {
+      position: relative; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
-      padding: 40px 20px 60px;
-      min-height: calc(100vh - 52px);
+      padding: 36px 18px 50px;
+      min-height: calc(100vh - 56px);
+      background:
+        radial-gradient(ellipse 60% 45% at 80% 8%, rgba(127,233,189,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 10% 95%, rgba(217,119,6,0.10) 0%, transparent 55%),
+        linear-gradient(165deg, var(--dark) 0%, var(--dark2) 55%, var(--dark) 100%);
     }
 
-    .guest-wrap { width: 100%; max-width: 480px; }
+    .guest-wrap { width: 100%; max-width: 460px; position: relative; z-index: 1; }
 
     /* ── Top badge ── */
     .guest-badge {
       display: inline-flex; align-items: center; gap: 7px;
-      background: var(--amber-lt);
-      border: 1px solid rgba(217,119,6,0.2);
+      background: rgba(240,180,41,0.14);
+      border: 1px solid rgba(240,180,41,0.35);
       border-radius: 50px; padding: 5px 14px 5px 8px;
-      font-size: 0.7rem; font-weight: 800;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--amber); margin-bottom: 16px;
+      font-size: 0.68rem; font-weight: 800;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: #f0b429; margin-bottom: 16px;
     }
     .guest-badge-dot {
       width: 20px; height: 20px; border-radius: 50%;
-      background: var(--amber);
+      background: #f0b429;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; color: #fff;
+      font-size: 0.65rem;
     }
 
     /* ── Card ── */
     .guest-card {
-      background: #fff;
-      border: 1px solid rgba(0,0,0,0.08);
+      background: var(--card);
       border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
       position: relative;
     }
     .guest-card::before {
       content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--amber), var(--forest), var(--plum));
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--forest), var(--mint), var(--amber));
     }
 
     /* ── Head ── */
     .guest-head {
-      padding: 28px 32px 22px;
+      padding: 26px 30px 20px;
       border-bottom: 1px solid rgba(0,0,0,0.06);
       background: #fafaf8;
     }
@@ -118,10 +114,10 @@
     }
     .guest-title {
       font-family: 'Fraunces', serif;
-      font-size: 1.55rem; font-weight: 700;
+      font-size: 1.5rem; font-weight: 700;
       letter-spacing: -0.8px; color: var(--ink); margin-bottom: 6px;
     }
-    .guest-title span { color: var(--amber); }
+    .guest-title span { font-style: italic; color: var(--forest2); }
     .guest-sub { font-size: 0.84rem; color: var(--ink3); line-height: 1.5; }
     .guest-event-meta {
       display: flex; flex-wrap: wrap; gap: 14px;
@@ -132,15 +128,15 @@
     .guest-event-meta i { color: var(--forest); }
 
     /* ── Body ── */
-    .guest-body { padding: 26px 32px 30px; }
+    .guest-body { padding: 24px 30px 28px; }
 
     .fl {
       display: block;
-      font-size: 0.73rem; font-weight: 800;
+      font-size: 0.72rem; font-weight: 800;
       color: var(--ink2); letter-spacing: 0.07em;
       text-transform: uppercase; margin-bottom: 7px;
     }
-    .fi-wrap { position: relative; margin-bottom: 18px; }
+    .fi-wrap { position: relative; margin-bottom: 16px; }
     .fi-icon {
       position: absolute; left: 14px; top: 50%;
       transform: translateY(-50%);
@@ -159,14 +155,14 @@
       transition: border-color .2s, box-shadow .2s, background .2s;
     }
     .fi:focus {
-      border-color: var(--amber);
+      border-color: var(--forest2);
       background: #fff;
-      box-shadow: 0 0 0 3px rgba(217,119,6,0.1);
+      box-shadow: 0 0 0 3px rgba(19,163,114,0.12);
     }
     .fi::placeholder { color: var(--ink4); }
 
     .selfie-label {
-      font-size: 0.73rem; font-weight: 800;
+      font-size: 0.72rem; font-weight: 800;
       color: var(--ink2); letter-spacing: 0.07em;
       text-transform: uppercase; margin-bottom: 10px; display: block;
     }
@@ -175,14 +171,11 @@
     .capture-wrap { margin-bottom: 14px; }
     .capture-stage {
       position: relative; width: 100%; aspect-ratio: 3/4; max-height: 340px;
-      background: #14161a; border-radius: 16px; overflow: hidden;
+      background: #0d1512; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08);
     }
-    .capture-stage video {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .capture-stage canvas {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-    }
+    .capture-stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .capture-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
     .capture-status {
       position: absolute; left: 0; right: 0; bottom: 14px;
       text-align: center; color: #fff; font-size: 0.85rem; font-weight: 700;
@@ -195,19 +188,23 @@
       background: var(--ink4); transition: background .25s;
       display: block; margin: 0 auto;
     }
-    .cp-dot.done::before { background: var(--forest); }
+    .cp-dot.done::before { background: var(--forest2); }
     .cp-dot span { font-size: 0.68rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .05em; }
 
     .btn-start-capture {
-      width: 100%; background: var(--forest); color: #fff; border: none;
+      width: 100%; background: linear-gradient(135deg, var(--forest), var(--forest2)); color: #fff; border: none;
       border-radius: 11px; padding: 13px; font-weight: 800; font-size: 0.9rem; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .15s ease, box-shadow .2s ease;
     }
+    .btn-start-capture:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(19,163,114,0.3); }
     .btn-start-capture:disabled { opacity: .5; cursor: not-allowed; }
     .btn-retake {
       width: 100%; margin-top: 8px; background: transparent; border: 1.5px solid rgba(0,0,0,0.12);
       color: var(--ink2); border-radius: 11px; padding: 11px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+      transition: border-color .18s, background .18s;
     }
+    .btn-retake:hover { border-color: rgba(0,0,0,0.25); background: rgba(0,0,0,0.02); }
     .capture-fallback { text-align: center; margin-top: 8px; }
     .capture-fallback a { font-size: 0.78rem; color: var(--ink3); text-decoration: underline; cursor: pointer; }
     .capture-done-badge {
@@ -219,15 +216,15 @@
     /* ── Submit ── */
     .btn-submit {
       width: 100%; margin-top: 20px;
-      background: linear-gradient(135deg, var(--amber), #e8920a);
-      color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(135deg, var(--forest), var(--mint));
+      color: var(--dark); font-family: 'Plus Jakarta Sans', sans-serif;
       font-weight: 800; font-size: 0.92rem;
       padding: 14px; border: none; border-radius: 11px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: transform .15s, box-shadow .2s;
-      box-shadow: 0 4px 18px rgba(217,119,6,0.3);
+      box-shadow: 0 4px 18px rgba(19,163,114,0.3);
     }
-    .btn-submit:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(217,119,6,0.38); }
+    .btn-submit:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(19,163,114,0.4); }
     .btn-submit:active { transform: translateY(0); }
     .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
@@ -239,7 +236,7 @@
     }
     .g-flash.danger  { background: var(--rose-lt);  border: 1px solid rgba(220,38,83,0.2);  color: var(--rose); }
     .g-flash.success { background: var(--forest-lt); border: 1px solid rgba(15,123,86,0.2);  color: var(--forest); }
-    .g-flash.info    { background: var(--plum-lt);   border: 1px solid rgba(82,64,168,0.2);  color: var(--plum); }
+    .g-flash.info    { background: var(--amber-lt);  border: 1px solid rgba(217,119,6,0.2);  color: var(--amber); }
 
     .selfie-hint {
       font-size: 0.75rem; color: var(--ink3); text-align: center;
@@ -249,7 +246,7 @@
 
     /* ── Footer strip ── */
     .guest-foot {
-      padding: 14px 32px 18px;
+      padding: 14px 30px 18px;
       border-top: 1px solid rgba(0,0,0,0.06);
       background: #fafaf8; text-align: center;
     }
@@ -598,10 +595,10 @@
           setStatus(PHASES[phaseIndex].label);
         }
 
-        drawOval('#13a372', false);
+        drawOval('#7fe9bd', false);
         var phase = PHASES[currentPhaseIndex] || PHASES[0];
         if (phase.arrow) {
-          drawDirectionArrow(phase.arrow, '#378ADD');
+          drawDirectionArrow(phase.arrow, '#f0b429');
         }
 
         requestAnimationFrame(tick);
